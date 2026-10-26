@@ -1,6 +1,6 @@
 # Review
 
-Adapted from pstack's Interrogate workflow. Default to one independent review, not a mandatory multi-model panel.
+Use the adapted [interrogate skill](../../interrogate/SKILL.md) for the review, including its reviewer template and evidence rubric. Default to one independent review; add specialists only for concrete uncovered risks.
 
 1. Establish the intent, acceptance criteria, base and candidate state, diff, relevant contracts, and verification gaps. Include dirty changes in the candidate identity. Check whether a completed local or hosted review already covers this candidate and risk.
 2. For a new independent pass, use a reviewer who did not author the candidate. Give that reviewer the evidence and scope without conclusions to agree with. Follow affected producers, consumers, and tests beyond the edited lines. Add another specialist only for a distinct unresolved risk or repository requirement. A same-model reviewer is independent of authorship, not model diversity.
