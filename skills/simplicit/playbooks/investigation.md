@@ -1,5 +1,7 @@
 # Investigation
 
+Load [how](../../how/SKILL.md) for runtime behavior or [why](../../why/SKILL.md) for historical rationale. Use existing findings rather than restarting either investigation.
+
 Adapted from pstack's Investigation playbook.
 
 Keep explanation, diagnosis, and recommendation requests read-only. Inspect the relevant source, callers, tests, and available records. Separate observed behavior from inferred intent. Cite paths or sources that support the answer.
