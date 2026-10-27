@@ -1,0 +1,28 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Unit tests
+        run: python -B -m unittest discover -s scripts -p 'test_*.py'
+      - name: Validate skills
+        run: python -B scripts/validate_skills.py
+      - name: Validate agents
+        run: python -B scripts/validate_agents.py

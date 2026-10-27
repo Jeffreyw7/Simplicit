@@ -43,12 +43,21 @@ Loading a skill does not automatically spawn an agent. These adaptations use ava
 
 ## Adopt in a selected repository
 
-Copy the **entire `skills/` collection** into the chosen repository's `.agents/skills/`. Keep every sibling skill, reference, and license together. Do not copy the original `pstack/` tree as active skills.
+Adopt these two components separately in a chosen repository:
 
-1. Inventory existing destination names first. Generic names such as `architect` or `tdd` may already exist.
+| Source in Simplicit | Destination in the selected repository |
+|---|---|
+| Entire `skills/` collection | `.agents/skills/` |
+| `.codex/agents/critic.toml` | `.codex/agents/critic.toml` |
+
+Both are needed for this specific custom critic. Skills-only adoption still uses the documented generic independent-reviewer fallback when permitted; without an independent execution path, review stays pending. Keep every sibling skill, reference, and license together. Do not copy the original `pstack/` tree as active skills.
+
+1. Inventory existing destination skill folders and agent files first. Generic names such as `architect`, `tdd`, or `critic` may already exist. Check destination paths for symlinks or redirection before writing.
 2. Keep identical content and preserve unrelated skills. If ownership or replacement authorization is unclear, stop before overwriting and choose explicitly which version to retain. Do not silently skip a required sibling.
-3. For a known prior Simplicit installation, compare and preserve local customizations before an authorized upgrade.
-4. Copy the collection, then run the validator against that destination. Start Codex in the selected repository and invoke `$simplicit`.
+3. For a known prior Simplicit installation, compare and preserve local customizations before an authorized upgrade. Preserve unrelated skills, agents, and `AGENTS.md`; do not replace entire destination directories.
+4. Copy the approved collection and critic, then run both validators from this source checkout against the destination paths below. These checks do not authorize overwriting collisions.
+5. Start a supported, fresh authenticated Codex session in the selected repository. Confirm `$simplicit` resolves to the intended `.agents/skills/simplicit/SKILL.md` and that the host exposes the custom `critic` role through its supported delegation interface. A copied file or successful parser check is not evidence of native discovery.
+6. Confirm the configured model and effort are available to that session and actually execute a bounded read-only review. Record discovery, model execution, and behavioral results separately. If a required capability is missing, use the permitted fallback or report the remaining requirement pending; do not install or upgrade clients silently.
 
 ```text
 <selected-repository>/.agents/skills/
@@ -57,6 +66,7 @@ Copy the **entire `skills/` collection** into the chosen repository's `.agents/s
     simplicit-help/
     architect/
     ...the other specialist folders...
+<selected-repository>/.codex/agents/critic.toml
 ```
 
 **Migration:** the old release supported copying only `simplicit-mode/`. This release requires the complete collection. Its alias points to the sibling `simplicit/` entrypoint; old playbooks should not be used as a fallback. Compare any locally customized old playbooks before retiring them.
@@ -65,17 +75,42 @@ Codex CLI and IDE support explicit `$skill-name` invocation and automatic select
 
 This repository stores reusable source. It does not install skills into other projects or user-wide locations. No installer, service, marketplace, or global configuration is required.
 
+The critic deliberately pins `gpt-6.1-sol` with `high` reasoning. These are project choices, not universally available defaults. Effective permissions come from the host/parent; the critic's no-edit instructions do not enforce an independent read-only sandbox. Current [OpenAI custom-agent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents) describes project-scoped TOML roles and inherited permissions. Check your installed client's capabilities. If the pinned model cannot run, report it once, disclose any permitted generic-reviewer fallback, and leave an explicitly required model-specific review unmet. Do not duplicate an otherwise valid completed review just for the role name.
+
+After adoption, this is a complete starting prompt for a repository with a duplicate-request defect:
+
+```text
+$simplicit Fix the duplicate-request bug in this repository's in-memory ledger.
+Acceptance: retrying the same request ID with the same positive amount credits
+once; distinct IDs still add; negative amounts remain rejected. Inspect the
+current contract and preserve existing edits. Local edits, isolated fixtures,
+tests, and internal independent review are authorized. Continue through
+investigation, implementation, executed checks, one independent review,
+supported repairs, and final verification in this chat. Prefer the available
+critic; a generic independent reviewer is permitted if it is unavailable.
+Report actual evidence and remaining gaps. Leave a reviewable local diff.
+Do not commit, push, create a PR, merge, deploy, or send external messages.
+```
+
+One prompt authorizes the stated work, not extra permissions or a guarantee against host interruptions. Ordinary stage transitions do not need another "continue". Missing product decisions, authorization, genuine access/capability blockers, and execution/context limits can require a precise handoff. Plan-only, review-only, and investigation-only requests retain their boundaries. Commit/push/PR work needs separate applicable authorization; keep one active Draft PR by default when that work is authorized.
+
 ## Validate the collection
 
-Use Python 3.10 or later (`python3` on systems where that is the command):
+Use Python 3.11 or later (`python3` on systems where that is the command). The agent validator uses the standard library's real TOML parser, `tomllib`; no dependencies are installed. CI uses Python 3.11 on Linux and Windows:
 
 ```sh
 python -B -m unittest discover -s scripts -p 'test_*.py'
 python -B scripts/validate_skills.py
+python -B scripts/validate_agents.py
 python -B scripts/validate_skills.py /path/to/copied/.agents/skills
+python -B scripts/validate_agents.py /path/to/copied/.codex/agents
 ```
 
-Run the validator from this source checkout; it selects the skill names shipped here, leaving unrelated installed skills out of its checks. It checks simple flat frontmatter, licenses, and inline Markdown resource links. It is not a general Markdown parser, a native Codex discovery test, or proof of workflow behavior. [Validation evidence](docs/validation.md) records targeted trials and remaining limits.
+Run validators from this source checkout. The skill validator retains its source-selected destination semantics and checks simple flat frontmatter, licenses, and inline Markdown resource links. It is not a general Markdown parser.
+
+The agent validator checks the source inventory (which must include `critic.toml`) and those same filenames at an optional destination, leaving unrelated destination profiles alone. Simplicit's narrow profile policy allows only nonempty strings for `name`, `description`, `developer_instructions`, and optional `model`, `model_reasoning_effort`, `model_reasoning_summary`, and `model_verbosity`. Names must match lowercase kebab-case filenames; duplicate names and paths escaping the selected directory fail. All other fields, including permission, sandbox, approval, provider, MCP, feature, and skill overrides, are rejected under this package policy. This is deliberately narrower than the host's full schema; it prevents implying separate permissions. It does not test model names/effort support against an account or claim native discovery or runtime correctness.
+
+Both validators only read inputs and never call models. The [CI workflow](.github/workflows/validate.yml) runs unit tests and both validators with read-only repository permissions; it does not install this workflow into projects. A workflow file does not prove hosted CI passed. [Validation evidence](docs/validation.md) separates parser checks, CI, native discovery, and executed behavior, with reproduction instructions and remaining limits.
 
 ## Source and limits
 
