@@ -21,6 +21,15 @@ Read only the matching playbook:
 | Feature or refactor | [Change](playbooks/change.md). |
 | Defect | [Bug fix](playbooks/bug-fix.md). |
 | Review only | [Review](playbooks/review.md), read-only. |
+| Measured slowness / sustained metric improvement | [Performance](playbooks/perf-issue.md) / [Hillclimb](playbooks/hillclimb.md). |
+| Live runtime symptom / captured profile | [Runtime forensics](playbooks/runtime-forensics.md) / [Trace forensics](playbooks/trace-forensics.md). |
+| Throwaway experiment / visual equivalence | [Prototype](playbooks/prototype.md) / [Visual parity](playbooks/visual-parity.md). |
+| Write skills / evaluate prompt or skill changes | [Authoring](playbooks/authoring-a-skill.md) / [Eval](playbooks/eval.md). |
+| Resume / suspend / multi-phase delivery | [Pickup](playbooks/session-pickup.md) / [Pause](playbooks/pause-safely.md) / [Plan](playbooks/multi-phase-plan.md). |
+| Long authorized task / coordinated program | [Autonomous run](playbooks/autonomous-run.md) / [Orchestrate](playbooks/orchestrate.md). |
+| Independent PRs / a dependent PR stack | [Autopilot full](playbooks/autopilot-full.md) / [Autopilot stack](playbooks/autopilot-stack.md). |
+| Bring a PR to readiness / prepare a PR | [Babysit](playbooks/babysit.md) / [Opening a PR](playbooks/opening-a-pr.md). |
+| Authorized landing / requested workspace reclamation | [Shipping](playbooks/shipping.md) / [Worktree cleanup](playbooks/worktree-cleanup.md). |
 
 A mechanical edit needs only the lead, applicable checks, and self-review. Meaningful features, fixes, and refactors need independent candidate review, including consequential refactors that preserve intended behavior. Ownership, trust boundaries, durable data, concurrency, and consequential transitions need explicit invariants before implementation. Compare short approaches when the design matters; file count alone does not determine risk.
 
@@ -44,6 +53,8 @@ Read and follow the linked skill for its bounded job. These are executable instr
 | Requested audit of an existing verification skill | [maintain-verification-skill](../maintain-verification-skill/SKILL.md) |
 
 Do not chain the entire catalog. Reuse grounded findings and read only guidance that resolves the current need. [Simplicit help](../simplicit-help/SKILL.md) explains invocation and support boundaries.
+
+The [complete catalog](references/catalog.md) includes all 61 upstream skill adaptations plus the mode alias: 24 separate engineering principles, writing and catch-up tools, setup/history/reflection, formal verification and [statechart](../statechart/SKILL.md), [bot UI](../make-bot-ui/SKILL.md), and the [issue workflows](../setup-benny/SKILL.md). Read that catalog when the core routes above do not identify the right specialist; never load every skill by default.
 
 ## Verify and review
 
