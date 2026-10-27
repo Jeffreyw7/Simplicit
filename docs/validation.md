@@ -40,9 +40,18 @@ A separate reviewer reproduced two installer defects: a destination-ancestor jun
 - Statechart verifies bounded model assumptions; generated formal skills and real product behavior still need project-specific execution. Optional PNG dependencies are not installed by normal validation.
 - Native custom-role/model execution and automatic skill selection remain unverified. Native loading of all 62 skills is established separately above.
 - No token, cost, speed or quality benchmark was performed. Reviewer arithmetic over synthetic timings is not a performance result.
-- CI retains the Python 3.11 Linux/Windows matrix and now adds Node 22, Java 17, a checksum-pinned TLC download and all seven statechart checks. Historical passing CI below belongs to PR #3's earlier commit; it does not prove the expanded workflow has run.
+- CI retains the Python 3.11 Linux/Windows matrix and now adds Node 22, Java 17, a checksum-pinned TLC download and all seven statechart checks. Current completed results are recorded immediately below; the October 26 results belong to the earlier candidate.
 
-The first expanded [hosted run](https://github.com/Jeffreyw7/Simplicit/actions/runs/40546396886) passed all Linux steps but exposed a Windows short-name-path incompatibility at `56bbe99`: `RUNNER~1` normalized to a different spelling and was wrongly rejected as a link. The installer now inspects actual symlink modes and junction reparse tags on each ancestor rather than equating normalization with redirection. A dedicated native Windows short-name regression accompanies the repair; its hosted rerun must establish behavior on a volume that supports those aliases.
+The first expanded [hosted run](https://github.com/Jeffreyw7/Simplicit/actions/runs/40546396886) passed all Linux steps but exposed a Windows short-name-path incompatibility at `56bbe99`: `RUNNER~1` normalized to a different spelling and was wrongly rejected as a link. The installer now inspects actual symlink modes and junction reparse tags on each ancestor rather than equating normalization with redirection. An independent narrow review approved the repair. A dedicated native Windows short-name regression accompanies it and executed successfully on the hosted Windows runner.
+
+The [repaired implementation run](https://github.com/Jeffreyw7/Simplicit/actions/runs/40546983901) at `0cc5d9cae0d0e1be7321f7d4482b39b358f0a03c` completed successfully on both platforms. Job steps and downloaded logs were inspected, rather than inferring success from workflow configuration:
+
+| Platform | Python 3.11 suite | Collection and critic | Node 22 / Java 17 / TLC |
+|---|---|---|---|
+| [Linux](https://github.com/Jeffreyw7/Simplicit/actions/runs/40546983901/job/122340104727) | 52 tests, zero failures; one Windows-only short-name test skipped | 62 skills and one critic pass | Seven tests pass, zero skips |
+| [Windows](https://github.com/Jeffreyw7/Simplicit/actions/runs/40546983901/job/122340105303) | All 52 tests pass with no skips, including short-name and link cases | 62 skills and one critic pass | Seven tests pass, zero skips |
+
+These results establish Python 3.11 execution and Windows alias handling for the repaired implementation, without changing the earlier local skips. A ZIP made from the reviewed Git revision was also extracted into a temporary path containing spaces; its shipped installer successfully adopted all 62 skills and the copied destination passed validation. The archive excludes Git internals, scratch evidence and local runtime downloads.
 
 ## Historical evidence — October 26, 2026
 
