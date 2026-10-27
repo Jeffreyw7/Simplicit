@@ -1,5 +1,15 @@
 # Validation evidence
 
+## Comment Sicko dispatch update — October 27, 2026
+
+The requested follow-up keeps `$no-comments` as the entrypoint and routes its comment-specific pass through `comment-sicko`. The new `.codex/agents/comment-sicko.toml` loads the installed portable reviewer brief; general candidate review still prefers `critic`. An unavailable named role uses a permitted independent generic helper with the same brief and an explicit disclosure. Without independent execution the Comment Sicko pass stays pending. Reviewers return proposals; the lead owns authorized edits and verifies findings.
+
+Before this change, an independent instruction-selection trial given both named roles selected `critic` under the existing runtime default. Repeating the selection after the change selected `comment-sicko`; generic-only and no-helper scenarios followed the documented fallback and pending paths. These are simulated dispatch decisions, not native role launches.
+
+An actual independent generic helper loaded the new role instructions and reviewer brief and inspected a disposable JavaScript fixture. It proposed two deletions (a section banner and redundant narration), retained the license and public API contract, and left an external signing constraint visible pending evidence. It reported zero applied deletions and no unsupported `MUST KILL` finding. The parent checked that the fixture's SHA-256 remained `6601c3c6ed4913065f93a15d67fdd407965259a740dc1483a72c7e7b91e1ff5b` after review. This establishes the disclosed helper path, not native custom-role loading.
+
+The existing complete-adoption fixture initially caught the missing copied Comment Sicko profile. It now copies the full shipped profile inventory and still verifies preservation of unrelated skills, agents and `AGENTS.md`. Local validation passes: 52 Python tests with the same three platform-capability skips, all 62 skills under both metadata validators, and both TOML profiles under package policy. Relocated adoption remains byte-identical/idempotent, and a fresh native `skills/list` again discovers all 62 skills enabled. Native execution of the custom role is unverified in this host. The original `pstack/` snapshot is unchanged. Earlier one-profile results below remain evidence for their explicitly dated candidates.
+
 ## Complete pstack adaptation — October 27, 2026
 
 This revision builds on the user-selected reliability PR #3 at `2c6be41080c0530876d933336b33d82b40183923`. It preserves that revision's critic, runtime, Interrogate and Review instructions. The collection now covers all 61 source skills (58 top-level and three nested Benny skills), plus the existing alias, for **62 installed skills**. All 23 upstream playbooks have explicit portable mappings. The original 200-file source tree remains `880564357e051d7c7802da1cb5d8df1d0b008299`.

@@ -30,13 +30,20 @@ Use `$simplicit-help` to find a skill, or invoke one directly. Codex supports ex
 
 Installation is project-local. It does not modify global model configuration, register a service, enable a scheduler, or install external dependencies.
 
-### Optional custom critic
+### Custom reviewer roles
 
-PR #3's custom critic and reliability contract are retained. To use that specific role, also adopt `.codex/agents/critic.toml` into the selected project's `.codex/agents/critic.toml`. Inspect existing files and linked paths first; keep identical content, preserve unrelated agents, and reconcile any collision explicitly. The skill installer deliberately handles only skills.
+Adopt the shipped `.codex/agents/*.toml` files individually into the selected project's `.codex/agents/` to expose these named roles. Inspect existing files and linked paths first; keep identical content, preserve unrelated agents, and reconcile any collision explicitly. The skill installer deliberately handles only skills.
+
+| Role | Used by |
+|---|---|
+| [critic](.codex/agents/critic.toml) | General independent candidate review. |
+| [comment-sicko](.codex/agents/comment-sicko.toml) | `$no-comments`: an independent comment review; the lead verifies findings and makes authorized edits. |
+
+Comment Sicko inherits the host model and reads its portable brief from the installed `no-comments` skill. Keep the complete skills collection alongside the roles.
 
 The critic pins `gpt-6.1-sol` with `high` reasoning. Honor those choices when using the role; model availability and the host's supported role selector must be checked. Effective permissions come from the host/parent; the critic's instructions do not enforce a separate sandbox. See [OpenAI's custom-agent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents).
 
-Skills-only adoption uses the documented generic independent-reviewer fallback when permitted. If independent execution is unavailable, review remains pending. Validate a copied critic with `python -B scripts/validate_agents.py "/path/to/project/.codex/agents"`, then separately confirm native role discovery and a real bounded review. A parser pass does not establish either. Do not repeat an already valid review just to obtain a preferred role name.
+Skills-only adoption uses the documented generic independent-reviewer fallback when permitted. For `$no-comments`, that helper receives the Comment Sicko brief and the fallback is disclosed. If independent execution is unavailable, the requested independent pass remains pending. Validate the complete copied role inventory with `python -B scripts/validate_agents.py "/path/to/project/.codex/agents"`, then separately confirm native role discovery and a real bounded review. The validator expects both shipped profiles; a parser pass does not establish native loading or model execution. Do not repeat an already valid review just to obtain a preferred role name.
 
 ### Continue through the authorized work
 

@@ -21,6 +21,8 @@ Retain substantive domain reasoning, evidence requirements and useful resources.
 
 The complete skill map is not a promise that the host supplies every external integration. History uses available sources, video uses available renderers, bot workflows require a configured webhook, and scheduled issue work requires an actual scheduler. Skills can be invoked manually without a scheduler. Missing capabilities have explicit outcomes.
 
+The upstream `pstack/agents/comment-sicko.md` is adapted as `.codex/agents/comment-sicko.toml` plus the installed `no-comments/references/comment-review.md` brief. `$no-comments` dispatches that named reviewer, or discloses a generic independent helper using the same brief when the host lacks the role. The lead verifies findings and owns edits. The adaptation preserves the keep categories and `MUST KILL` root-cause findings while retaining Simplicit's evidence-based treatment of uncertain safety constraints. It does not add another skill entrypoint or require the original `pstack/` tree at runtime.
+
 ### Executable helpers
 
 - Statechart retains all 21 production JavaScript modules from the pinned source. TLC setup now requires explicit existing Java/JAR configuration. PNG dependencies require a one-time opt-in; documented versions stay pinned. CLI help describes these differences. Original upstream tests remain in the source snapshot; portable behavioral tests are in `scripts/test_statechart.mjs`.

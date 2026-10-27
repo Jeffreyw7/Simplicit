@@ -174,7 +174,8 @@ class AgentTests(unittest.TestCase):
             path.write_bytes(content)
         # Copy only into this new fixture, whose inventory is known and disjoint.
         shutil.copytree(repository / "skills", skills, dirs_exist_ok=True)
-        shutil.copy2(repository / ".codex/agents/critic.toml", agents / "critic.toml")
+        for profile in (repository / ".codex/agents").glob("*.toml"):
+            shutil.copy2(profile, agents / profile.name)
         before = {p.relative_to(target): p.read_bytes() for p in target.rglob("*") if p.is_file()}
         names = [p.parent.name for p in (repository / "skills").glob("*/SKILL.md")]
         self.assertEqual([], validate_skills(skills, names=names))
