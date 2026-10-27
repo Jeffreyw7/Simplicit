@@ -10,7 +10,7 @@ Local host: Windows, Python 3.14.5, Node.js 24.11.1, Java 20.0.2, TLC 1.7.4, and
 
 | Check | Actual result |
 |---|---|
-| `python -B -m unittest discover -s scripts -p 'test_*.py'` | 51 tests, zero failures; two inherited agent-validator symlink cases skipped because unprivileged symbolic links are unavailable. The new Windows junction-containment case executed and passed. |
+| `python -B -m unittest discover -s scripts -p 'test_*.py'` | 52 tests, zero failures; two inherited agent-validator symlink cases skipped because unprivileged symbolic links are unavailable, and one Windows short-name case skipped because this local volume supplies no 8.3 alias. The Windows junction-containment case executed and passed. |
 | `python -B scripts/validate_skills.py` | All 62 skills valid; local links and licenses present. |
 | `python -B scripts/validate_agents.py` | The retained critic passes TOML parsing and package policy. |
 | Standard Codex skill-creator `quick_validate` on each entrypoint | All 62 pass. PyYAML 6.0.3 was supplied only in ignored task-local scratch, with no global installation. |
@@ -18,7 +18,7 @@ Local host: Windows, Python 3.14.5, Node.js 24.11.1, Java 20.0.2, TLC 1.7.4, and
 | Actual upload-statechart exercise | TLC explored five states/eight transitions with no broken properties; the chart round-tripped unchanged. PNG rendering ran with explicit opt-in and isolated cache; the generated image was opened and inspected for readability. This is a bounded model fixture, not proof of a product. |
 | Relocated installation in a temporary Git project whose path contains spaces | All 62 skills and 200 distributable files copied byte-for-byte; destination validation passes; a second install adds zero folders; relocated statechart CLI help works. The separately copied critic passes its parser. |
 
-The 51-test Python suite includes complete source mapping and exact licenses, deterministic manifest destinations, JavaScript module dependency closure, nine installer cases, and three decision-log cases. Installer tests cover differing/extra local content, unrelated skills, invalid sources, files at destinations, ancestor junctions, interrupted staging and interrupted publication. The last three failure cases were reproduced before their repairs. Staging prevents partially copied active folders; completed folder publication can be resumed idempotently. Concurrent destination writers are outside the installer contract.
+The 52-test Python suite includes complete source mapping and exact licenses, deterministic manifest destinations, JavaScript module dependency closure, ten installer cases, and three decision-log cases. Installer tests cover differing/extra local content, unrelated skills, invalid sources, files at destinations, ancestor junctions, interrupted staging, interrupted publication and Windows short-name aliases. The junction/interruption failures were reproduced before their repairs. Staging prevents partially copied active folders; completed folder publication can be resumed idempotently. Concurrent destination writers are outside the installer contract.
 
 The decision logger was exercised with whitespace, formula-like values, UTC timestamps and malformed existing logs. It preserves invalid inputs rather than appending corrupt records. It remains a single-writer helper.
 
@@ -41,6 +41,8 @@ A separate reviewer reproduced two installer defects: a destination-ancestor jun
 - Native custom-role/model execution and automatic skill selection remain unverified. Native loading of all 62 skills is established separately above.
 - No token, cost, speed or quality benchmark was performed. Reviewer arithmetic over synthetic timings is not a performance result.
 - CI retains the Python 3.11 Linux/Windows matrix and now adds Node 22, Java 17, a checksum-pinned TLC download and all seven statechart checks. Historical passing CI below belongs to PR #3's earlier commit; it does not prove the expanded workflow has run.
+
+The first expanded [hosted run](https://github.com/Jeffreyw7/Simplicit/actions/runs/40546396886) passed all Linux steps but exposed a Windows short-name-path incompatibility at `56bbe99`: `RUNNER~1` normalized to a different spelling and was wrongly rejected as a link. The installer now inspects actual symlink modes and junction reparse tags on each ancestor rather than equating normalization with redirection. A dedicated native Windows short-name regression accompanies the repair; its hosted rerun must establish behavior on a volume that supports those aliases.
 
 ## Historical evidence — October 26, 2026
 

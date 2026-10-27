@@ -72,6 +72,22 @@ class InstallationTests(unittest.TestCase):
             install(self.source, self.target)
         self.assertFalse((self.target / "one").exists())
 
+    @unittest.skipUnless(os.name == "nt", "Windows short-name paths only")
+    def test_windows_short_name_path_is_not_mistaken_for_a_link(self):
+        import ctypes
+
+        buffer = ctypes.create_unicode_buffer(32768)
+        size = ctypes.windll.kernel32.GetShortPathNameW(str(self.root), buffer, len(buffer))
+        if not size:
+            self.skipTest("short-name lookup unavailable")
+        short_root = Path(buffer.value)
+        if short_root == self.root.resolve():
+            self.skipTest("8.3 short names unavailable on this volume")
+        destination = short_root / "project/.agents/skills"
+        self.assertEqual(2, install(self.source, destination))
+        self.assertEqual(0, install(self.source, destination))
+        self.assertTrue((self.root.resolve() / "project/.agents/skills/one/SKILL.md").is_file())
+
     def test_interrupted_copy_preserves_existing_content_and_can_be_retried(self):
         existing = self.target / "unrelated"
         existing.mkdir(parents=True)

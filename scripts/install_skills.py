@@ -6,6 +6,7 @@ the preflight; local customizations must be reconciled explicitly.
 
 import argparse
 import shutil
+import stat
 import tempfile
 from pathlib import Path
 
@@ -13,8 +14,14 @@ from validate_skills import validate
 
 
 def reject_link(path):
-    if path.is_symlink() or path.resolve() != path.absolute():
-        raise ValueError(f"collision: linked path or ancestor {path}")
+    for candidate in (path, *path.parents):
+        try:
+            metadata = candidate.lstat()
+        except FileNotFoundError:
+            continue
+        junction = getattr(metadata, "st_reparse_tag", 0) == getattr(stat, "IO_REPARSE_TAG_MOUNT_POINT", None)
+        if stat.S_ISLNK(metadata.st_mode) or junction:
+            raise ValueError(f"collision: linked path or ancestor {candidate}")
 
 
 def snapshot(folder):
