@@ -66,7 +66,7 @@ The original imported Git subtree remains `880564357e051d7c7802da1cb5d8df1d0b008
 
 ## Reliability update — October 26, 2026 (America/New_York)
 
-### Candidate, scope, and host
+### Candidate, scope, and host at the initial local handoff
 
 - Starting checkout: clean `main`, revision `6c5cf96291c00262ad36d19db652849ea6b0e742`, equal to the requested review baseline. No newer changes were present to preserve; no applicable `AGENTS.md` was found in the checkout or inspected ancestor directories.
 - Working candidate: local uncommitted diff on `codex/simplicit-reliability`, based on that same revision. It includes the critic, shared runtime/review routing, README, this record, two new agent-validation scripts, and `.github/workflows/validate.yml`. The final diff and untracked files are part of the candidate; HEAD alone does not identify it.
@@ -103,7 +103,7 @@ python -B scripts/validate_agents.py
 | Complete copied destinations | Both CLI validators passed against `.scratch/reliability-2026-10-26/native/.agents/skills` and `.scratch/reliability-2026-10-26/native/.codex/agents`. |
 | Collision/preservation fixture | `test_complete_adoption_preserves_unrelated_destination_files` copies the whole collection and critic into a fresh temporary destination containing an unrelated skill, an unrelated malformed agent, and `AGENTS.md`. Byte snapshots confirm all inputs are unchanged by validation and all three sentinels survive adoption. This is a test of disjoint fixture copying, not an overwrite/merge installer. |
 | Local diff whitespace | `git diff --check` passed. |
-| Hosted CI | Not Run. Workflow added with `contents: read`, Linux/Windows and Python 3.11, unit tests and both validators. No secrets, model calls, publishing, or automatic adoption. |
+| Hosted CI at the initial local handoff | Not Run at that point; subsequent passing results are recorded in the hosted CI follow-up below. Workflow uses `contents: read`, Linux/Windows and Python 3.11, unit tests and both validators. No secrets, model calls, publishing, or automatic adoption. |
 
 The agent tests cover real TOML syntax, absent/empty/wrong-type required fields, names and filenames, duplicate shipped names, optional model field types, unsupported permission/session overrides, empty/missing source inventories, missing destination critic, unrelated destination profiles, invalid UTF-8, non-file profiles, input preservation, and CLI exit/count behavior. Symlink containment tests remain in the suite for hosts that support creating them. Validators never modify input files or call models.
 
@@ -178,3 +178,38 @@ All table commands ran from the `bug-fix/` directory with the bundled Python 3.1
 No review-driven repair loop occurred: the original defect was fixed before review, and review found no further defect. The current host's generic reviewer path worked on the configured model, while custom critic loading remains unverified. Persistence, concurrency, and conflicting amounts for one ID were outside the stated fixture contract. Task-wide helpers were limited to three contexts: one reviewer reused for the separate read-only trial and primary candidate review; one fixture lead; and its one required independent reviewer. Completed helper records remain because this host exposes no record-deletion operation.
 
 The initial `pstack/` snapshot contains 200 files, with tree object `880564357e051d7c7802da1cb5d8df1d0b008299`; a full-file SHA-256 inventory is retained locally in `pstack-before.json`. Both lead and reviewer confirmed all 200 file paths and byte hashes still matched, no tracked diff or untracked additions existed under `pstack/`, and license files were unchanged. No token, cost, speed, or quality savings are claimed.
+
+## Hosted CI follow-up — October 26, 2026 (America/New_York)
+
+The reliability update was subsequently committed and pushed as `cc608eb87764a72356d62eb342ae2ddd742344e5` on `codex/simplicit-reliability`, and [Draft PR #3](https://github.com/Jeffreyw7/Simplicit/pull/3) was opened against `main`. The initial local-handoff record above is retained as historical evidence. This follow-up records actual completed CI runs for that implementation commit, not a prediction about later commits.
+
+All four `Validate` jobs completed successfully:
+
+| Trigger / run | Linux job | Windows job |
+|---|---|---|
+| Push / [40430635290](https://github.com/Jeffreyw7/Simplicit/actions/runs/40430635290) | [PASS](https://github.com/Jeffreyw7/Simplicit/actions/runs/40430635290/job/121947143401) | [PASS](https://github.com/Jeffreyw7/Simplicit/actions/runs/40430635290/job/121947143088) |
+| Pull request / [40430710624](https://github.com/Jeffreyw7/Simplicit/actions/runs/40430710624) | [PASS](https://github.com/Jeffreyw7/Simplicit/actions/runs/40430710624/job/121947389531) | [PASS](https://github.com/Jeffreyw7/Simplicit/actions/runs/40430710624/job/121947390319) |
+
+Job-step results confirm successful unit tests and both validators in all four jobs. The pull-request job logs were also inspected directly: Ubuntu 24.04 used CPython 3.11.17 with working directory `/home/runner/work/Simplicit/Simplicit`; Windows Server 2025 used CPython 3.11.9 with working directory `D:\a\Simplicit\Simplicit`. Both checked out GitHub's test merge `033d38204001956874d89b3e1ad9d2a25051bd11`, combining the implementation head above with base `6c5cf96291c00262ad36d19db652849ea6b0e742`. This test merge is CI infrastructure; the PR itself remains unmerged.
+
+The executed commands and observed results in each inspected pull-request job were:
+
+```sh
+python -B -m unittest discover -s scripts -p 'test_*.py'
+# Ran 35 tests; OK, with no skips on either hosted platform.
+python -B scripts/validate_skills.py
+# Valid collection: 15 skills; local links and licenses present.
+python -B scripts/validate_agents.py
+# Valid profiles: 1 agent(s); TOML and Simplicit policy only.
+```
+
+This establishes actual Python 3.11 execution on Linux and Windows, including the symlink-containment subcases skipped by the local Windows sandbox. It does not change that earlier local result. The logs include a non-failing Node.js 20 deprecation notice for the existing checkout/setup actions, which GitHub ran on Node.js 24; no workflow change was needed for these successful runs.
+
+### Remaining native-test gaps
+
+- Fresh native Codex startup remains blocked by the recorded `failed to initialize in-process app-server client: Access is denied. (os error 5)` failure. Native discovery of the copied skills and custom `critic`, and execution of the pinned model through that role, remain unverified.
+- The native mechanical-edit trial was blocked before execution. The complete native one-prompt bug-fix and native review-only trials remain Not Run. Native evidence invalidation/reuse behavior is also unverified.
+- Successful in-chat trials explicitly loaded copied files and used the disclosed generic independent-reviewer fallback on `gpt-6.1-sol` / `high`. They are actual behavioral evidence for that path, not proof of native discovery or role loading.
+- No review-driven repair loop was exercised because review found no additional defect. CI runs deterministic tests and parsers, with no model calls; it cannot close those native behavioral gaps.
+
+No native trial was rerun for this documentation follow-up. The PR remains Draft; no merge, deployment, global configuration change, or adoption into another real project is part of this update.
