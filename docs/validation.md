@@ -1,6 +1,50 @@
 # Validation evidence
 
-This record preserves the October 26, 2026 specialist evidence below, followed by candidate-specific reliability-update results. It distinguishes package checks, real execution trials, and review-based scenario evaluation. It does not establish native Codex discovery, every specialist's end-to-end behavior, or measured efficiency.
+## Complete pstack adaptation — October 27, 2026
+
+This revision builds on the user-selected reliability PR #3 at `2c6be41080c0530876d933336b33d82b40183923`. It preserves that revision's critic, runtime, Interrogate and Review instructions. The collection now covers all 61 source skills (58 top-level and three nested Benny skills), plus the existing alias, for **62 installed skills**. All 23 upstream playbooks have explicit portable mappings. The original 200-file source tree remains `880564357e051d7c7802da1cb5d8df1d0b008299`.
+
+### Executed package and runtime checks
+
+Local host: Windows, Python 3.14.5, Node.js 24.11.1, Java 20.0.2, TLC 1.7.4, and Codex `0.164.0-alpha.11.1`. Commands ran from the Simplicit checkout unless stated otherwise:
+
+| Check | Actual result |
+|---|---|
+| `python -B -m unittest discover -s scripts -p 'test_*.py'` | 51 tests, zero failures; two inherited agent-validator symlink cases skipped because unprivileged symbolic links are unavailable. The new Windows junction-containment case executed and passed. |
+| `python -B scripts/validate_skills.py` | All 62 skills valid; local links and licenses present. |
+| `python -B scripts/validate_agents.py` | The retained critic passes TOML parsing and package policy. |
+| Standard Codex skill-creator `quick_validate` on each entrypoint | All 62 pass. PyYAML 6.0.3 was supplied only in ignored task-local scratch, with no global installation. |
+| `node --test scripts/test_statechart.mjs`, with `TLA2TOOLS` set to the checksum-verified JAR | Seven tests pass, zero skips: real TLC success/round-trip, a real failing invariant and counterexample, help without dependencies/writes, chart compilation, actionable missing TLC, no unapproved renderer install, and preservation of unrelated output after invalid input. |
+| Actual upload-statechart exercise | TLC explored five states/eight transitions with no broken properties; the chart round-tripped unchanged. PNG rendering ran with explicit opt-in and isolated cache; the generated image was opened and inspected for readability. This is a bounded model fixture, not proof of a product. |
+| Relocated installation in a temporary Git project whose path contains spaces | All 62 skills and 200 distributable files copied byte-for-byte; destination validation passes; a second install adds zero folders; relocated statechart CLI help works. The separately copied critic passes its parser. |
+
+The 51-test Python suite includes complete source mapping and exact licenses, deterministic manifest destinations, JavaScript module dependency closure, nine installer cases, and three decision-log cases. Installer tests cover differing/extra local content, unrelated skills, invalid sources, files at destinations, ancestor junctions, interrupted staging and interrupted publication. The last three failure cases were reproduced before their repairs. Staging prevents partially copied active folders; completed folder publication can be resumed idempotently. Concurrent destination writers are outside the installer contract.
+
+The decision logger was exercised with whitespace, formula-like values, UTC timestamps and malformed existing logs. It preserves invalid inputs rather than appending corrupt records. It remains a single-writer helper.
+
+### Native Codex discovery
+
+**Passed.** A fresh native `codex app-server --stdio` process, launched in the isolated adopted project, received `initialize`, `initialized`, then `skills/list` with that project's `cwds` and `forceReload: true`. Filtering the response by the installed `.agents/skills` path found all **62 expected skills enabled**, with zero installation loading errors. This closes the earlier skill-discovery gap for this client/version and selected-project layout.
+
+This check started no model turn and changed no global configuration. It establishes native skill parsing/discovery, not automatic-selection quality, behavior of every skill, custom `critic` role discovery, or execution of its pinned model. The earlier file-loaded workflow and reviewer trials below remain separate evidence. For reproduction, install into a disposable selected project, launch the app-server from it, initialize with a named client, and issue `{"id":1,"method":"skills/list","params":{"cwds":["<absolute-project-path>"],"forceReload":true}}`; compare returned names, paths, enabled flags and errors against the manifest plus alias.
+
+### Independent review and bounded instruction trials
+
+An independent reviewer compared all 47 newly added skill entrypoints and their required resources against the pinned source. Five concrete instruction applications covered unavailable model enumeration, missing transcript access, triage without posting authorization, formal-model drift/missing TLC, and repeated-measurement conclusions. These are instruction trials over supplied facts, not live service tests. Review exposed and verified repairs for UI-only references contradicting API/CLI reproduction, a missing unattended reporter-correction window, an overstatement of TypeScript range guarantees, and inconsistent video-render failure fallback.
+
+A separate reviewer reproduced two installer defects: a destination-ancestor junction could redirect writes outside the chosen project, and a failed copy left partial active content that blocked retry. Both are repaired and independently approved. Additional paths-with-spaces installation/idempotence checks pass. The main routing/playbook integration passed a separate review against the retained PR #3 contract, including all 23 mappings and four bounded instruction trials for stale resume evidence, cleanup authority, critic-first review and missing capabilities. Its refactoring-baseline finding is repaired and the repair independently approved: the workflow now requires an executable pre-change behavioral record and actual equivalence checks.
+
+### Current limits and CI
+
+- Live webhook, tracker, scheduler, transcript and video integrations were not available/exercised. Their adapters discover actual capabilities and preserve explicit pending steps. Manual issue workflows remain usable without a scheduler.
+- Statechart verifies bounded model assumptions; generated formal skills and real product behavior still need project-specific execution. Optional PNG dependencies are not installed by normal validation.
+- Native custom-role/model execution and automatic skill selection remain unverified. Native loading of all 62 skills is established separately above.
+- No token, cost, speed or quality benchmark was performed. Reviewer arithmetic over synthetic timings is not a performance result.
+- CI retains the Python 3.11 Linux/Windows matrix and now adds Node 22, Java 17, a checksum-pinned TLC download and all seven statechart checks. Historical passing CI below belongs to PR #3's earlier commit; it does not prove the expanded workflow has run.
+
+## Historical evidence — October 26, 2026
+
+The remaining record preserves the earlier 15-skill and reliability results. Counts, native-startup blockers and unrun capabilities below describe those historical candidates; the current native skill-discovery result above supersedes that specific gap only.
 
 ## Package checks
 

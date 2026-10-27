@@ -26,3 +26,28 @@ jobs:
         run: python -B scripts/validate_skills.py
       - name: Validate agents
         run: python -B scripts/validate_agents.py
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Download and verify pinned TLC
+        shell: python
+        run: |
+          import hashlib
+          import pathlib
+          import urllib.request
+          url = 'https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar'
+          with urllib.request.urlopen(url, timeout=60) as response:
+              data = response.read()
+          expected = '936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88'
+          if hashlib.sha256(data).hexdigest() != expected:
+              raise SystemExit('TLC checksum mismatch')
+          pathlib.Path('tla2tools.jar').write_bytes(data)
+      - name: Statechart runtime tests
+        env:
+          TLA2TOOLS: ${{ github.workspace }}/tla2tools.jar
+        run: node --test scripts/test_statechart.mjs

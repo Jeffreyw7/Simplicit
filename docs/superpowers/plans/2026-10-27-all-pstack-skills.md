@@ -18,12 +18,12 @@ Spec: the user's October 27 request for **all** pstack skills, extending the pri
 
 ## Tasks and verification
 
-- [ ] Inventory all 58 top-level and three nested source skills; demonstrate missing coverage before editing and maintain a machine-readable source-to-target manifest.
-- [ ] Adapt general workflow, writing, explanation, setup, and 24 principle skills. Review source-specific dependencies and validate each added folder before proceeding.
-- [ ] Adapt formal verification, statechart, bot UI, and nested issue workflows, preserving useful runtime helpers. Test helper behavior and dependency errors with isolated fixtures.
-- [ ] Extend the main workflow's playbook coverage, help catalog, provenance, and adoption instructions. Add a safe local installer if it reduces copy errors; test collisions before implementation.
-- [ ] Validate full mapping, metadata, licensing, resource closure, and relocated installation. Run existing and new meaningful tests, script checks, and representative independent skill trials.
-- [ ] Obtain independent review, repair supported findings, rerun affected checks, and prepare a reviewable branch/patch with accurate limitations. Do not merge or release.
+- [x] Inventory all 58 top-level and three nested source skills; demonstrate missing coverage before editing and maintain a machine-readable source-to-target manifest.
+- [x] Adapt general workflow, writing, explanation, setup, and 24 principle skills. Review source-specific dependencies and validate each added folder before proceeding.
+- [x] Adapt formal verification, statechart, bot UI, and nested issue workflows, preserving useful runtime helpers. Test helper behavior and dependency errors with isolated fixtures.
+- [x] Extend the main workflow's playbook coverage, help catalog, provenance, and adoption instructions. Add a safe local installer if it reduces copy errors; test collisions before implementation.
+- [x] Validate full mapping, metadata, licensing, resource closure, and relocated installation. Run existing and new meaningful tests, script checks, and representative independent skill trials.
+- [x] Obtain independent review, repair supported findings, rerun affected checks, and prepare a reviewable branch/patch with accurate limitations. Do not merge or release.
 
 ## Review focus
 
@@ -35,3 +35,5 @@ Missing nested skills; broken dependencies after relocation; hidden host-specifi
 - Ruling: preserve the pinned source and extend all of it; changing the upstream version is separate work.
 - Ruling: the current request supersedes the earlier source-only exclusions. It does not supersede the established authorization and selected-repository installation boundaries.
 - Windows sandbox cannot read/write the task checkout despite its declared workspace root; scoped shell operations use reviewed escalation.
+- User selected PR #3 as the integration base; its critic, runtime, Interrogate and Review contracts are retained.
+- Final coverage: 62 skills and all 23 source playbook routes. Native Codex discovery found every installed skill enabled. Local Python checks pass (51 tests, two inherited symbolic-link skips); all seven Node/TLC checks pass. Independent adaptation, installer, integration and CI/evidence reviews are complete. See [dated evidence](../../validation.md).
