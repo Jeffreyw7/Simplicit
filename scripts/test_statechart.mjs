@@ -6,6 +6,8 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import "./test_statechart_values.mjs";
+import "./test_statechart_recovery.mjs";
+import "./test_statechart_config.mjs";
 
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -226,7 +228,7 @@ test("from-spec region proof artifacts permit regeneration", tlcRequired, () => 
   } finally { fs.rmSync(dir, {recursive: true, force: true}); }
 });
 
-test("postpublication cleanup failure keeps committed results and reports retained backup", tlcRequired, () => {
+test("publication retains previous output without attempting to delete it", tlcRequired, () => {
   const dir = scratch();
   try {
     write(dir, "Flow.mmd", chart);
@@ -247,8 +249,8 @@ test("postpublication cleanup failure keeps committed results and reports retain
     const result = node("statechart.mjs", ["from-chart", "Flow.mmd"], dir,
       {NODE_OPTIONS: "--import=" + pathToFileURL(hook).href});
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.match(result.stderr, /injected cleanup failure/);
-    assert.match(result.stderr, /previous output remains/);
+    assert.doesNotMatch(result.stderr, /injected cleanup failure/);
+    assert.match(result.stdout, /Previous output preserved/);
     assert.ok(fs.existsSync(path.join(dir, "Flow.tla")));
     assert.match(read(dir, "Flow.cfg"), /INVARIANT TypeOK/);
     assert.equal(JSON.parse(read(dir, "Flow-statechart/summary.json")).modelStates, 2);

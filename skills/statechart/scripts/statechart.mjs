@@ -29,6 +29,14 @@ class CannotFinish extends Error {}
 class TlcStopped extends CannotFinish {}
 class NotPublished extends CannotFinish {}
 
+function errorText(error) {
+  try {
+    return String(error instanceof Error ? error.message : error);
+  } catch {
+    return "unprintable thrown value";
+  }
+}
+
 const COMMANDS = {
   "from-spec": {
     values: [
@@ -123,6 +131,34 @@ function script(name, scriptArgs, about, { okExits = [0] } = {}) {
 const KEYWORD =
   /^(SPECIFICATION|INIT|NEXT|CONSTANTS?|INVARIANTS?|PROPERTY|PROPERTIES|SYMMETRY|VIEW|CONSTRAINTS?|ACTION_CONSTRAINTS?|TYPE|TYPE_CONSTRAINT|CHECK_DEADLOCK|POSTCONDITION|ALIAS)$/;
 
+// ModelConfig uses SANY's SPEC lexer, even for otherwise opaque model values.
+// Match its longest token (TLC 2.19, 5a47802, javacc/tla+.jj): punctuation can
+// belong to a value such as =>, [] or (+), and need not be surrounded by spaces.
+const CONFIG_SYMBOLS = String.raw`
+  []ASSUME []PROVE SF_ WF_ , : :: . _ == ( ) -|- [ ]_ ] {| |} { } << >>_ >> ! -> <- |->
+  \E \exists \A \forall \EE \AA ' ^+ ^* ^# -. \lnot \neg ~ [] <> // /\ /= / \/
+  \approx \asymp \bigcirc \bullet \cap \cdot \circ \cong \cup \div \doteq \equiv
+  \geq \gg \in \intersect \union \land \leq \ll \lor \o \odot \ominus \oplus
+  \oslash \otimes \prec \preceq \propto \sim \simeq \sqcap \sqcup \sqsubset
+  \sqsupset \sqsubseteq \sqsupseteq \star \subset \subseteq \succ \succeq \supset
+  \supseteq \uplus \wr \ ~> => =< =| = ## # ^^ ^ -- -| -+-> - ** * ++ + <=> <: <= <
+  >= > ... .. || | |- |= && & $$ $ ?? %% % @@ !! :> := ::= (+) (-) (.) (/) (\X)
+  \notin \times \X @
+`.trim().split(/\s+/).sort((a, b) => b.length - a.length);
+const CONFIG_LEXEMES = [
+  /----+(?: *MODULE)?/y,
+  /====+/y,
+  /[0-9]+|\\[oO][0-7]+|\\[bB][01]+|\\[hH][0-9a-fA-F]+/y,
+  /"(?:[^"`\r\n\\]|`[^']*'|\\[ntrf\\"])*"/y,
+  // Identifiers may start with digits/underscores but must contain a letter.
+  // WF_ and SF_ are separate tokens, including when followed by an identifier.
+  /[0-9_][A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*|[WS]F(?:[A-Za-z0-9][A-Za-z0-9_]*)?|[WS](?:[a-zA-EG-Z_0-9][A-Za-z0-9_]*)?|[a-zA-RT-VX-Z][A-Za-z0-9_]*/y,
+  /(?:[0-9][A-Za-z0-9]*|[WS][a-zA-EG-Z0-9][A-Za-z0-9]*|[a-zA-RT-VX-Z][A-Za-z0-9]*)\.(?:\/\\|\\\/)/y,
+  /<[0-9]+>[A-Za-z0-9_]+/y,
+  /<[+*]>[A-Za-z0-9]+/y,
+  /<(?:[0-9]+|[+*])>(?:[A-Za-z0-9_]+\.+|[*-]\.*|\.+)?/y,
+];
+
 function splitRules(cfg) {
   const tokens = [];
   for (let i = 0; i < cfg.length;) {
@@ -143,31 +179,86 @@ function splitRules(cfg) {
       continue;
     }
     const start = i;
-    if (cfg[i] === '"') {
-      i++;
-      while (i < cfg.length && cfg[i] !== '"') i += cfg[i] === "\\" ? 2 : 1;
-      if (i >= cfg.length) throw new CannotFinish("the config has an unterminated string");
-      i++;
-    } else {
-      while (i < cfg.length && !/\s/.test(cfg[i]) && cfg[i] !== '"' &&
-        !cfg.startsWith("(*", i) && !cfg.startsWith("\\*", i)) i++;
+    let text = CONFIG_SYMBOLS.find((symbol) => cfg.startsWith(symbol, i)) ?? "";
+    for (const pattern of CONFIG_LEXEMES) {
+      pattern.lastIndex = i;
+      const match = pattern.exec(cfg)?.[0];
+      if (match && match.length > text.length) text = match;
     }
-    tokens.push({start, end: i, text: cfg.slice(start, i)});
+    if (!text) throw new CannotFinish(`the config has an invalid token near ${cfg.slice(i, i + 20)}`);
+    i += text.length;
+    tokens.push({start, end: i, text});
   }
   const kept = cfg.split("");
   const rules = [];
   const properties = [];
-  let section = "";
-  for (const {start, end, text: w} of tokens) {
-    if (KEYWORD.test(w)) section = w;
-    const list = /^INVARIANTS?$/.test(section)
-      ? rules
-      : /^PROPERT(Y|IES)$/.test(section)
-        ? properties
-        : null;
-    if (list) {
-      for (let i = start; i < end; i++) if (!/\s/.test(kept[i])) kept[i] = " ";
-      if (w !== section && !list.includes(w)) list.push(w);
+  let cursor = 0;
+  const peek = () => tokens[cursor]?.text;
+  const take = () => {
+    if (cursor === tokens.length) throw new CannotFinish("the config ends before an expected value");
+    return tokens[cursor++];
+  };
+  const expect = (symbol) => {
+    if (peek() !== symbol) throw new CannotFinish(`the config expected ${symbol} near ${peek() ?? "the end"}`);
+    cursor++;
+  };
+  const mask = ({start, end}) => {
+    for (let i = start; i < end; i++) if (!/\s/.test(kept[i])) kept[i] = " ";
+  };
+  // ModelConfig's values are single tokens or recursively nested sets. A keyword is
+  // an ordinary model value here, including in constant-operator arguments.
+  const value = () => {
+    if (take().text !== "{") return;
+    if (peek() !== "}") {
+      value();
+      while (peek() === ",") { cursor++; value(); }
+    }
+    expect("}");
+  };
+  const moduleQualifier = () => {
+    if (peek() !== "[") return;
+    cursor++;
+    take();
+    expect("]");
+  };
+  while (cursor < tokens.length) {
+    const section = take();
+    if (!KEYWORD.test(section.text))
+      throw new CannotFinish(`the config expected a section keyword near ${section.text}`);
+    if (/^CONSTANTS?$/.test(section.text)) {
+      while (cursor < tokens.length && !KEYWORD.test(peek())) {
+        take(); // The left side can be qualified: instance!operator.
+        while (peek() === "!") { cursor++; take(); }
+        if (peek() === "<-") {
+          cursor++;
+          moduleQualifier();
+          take(); // The replacement is one token, even when it is a keyword.
+        } else {
+          if (peek() === "(") {
+            cursor++;
+            value();
+            while (peek() === ",") { cursor++; value(); }
+            expect(")");
+          }
+          expect("=");
+          moduleQualifier();
+          value();
+        }
+      }
+    } else if (/^(INVARIANTS?|PROPERT(Y|IES)|CONSTRAINTS?|ACTION_CONSTRAINTS?)$/.test(section.text)) {
+      const list = /^INVARIANTS?$/.test(section.text) ? rules
+        : /^PROPERT(Y|IES)$/.test(section.text) ? properties : null;
+      if (list) mask(section);
+      while (cursor < tokens.length && !KEYWORD.test(peek())) {
+        const token = take();
+        if (list) {
+          mask(token);
+          if (!list.includes(token.text)) list.push(token.text);
+        }
+      }
+    } else {
+      // INIT, NEXT, TYPE, etc. each consume one operand before another section.
+      take();
     }
   }
   // TLC takes only a state predicate as an INVARIANT, and checks a state predicate given as a
@@ -405,8 +496,7 @@ async function draw({ now, other, uncited, map, work, out, title, comparing, cov
   try {
     mapping = await import(pathToFileURL(path.resolve(map)).href);
   } catch (e) {
-    throw new CannotFinish("cannot load mapping " + rel(map) + ": " +
-      (e instanceof Error ? e.message : String(e)));
+    throw new CannotFinish("cannot load mapping " + rel(map) + ": " + errorText(e));
   }
   const from = ["--dot", now.dot, "--broken", now.dumpOut, "--map", map, "--spec", now.copy];
   for (const m of [now, other]) if (m?.next) from.push("--next", m.next);
@@ -675,7 +765,7 @@ function removeTemporary(dir) {
   try {
     fs.rmSync(dir, { recursive: true, force: true });
   } catch (e) {
-    console.error("Temporary cleanup failed; temporary files remain in " + rel(dir) + ": " + e.message);
+    console.error("Temporary cleanup failed; temporary files remain in " + rel(dir) + ": " + errorText(e));
   }
 }
 
@@ -756,7 +846,8 @@ function publish(work, out, inputs) {
   const parent = path.dirname(path.resolve(out));
   fs.mkdirSync(parent, { recursive: true });
   const next = fs.mkdtempSync(path.join(parent, `.${path.basename(out)}-`));
-  const old = `${next}-old`;
+  let old = `${next}-old`;
+  let displaced = 0;
   let aside = false;
   try {
     fs.cpSync(work, next, { recursive: true });
@@ -765,7 +856,8 @@ function publish(work, out, inputs) {
     while (!moved(next, out, "ENOTEMPTY", "EEXIST")) {
       if (aside) {
         refuseForeign(out);
-        fs.rmSync(old, { recursive: true, force: true });
+        console.log("Previous output preserved in " + rel(old) + ".");
+        old = `${next}-${++displaced}-old`;
         aside = false;
       }
       aside = moved(out, old, "ENOENT");
@@ -773,8 +865,8 @@ function publish(work, out, inputs) {
     }
   } catch (e) {
     const back = !aside || putBack(old, out);
-    fs.rmSync(next, { recursive: true, force: true });
-    const why = e instanceof CannotFinish ? e.message : `cannot replace ${rel(out)}: ${e.message}.`;
+    removeTemporary(next);
+    const why = e instanceof CannotFinish ? errorText(e) : `cannot replace ${rel(out)}: ${errorText(e)}.`;
     if (!back)
       throw new NotPublished(
         `${why} This run moved the previous ${rel(out)} to ${rel(old)} and could not put it back.`,
@@ -784,12 +876,7 @@ function publish(work, out, inputs) {
     );
   }
   if (aside) {
-    try {
-      fs.rmSync(old, { recursive: true, force: true });
-    } catch (e) {
-      console.error("Published " + rel(out) + "; previous output remains in " + rel(old) +
-        ": " + e.message);
-    }
+    console.log("Previous output preserved in " + rel(old) + ".");
   }
 }
 

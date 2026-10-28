@@ -1544,7 +1544,9 @@
       "source": "pstack/skills/statechart/scripts/test/statechart.test.mjs",
       "targets": [
         "scripts/test_statechart.mjs",
-        "scripts/test_statechart_values.mjs"
+        "scripts/test_statechart_values.mjs",
+        "scripts/test_statechart_config.mjs",
+        "scripts/test_statechart_recovery.mjs"
       ],
       "disposition": "adapted",
       "reason": "The upstream suite remains in the source snapshot; portable tests exercise the active helpers and adaptation regressions. Review changed source cases here, without claiming one-for-one case coverage."
