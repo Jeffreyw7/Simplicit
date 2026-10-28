@@ -77,12 +77,17 @@ export function parseValue(text) {
     if (peek('"')) {
       i++;
       let s = "";
-      while (i < src.length && src[i] !== '"') {
-        if (src[i] === "\\") i++;
-        s += src[i++];
+      const escapes = { '"': '"', "\\": "\\", t: "\t", n: "\n", f: "\f", r: "\r" };
+      while (i < src.length) {
+        const c = src[i++];
+        if (c === '"') return s;
+        if (c === "\\") {
+          const decoded = escapes[src[i++]];
+          if (decoded === undefined) throw new Error(`bad string escape at ${i - 1}`);
+          s += decoded;
+        } else s += c;
       }
-      i++;
-      return s;
+      throw new Error("unterminated string");
     }
     const m = /^-?\d+|^[A-Za-z_][A-Za-z0-9_]*/.exec(src.slice(i));
     if (!m) throw new Error(`bad value at ${i} in ${src}`);
@@ -760,8 +765,13 @@ export function parseMermaid(text) {
       if (holder && holder.parts.length > 1)
         throw new Error(`${display(holder.name)} splits into regions below the top level`);
       const name = holder ? display(holder.name) : `Region${Object.keys(regions).length + 1}`;
+      if (Object.hasOwn(regions, name))
+        throw new Error(`two regions have the caption "${name}"; give each its own caption`);
       const [r, ids] = region(holder ? holder.parts[0] : p);
-      regions[name] = r;
+      // Captions such as "__proto__" are data, not inherited object setters.
+      Object.defineProperty(regions, name, {
+        value: r, enumerable: true, configurable: true, writable: true,
+      });
       for (const [id, { all }] of ids) owners.set(id, { name, all });
     }
   } else {
@@ -783,7 +793,11 @@ export function parseMermaid(text) {
           throw new Error(
             `a %% when line names ${display(id)}, which is in the step's own region; a guard reads other regions`,
           );
-        states[at.name] = [...new Set([...(states[at.name] ?? []), ...at.all])].sort();
+        const previous = Object.hasOwn(states, at.name) ? states[at.name] : [];
+        Object.defineProperty(states, at.name, {
+          value: [...new Set([...previous, ...at.all])].sort(),
+          enumerable: true, configurable: true, writable: true,
+        });
       }
       t.guard = { not: t.when.not, states };
       delete t.when;

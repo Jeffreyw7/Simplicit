@@ -2,6 +2,12 @@
 
 Use Node.js 22 or later. The bundled JavaScript is local and works independently of Codex-specific tools. Commands write beside their input; use a disposable, user-approved working directory and preserve source files.
 
+`from-chart` keeps existing TLA sources. When the TLA source is absent, generation still replaces sibling configuration/mapping files with generated defaults, but retains their originals in a unique `.NAME-statechart-backup-*` folder beside the chart and reports that path. Keep these backups until their contents have been reviewed. Output/tool preflight precedes source writes; execution or publication failure restores the previous siblings when they have not changed during the run. If restoration is unsafe or fails, the diagnostic identifies the retained originals. A reported property failure (exit 1) is a completed check, so its generated sources and backups remain available.
+
+If only PNG rendering fails after model results are published, exit 2 retains those results, generated sources and source backups. If cleanup cannot remove the previous output after successful publication, the command reports its retained location and preserves the completed check's exit status.
+
+Temporary-folder cleanup failures report the retained path without cancelling a source transaction or changing a completed result. Remove retained temporary files only after reviewing the reported location.
+
 ## Model checking
 
 Install or reuse Java 11+ and the official immutable [TLC 1.7.4 release](https://github.com/tlaplus/tlaplus/releases/tag/v1.7.4). The expected SHA-256 of `tla2tools.jar` is `936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88`. Verify the downloaded file before executing it. The helper never installs Java or TLC itself.

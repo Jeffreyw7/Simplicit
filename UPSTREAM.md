@@ -26,6 +26,7 @@ The upstream `pstack/agents/comment-sicko.md` is adapted as `.codex/agents/comme
 ### Executable helpers
 
 - Statechart retains all 21 production JavaScript modules from the pinned source. TLC setup now requires explicit existing Java/JAR configuration. PNG dependencies require a one-time opt-in; documented versions stay pinned. CLI help describes these differences. Original upstream tests remain in the source snapshot; portable behavioral tests are in `scripts/test_statechart.mjs`.
+- The active statechart implementation additionally corrects configuration/string parsing, rejects ambiguous duplicate region captions, normalizes mapping failures, and supports safe Windows regeneration with recoverable source backups. The original subtree remains unchanged; [review-fix evidence](docs/review-fixes-2026-10-27.md) records the regressions and compatibility checks.
 - The Bash decision logger is replaced by a Python 3.10+ helper with the same six-column UTC TSV contract, literal argument handling, whitespace/formula sanitation and malformed-log rejection.
 - The upstream Bun orchestration framework, PR watcher and destructive shell cleanup helpers are not installed. Their workflows are adapted into the mode's portable playbooks: durable unit/evidence records, single topology writer, actual host collaboration/Git tools, bounded retries, and explicit shipping/cleanup authority. These are workflow adaptations, not claims of binary/CLI compatibility with `orch`.
 

@@ -1,5 +1,9 @@
 # Validation evidence
 
+## Review fixes — October 27, 2026
+
+The [review-fix completion report](review-fixes-2026-10-27.md) records the eight repairs, source-preservation changes, independent review findings and compatibility limits. Final local verification passes 54 Python tests on Windows (3 skips) and Ubuntu (2 skips), 30 real Node/TLC regressions on Windows (no skips), all 62 skills and both agent profiles. Preserved CLI workflows and PNG success/partial-failure behavior were also exercised. Linux Node/TLC and native custom-role execution remain unverified. The earlier counts and hosted CI results below belong to their dated candidates.
+
 ## Comment Sicko dispatch update — October 27, 2026
 
 The requested follow-up keeps `$no-comments` as the entrypoint and routes its comment-specific pass through `comment-sicko`. The new `.codex/agents/comment-sicko.toml` loads the installed portable reviewer brief; general candidate review still prefers `critic`. An unavailable named role uses a permitted independent generic helper with the same brief and an explicit disclosure. Without independent execution the Comment Sicko pass stays pending. Reviewers return proposals; the lead owns authorized edits and verifies findings.

@@ -75,8 +75,17 @@ const FROM_SPEC = `from-spec SPEC.tla
 
 const FROM_CHART = `from-chart CHART.mmd
   Writes NAME.tla, NAME.cfg, and NAME.map.mjs next to the chart. When NAME.tla already exists, it
-  writes none of them. Otherwise it replaces a NAME.cfg or NAME.map.mjs that is there. Then it
-  checks the spec as from-spec does, and compares the chart that the spec draws with CHART.mmd.
+  writes none of them. Otherwise it replaces a NAME.cfg or NAME.map.mjs that is there, keeping
+  the originals in a unique .NAME-statechart-backup-* folder beside the chart and printing its
+  path. It validates the output and tools before writing, stages generation, and restores the
+  source files if execution or publication fails. If a file changes or cannot be restored,
+  the error identifies the retained backup. Then it checks the spec as from-spec does, and
+  compares the chart that the spec draws with CHART.mmd.
+
+  If only PNG rendering fails after model results are published, exit 2 keeps those results,
+  generated sources, and source backups. Failure to remove an old output folder after successful
+  publication reports its retained path and keeps the completed check's exit status.
+  Temporary-folder cleanup failures likewise report retained files without changing the result.
 
   --module NAME      The TLA+ module name. Default: the chart's file name in CamelCase, such as
                      NotesApp for notes-app.mmd.
