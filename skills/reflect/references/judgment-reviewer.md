@@ -15,15 +15,17 @@ Scan for:
 - Friction in skill execution, orchestration, or delegation
 - Repeated manual steps that could be automated or encoded
 
-## Scope to skills and tools the session actually used
+## Scope to workflows evidenced in the session
 
-Route findings only to skills, tools, or MCPs this transcript used. A skill counts as used when the transcript shows reading its `SKILL.md`, an authorized helper brief naming its path, or a tool call matching its documented workflow. Speculative routings to skills the parent never opened do not count.
+Route existing-skill findings only to skills, tools, or MCPs this transcript used. A skill counts as used when the transcript shows reading its `SKILL.md`, an authorized helper brief naming its path, or a tool call matching its documented workflow. Speculative routings to skills the parent never opened do not count.
 
-Two finding shapes are valid:
+Three finding shapes are valid:
+
 - The parent invoked the skill and you found a real gap in its body. Route to the skill's relevant section.
 - The skill was visible in the catalog but did not trigger when it would have helped. Tune its description so future agents pick it up. Route as `tune description: <skill path>`.
+- The transcript shows a recurring workflow with no existing skill that is a real home. Cite the recurrence and route as `new skill: <kebab-name>`; a one-off incident does not qualify.
 
-Drop any skill that was neither invoked nor a missed-trigger candidate.
+Drop other routings.
 
 List each durable learning. For each:
 - Principle: one sentence describing what generalizes. State the rule, not the label, no name-dropping.

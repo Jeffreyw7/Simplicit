@@ -25,7 +25,11 @@ Source reading and a plausible model are hypotheses until runtime evidence suppo
 
 ## Fix only after proof
 
-For unattended runs, record when the reproduction was confirmed and honor the configured `rejection_window_minutes` before entering the fix phase. Observe the original source thread within that bounded window using actual host waiting/scheduling capabilities. A correction to the setup invalidates the evidence and requires a fresh reproduction; a new fix owner or artifact switches to the ownership/existing-fix gate. If waiting or source reads cannot be completed, leave the fix pending rather than assume silence. Direct manual work follows the user's current scope and need not fabricate an automation window.
+For unattended runs, first deliver the confirmed reproduction's setup, interpretation and evidence to the original source thread, only when that reply is explicitly authorized and after the source-parent preflight. Read back the delivered report to verify its content and location. Record the source coordinates, report identity, evidence links and successful delivery/readback time. Start the full configured `rejection_window_minutes` from successful readback, not internal reproduction confirmation or an attempted post.
+
+Observe the original source thread throughout that bounded window using actual host waiting/scheduling capabilities, and recheck it before entering the fix phase. A correction to the setup or interpretation invalidates the evidence and window: reproduce afresh, deliver/read back the corrected report within authorization, and start a new full window. A new fix owner or artifact invalidates unattended fix eligibility and switches to the ownership/existing-fix gate. If required posting authorization, delivery, readback, waiting or source observation is unavailable or fails, leave the unattended fix pending; silence does not complete a missing gate. If the user explicitly selected an alternative correction gate, record and satisfy that gate instead; missing authorization or capabilities do not select an alternative.
+
+Direct manual work follows the user's current scope and need not fabricate an automation window.
 
 No confirmed reproduction means no fix under this workflow. Verify-only and existing-fix tasks stay read-only. Otherwise confirm root cause, check no new ownership/fix artifact appeared, and keep the change inside the authorized effort and repository scope. Use [tdd](../tdd/SKILL.md) when there is a meaningful practical regression path. Keep unrelated cleanup out.
 
@@ -33,7 +37,7 @@ Re-run the original path twice against the patched build with the same inputs. S
 
 ## External handoff and cleanup
 
-By default report in this conversation. External replies and tracker changes require explicit authorization even when configuration names channels. Follow the triage source-parent preflight before each authorized reply; never post at the source root or fall back to another channel. Keep operations coordinates separate. Use one concise source update, and read it back.
+By default report in this conversation. External replies and tracker changes require explicit authorization even when configuration names channels. Follow the triage source-parent preflight before each authorized reply; never post at the source root or fall back to another channel. Keep operations coordinates separate. Use one concise, authorized source update per confirmed reproduction and read it back; do not duplicate the pre-fix report during handoff.
 
 Prepare a draft PR only within scope after proof and checks. Its description links the report, mechanism, before/after evidence and tests. No merge or deployment is implied. If PR creation fails, report the actual local/remote state.
 
