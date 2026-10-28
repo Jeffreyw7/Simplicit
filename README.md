@@ -117,3 +117,17 @@ Both validators are read-only. The skill validator checks this package's simple 
 The original 200-file `pstack/` snapshot remains unchanged. [UPSTREAM.md](UPSTREAM.md) records provenance, source mapping and runtime differences; each installed skill carries the MIT license.
 
 Earlier Simplicit releases adapted only a subset or installed a single mode folder. Upgrade to the full collection after comparing local customizations. The installer deliberately refuses conflicting upgrades instead of overwriting them. Updates to the pinned source require deliberate review; no background updater runs.
+
+Compare an explicitly selected upstream revision before planning an adoption:
+
+```sh
+python -B scripts/upstream_report.py --upstream-repo "/path/to/cursor-plugins" --ref <commit-or-ref>
+```
+
+Use an existing complete local Git clone of `cursor/plugins`; preparing or fetching that clone is a separate step. The report command performs no network access, checkout, installation, source replacement, or pin update. It resolves the ref once and reads committed `pstack/` objects; uncommitted upstream edits are excluded. Run it from a Simplicit Git checkout, where the pinned tree is available.
+
+The [resource map](upstream-resources.json) covers all 200 pinned files, including scripts, references, agents, merged adaptations and intentional omissions. JSON output (`--format json`) includes blob identities, upstream diffs and current adaptation SHA-256 hashes. Markdown shows the mapping table; add `--include-diffs` for upstream diffs. Output goes to stdout; save it to a separate report file if needed. Exit 0 means the comparison completed, including unresolved additions; exit 2 means invalid or unavailable inputs. It never means an update was accepted.
+
+New files are explicitly unmapped. Only unique exact-content/mode renames retain an old mapping, and those still require review. Mappings identify where to review effects, not interchangeable files. Intentional differences in Codex instructions must be preserved. See the [initial upstream comparison](docs/upstream-comparison-2026-10-28.md).
+
+Preview-and-accept adoption remains disabled while the new-resource mappings are unresolved. A future adoption flow must preview deliberately adapted patches, require explicit acceptance of the exact preview, reject stale inputs, and preserve local changes. It must never automatically copy newer pstack instructions over Simplicit adaptations.

@@ -36,4 +36,6 @@ The naming pattern and worker brief established by the earlier adaptation contin
 
 Run the [checks in README](README.md#validate). Coverage tests enumerate the pinned subtree independently of the map, then check every adapter, license and playbook target. Update the source snapshot, map, adapters and validation deliberately as one reviewed change. Never execute inactive upstream instructions as a fallback for missing installed resources.
 
+The [resource-level map](upstream-resources.json) supplements the entrypoint/playbook map with every pinned upstream file and its review targets or explicit omission. `scripts/upstream_report.py` validates both maps against the pinned Git tree, compares a selected local upstream commit, and produces a read-only report. It reports new resources as unresolved and does not change this pin, the source snapshot, or active instructions. The [October 28 comparison](docs/upstream-comparison-2026-10-28.md) records the first candidate and the remaining mapping work before any preview-and-accept adoption feature.
+
 See [validation evidence](docs/validation.md) for actual trials and remaining limits. Instructions guide behavior; they do not enforce sandbox or service permissions.

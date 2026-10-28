@@ -1,0 +1,1766 @@
+{
+  "version": 1,
+  "upstream_commit": "99b609a72323b70204eab407c622f436e858e112",
+  "upstream_tree": "880564357e051d7c7802da1cb5d8df1d0b008299",
+  "resources": [
+    {
+      "source": "pstack/.cursor-plugin/plugin.json",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "Cursor marketplace registration, discovery paths and branding are not installed by Simplicit; the project-local Codex skill collection has no Cursor plugin manifest."
+    },
+    {
+      "source": "pstack/.gitignore",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "The upstream Node dependency, macOS metadata and log ignore rules belong to the preserved source package; Simplicit does not install its Bun tooling package."
+    },
+    {
+      "source": "pstack/LICENSE",
+      "targets": [
+        "skills/architect/LICENSE",
+        "skills/arena/LICENSE",
+        "skills/automate-me/LICENSE",
+        "skills/benchmark-checklist/LICENSE",
+        "skills/blast-radius/LICENSE",
+        "skills/bro/LICENSE",
+        "skills/correct/LICENSE",
+        "skills/create-formal-verification-skill/LICENSE",
+        "skills/create-verification-skill/LICENSE",
+        "skills/figure-it-out/LICENSE",
+        "skills/how/LICENSE",
+        "skills/in-your-own-words/LICENSE",
+        "skills/interrogate/LICENSE",
+        "skills/ketchup-video/LICENSE",
+        "skills/ketchup/LICENSE",
+        "skills/maintain-formal-verification-skill/LICENSE",
+        "skills/maintain-verification-skill/LICENSE",
+        "skills/make-bot-ui/LICENSE",
+        "skills/no-comments/LICENSE",
+        "skills/principle-attack-the-premise/LICENSE",
+        "skills/principle-boundary-discipline/LICENSE",
+        "skills/principle-build-the-lever/LICENSE",
+        "skills/principle-encode-lessons-in-structure/LICENSE",
+        "skills/principle-exhaust-the-design-space/LICENSE",
+        "skills/principle-experience-first/LICENSE",
+        "skills/principle-explain-the-number/LICENSE",
+        "skills/principle-fix-root-causes/LICENSE",
+        "skills/principle-foundational-thinking/LICENSE",
+        "skills/principle-guard-the-context-window/LICENSE",
+        "skills/principle-laziness-protocol/LICENSE",
+        "skills/principle-make-operations-idempotent/LICENSE",
+        "skills/principle-migrate-callers-then-delete-legacy-apis/LICENSE",
+        "skills/principle-minimize-reader-load/LICENSE",
+        "skills/principle-model-the-domain/LICENSE",
+        "skills/principle-never-block-on-the-human/LICENSE",
+        "skills/principle-outcome-oriented-execution/LICENSE",
+        "skills/principle-prove-it-works/LICENSE",
+        "skills/principle-redesign-from-first-principles/LICENSE",
+        "skills/principle-separate-before-serializing-shared-state/LICENSE",
+        "skills/principle-sequence-verifiable-units/LICENSE",
+        "skills/principle-subtract-before-you-add/LICENSE",
+        "skills/principle-test-behavior-not-implementation/LICENSE",
+        "skills/principle-type-system-discipline/LICENSE",
+        "skills/recall/LICENSE",
+        "skills/reflect/LICENSE",
+        "skills/reproduce-and-fix-issues/LICENSE",
+        "skills/setup-benny/LICENSE",
+        "skills/setup-simplicit/LICENSE",
+        "skills/sharpen/LICENSE",
+        "skills/show-me-your-work/LICENSE",
+        "skills/simplicit-help/LICENSE",
+        "skills/simplicit-mode/LICENSE",
+        "skills/simplicit/LICENSE",
+        "skills/statechart/LICENSE",
+        "skills/swarm/LICENSE",
+        "skills/tdd/LICENSE",
+        "skills/teach/LICENSE",
+        "skills/technical-writing/LICENSE",
+        "skills/triage-issue-reports/LICENSE",
+        "skills/typescript-best-practices/LICENSE",
+        "skills/unslop/LICENSE",
+        "skills/why/LICENSE"
+      ],
+      "disposition": "retained",
+      "reason": "The upstream MIT license and copyright notice are retained in every installed skill, including the Simplicit compatibility alias; checkout line endings or subsequent local edits may differ."
+    },
+    {
+      "source": "pstack/README.md",
+      "targets": [
+        "README.md",
+        "UPSTREAM.md",
+        "skills/simplicit-help/SKILL.md",
+        "skills/simplicit/references/catalog.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The collection overview, installation, naming, runtime limits and provenance are rewritten for the project-local Codex collection; source-plugin installation and automatic updates are not carried over."
+    },
+    {
+      "source": "pstack/agents/comment-sicko.md",
+      "targets": [
+        ".codex/agents/comment-sicko.toml",
+        "skills/no-comments/references/comment-review.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The named Codex profile loads a portable read-only reviewer brief preserving keep categories and MUST KILL root-cause findings; the lead verifies findings and owns edits."
+    },
+    {
+      "source": "pstack/agents/poteto-agent.md",
+      "targets": [
+        "skills/simplicit/references/simplicit-agent.md",
+        "skills/simplicit/references/runtime.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Cursor delegate agent becomes a portable worker briefing template with explicit scope, acceptance, evidence and parent integration; it is not a registered poteto-agent role."
+    },
+    {
+      "source": "pstack/assets/logo.png",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "The upstream pstack logo is provenance-only artwork; no installed Simplicit skill or documentation uses it."
+    },
+    {
+      "source": "pstack/automations/benny/FOR_AGENTS.md",
+      "targets": [
+        "skills/setup-benny/SKILL.md",
+        "skills/triage-issue-reports/SKILL.md",
+        "skills/reproduce-and-fix-issues/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The two-stage triage/reproduction intent is expressed in the three installed workflows with immutable source identity, separate action grants and actual scheduler capability checks."
+    },
+    {
+      "source": "pstack/automations/benny/README.md",
+      "targets": [
+        "skills/setup-benny/SKILL.md",
+        "README.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Benny setup is folded into the standalone Codex setup skill and collection installation guide; no Cursor automation-pack copy or settings write is performed."
+    },
+    {
+      "source": "pstack/automations/benny/skills/reproduce-and-fix-issues/SKILL.md",
+      "targets": [
+        "skills/reproduce-and-fix-issues/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Reproduce and fix issues skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/automations/benny/skills/reproduce-and-fix-issues/references/control-adapter.md",
+      "targets": [
+        "skills/reproduce-and-fix-issues/references/control-adapter.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The control contract uses installed-skill paths and selects the report's real UI, API, CLI or service surface while preserving revision, observation, reset and evidence requirements."
+    },
+    {
+      "source": "pstack/automations/benny/skills/reproduce-and-fix-issues/references/feature-map.example.md",
+      "targets": [
+        "skills/reproduce-and-fix-issues/references/feature-map.example.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The user-facing feature-map template is stored outside installed skills in a user-owned Simplicit configuration path."
+    },
+    {
+      "source": "pstack/automations/benny/skills/reproduce-and-fix-issues/references/verify-existing-fix.md",
+      "targets": [
+        "skills/reproduce-and-fix-issues/references/verify-existing-fix.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Baseline/patched verification preserves existing fix ownership and adds runtime authorization plus non-UI observable-surface guidance."
+    },
+    {
+      "source": "pstack/automations/benny/skills/setup-benny/SKILL.md",
+      "targets": [
+        "skills/setup-benny/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Set up issue workflows skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/automations/benny/skills/triage-issue-reports/SKILL.md",
+      "targets": [
+        "skills/triage-issue-reports/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Triage issue reports skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/automations/benny/skills/triage-issue-reports/references/routing.example.md",
+      "targets": [
+        "skills/triage-issue-reports/references/routing.example.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The evidence-based routing example keeps user configuration outside installed skills under Simplicit-owned paths."
+    },
+    {
+      "source": "pstack/automations/benny/templates/configuration.example.yaml",
+      "targets": [
+        "skills/setup-benny/references/configuration.example.yaml"
+      ],
+      "disposition": "adapted",
+      "reason": "The secret-free configuration template uses Simplicit-owned paths, connected actions and inherited model preferences while preserving thread, tracker, control and budget settings."
+    },
+    {
+      "source": "pstack/automations/benny/templates/reproduce-automation-prompt.md",
+      "targets": [
+        "skills/setup-benny/SKILL.md",
+        "skills/reproduce-and-fix-issues/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The reproduction job prompt is composed from stable installed operational instructions only when a real scheduler is requested; source identity, trusted triage, reproduction and existing-fix gates remain explicit."
+    },
+    {
+      "source": "pstack/automations/benny/templates/triage-automation-prompt.md",
+      "targets": [
+        "skills/setup-benny/SKILL.md",
+        "skills/triage-issue-reports/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The triage job prompt is composed from the installed workflow and user-owned configuration; immutable thread coordinates, one authorized coordinator reply and read-only delegates replace Cursor automate syntax."
+    },
+    {
+      "source": "pstack/docs/guide/01-setup.md",
+      "targets": [
+        "README.md",
+        "skills/setup-simplicit/SKILL.md",
+        "skills/create-verification-skill/SKILL.md",
+        "skills/create-formal-verification-skill/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Installation, role preferences and optional verification setup use project-local Codex instructions and discovered runtime capabilities."
+    },
+    {
+      "source": "pstack/docs/guide/02-poteto-mode.md",
+      "targets": [
+        "README.md",
+        "skills/simplicit/SKILL.md",
+        "skills/simplicit/references/runtime.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Goal-driven routing and continued authorized work are described by the Simplicit router and runtime contract; Cursor cloud-agent requirements are removed."
+    },
+    {
+      "source": "pstack/docs/guide/03-understand.md",
+      "targets": [
+        "skills/simplicit/playbooks/investigation.md",
+        "skills/how/SKILL.md",
+        "skills/why/SKILL.md",
+        "skills/teach/SKILL.md",
+        "skills/recall/SKILL.md",
+        "skills/simplicit/playbooks/session-pickup.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Read-only investigation, mechanism/history explanation, teaching, recall and resuming existing work are covered by the named installed workflows."
+    },
+    {
+      "source": "pstack/docs/guide/04-design.md",
+      "targets": [
+        "skills/architect/SKILL.md",
+        "skills/arena/SKILL.md",
+        "skills/swarm/SKILL.md",
+        "skills/interrogate/SKILL.md",
+        "skills/simplicit/playbooks/prototype.md",
+        "skills/simplicit/playbooks/multi-phase-plan.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Design sketches, optional independent candidates, bounded slices, challenge, prototypes and verifiable planning are adapted to the available Codex host."
+    },
+    {
+      "source": "pstack/docs/guide/05-build-and-clean.md",
+      "targets": [
+        "skills/simplicit/playbooks/bug-fix.md",
+        "skills/simplicit/playbooks/change.md",
+        "skills/simplicit/playbooks/perf-issue.md",
+        "skills/tdd/SKILL.md",
+        "skills/typescript-best-practices/SKILL.md",
+        "skills/unslop/SKILL.md",
+        "skills/no-comments/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Build/refactor/bug/performance routes and scoped test, TypeScript, prose and comment cleanup live in these installed workflows."
+    },
+    {
+      "source": "pstack/docs/guide/06-verify-and-ship.md",
+      "targets": [
+        "skills/benchmark-checklist/SKILL.md",
+        "skills/create-verification-skill/SKILL.md",
+        "skills/maintain-verification-skill/SKILL.md",
+        "skills/create-formal-verification-skill/SKILL.md",
+        "skills/maintain-formal-verification-skill/SKILL.md",
+        "skills/statechart/SKILL.md",
+        "skills/simplicit/playbooks/opening-a-pr.md",
+        "skills/simplicit/playbooks/babysit.md",
+        "skills/simplicit/playbooks/shipping.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Verification and measured claims use the installed specialists; opening, tending and landing PRs use distinct portable workflows with explicit shipping authority."
+    },
+    {
+      "source": "pstack/docs/guide/07-overnight.md",
+      "targets": [
+        "skills/simplicit/playbooks/autonomous-run.md",
+        "skills/simplicit/playbooks/autopilot-full.md",
+        "skills/simplicit/playbooks/autopilot-stack.md",
+        "skills/simplicit/playbooks/orchestrate.md",
+        "skills/show-me-your-work/SKILL.md",
+        "skills/setup-benny/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Unattended work, queue ownership, durable evidence and optional scheduled issue work are adapted to actual host continuation and scheduler capabilities; no daemon or automatic wake is promised."
+    },
+    {
+      "source": "pstack/docs/guide/08-principles.md",
+      "targets": [
+        "skills/simplicit/references/catalog.md",
+        "skills/simplicit/references/engineering.md",
+        "skills/principle-attack-the-premise/SKILL.md",
+        "skills/principle-boundary-discipline/SKILL.md",
+        "skills/principle-build-the-lever/SKILL.md",
+        "skills/principle-encode-lessons-in-structure/SKILL.md",
+        "skills/principle-exhaust-the-design-space/SKILL.md",
+        "skills/principle-experience-first/SKILL.md",
+        "skills/principle-explain-the-number/SKILL.md",
+        "skills/principle-fix-root-causes/SKILL.md",
+        "skills/principle-foundational-thinking/SKILL.md",
+        "skills/principle-guard-the-context-window/SKILL.md",
+        "skills/principle-laziness-protocol/SKILL.md",
+        "skills/principle-make-operations-idempotent/SKILL.md",
+        "skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md",
+        "skills/principle-minimize-reader-load/SKILL.md",
+        "skills/principle-model-the-domain/SKILL.md",
+        "skills/principle-never-block-on-the-human/SKILL.md",
+        "skills/principle-outcome-oriented-execution/SKILL.md",
+        "skills/principle-prove-it-works/SKILL.md",
+        "skills/principle-redesign-from-first-principles/SKILL.md",
+        "skills/principle-separate-before-serializing-shared-state/SKILL.md",
+        "skills/principle-sequence-verifiable-units/SKILL.md",
+        "skills/principle-subtract-before-you-add/SKILL.md",
+        "skills/principle-test-behavior-not-implementation/SKILL.md",
+        "skills/principle-type-system-discipline/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The steering guide is represented by the catalog, engineering summary and all 24 installed principle entrypoints; host-specific instructions are governed by the runtime contract."
+    },
+    {
+      "source": "pstack/docs/guide/09-make-it-yours.md",
+      "targets": [
+        "skills/automate-me/SKILL.md",
+        "skills/reflect/SKILL.md",
+        "skills/correct/SKILL.md",
+        "skills/simplicit/playbooks/authoring-a-skill.md",
+        "skills/technical-writing/SKILL.md",
+        "skills/simplicit/playbooks/eval.md",
+        "skills/make-bot-ui/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Personal modes, reflection, structural corrections, skill authoring/evaluation, writing and bot interfaces use these portable workflows and the current task scope."
+    },
+    {
+      "source": "pstack/docs/guide/10-recipes-and-pitfalls.md",
+      "targets": [
+        "README.md",
+        "skills/simplicit-help/SKILL.md",
+        "skills/simplicit/references/catalog.md",
+        "skills/simplicit/SKILL.md",
+        "skills/simplicit/references/runtime.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Prompt examples and route selection are consolidated into the Codex usage guide, help/catalog and router; scope and capability pitfalls are handled by the runtime contract."
+    },
+    {
+      "source": "pstack/docs/guide/README.md",
+      "targets": [
+        "README.md",
+        "skills/simplicit-help/SKILL.md",
+        "skills/simplicit/references/catalog.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The guide landing page is consolidated into the Simplicit overview, installed help and complete skill catalog rather than copied as a second source-specific guide."
+    },
+    {
+      "source": "pstack/docs/guide/images/design.jpg",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "Illustration for the upstream pstack guide; the portable Simplicit guide does not embed or install this artwork."
+    },
+    {
+      "source": "pstack/docs/guide/images/overnight.jpg",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "Illustration for the upstream pstack guide; the portable Simplicit guide does not embed or install this artwork."
+    },
+    {
+      "source": "pstack/docs/guide/images/recipes.jpg",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "Illustration for the upstream pstack guide; the portable Simplicit guide does not embed or install this artwork."
+    },
+    {
+      "source": "pstack/docs/guide/images/router.jpg",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "Illustration for the upstream pstack guide; the portable Simplicit guide does not embed or install this artwork."
+    },
+    {
+      "source": "pstack/docs/guide/images/understanding.jpg",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "Illustration for the upstream pstack guide; the portable Simplicit guide does not embed or install this artwork."
+    },
+    {
+      "source": "pstack/docs/guide/images/verification.jpg",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "Illustration for the upstream pstack guide; the portable Simplicit guide does not embed or install this artwork."
+    },
+    {
+      "source": "pstack/docs/harness/claude-code.md",
+      "targets": [
+        "README.md",
+        "skills/simplicit/references/runtime.md",
+        "skills/setup-simplicit/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The harness-adaptation concern is handled by the Codex installation guide, actual-capability runtime contract and project setup; Claude-specific tool and model aliases are not installed."
+    },
+    {
+      "source": "pstack/plugin.json",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "The upstream agent-plugin package manifest is not used by the project-local Codex skill installer; its package name/version must not replace Simplicit metadata."
+    },
+    {
+      "source": "pstack/skills/architect/SKILL.md",
+      "targets": [
+        "skills/architect/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Architect skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/architect/references/design-red-flags.md",
+      "targets": [
+        "skills/architect/references/design-red-flags.md",
+        ".codex/agents/critic.toml"
+      ],
+      "disposition": "adapted",
+      "reason": "Design concerns become evidence-seeking review prompts without automatic restructuring or mandatory candidate fan-out. The critic Codex profile directly credits these design red flags and applies ownership, representation-leakage and indirection checks to bounded independent review."
+    },
+    {
+      "source": "pstack/skills/architect/references/rationale-template.md",
+      "targets": [
+        "skills/architect/references/rationale-template.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The rationale outline keeps caller usage, contract, ownership and tradeoffs in an existing brief without a mandatory separate synthesis document."
+    },
+    {
+      "source": "pstack/skills/architect/references/runner-prompt.md",
+      "targets": [
+        "skills/architect/SKILL.md",
+        "skills/architect/references/rationale-template.md",
+        "skills/arena/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Caller-first sketches and candidate rationale are owned by the architect lead; independent competing candidates are optional through Arena rather than mandatory Cursor runners."
+    },
+    {
+      "source": "pstack/skills/arena/SKILL.md",
+      "targets": [
+        "skills/arena/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Arena skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/automate-me/SKILL.md",
+      "targets": [
+        "skills/automate-me/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Automate me skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/benchmark-checklist/SKILL.md",
+      "targets": [
+        "skills/benchmark-checklist/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Benchmark checklist skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/blast-radius/SKILL.md",
+      "targets": [
+        "skills/blast-radius/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Blast radius skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/bro/SKILL.md",
+      "targets": [
+        "skills/bro/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Bro skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/correct/SKILL.md",
+      "targets": [
+        "skills/correct/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Correct skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/create-formal-verification-skill/SKILL.md",
+      "targets": [
+        "skills/create-formal-verification-skill/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Create a formal verification skill skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/create-verification-skill/SKILL.md",
+      "targets": [
+        "skills/create-verification-skill/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Create a verification skill skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/create-verification-skill/references/feature-map-example/README.md",
+      "targets": [
+        "skills/create-verification-skill/references/feature-map-example.md",
+        "skills/create-verification-skill/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The index and per-feature contract become a portable feature-map shape; example-only Notes commands are not treated as installed controls."
+    },
+    {
+      "source": "pstack/skills/create-verification-skill/references/feature-map-example/create-note.md",
+      "targets": [
+        "skills/create-verification-skill/references/feature-map-example.md",
+        "skills/create-verification-skill/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The create-note recipe is condensed into create-item entry, input, confirmation and persistence guidance; actual app commands must be discovered."
+    },
+    {
+      "source": "pstack/skills/create-verification-skill/references/feature-map-example/search.md",
+      "targets": [
+        "skills/create-verification-skill/references/feature-map-example.md",
+        "skills/create-verification-skill/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The search recipe is condensed into matching, non-matching and clear-filter scenarios; actual app behavior and controls must be observed."
+    },
+    {
+      "source": "pstack/skills/figure-it-out/SKILL.md",
+      "targets": [
+        "skills/figure-it-out/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Figure it out skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/how/SKILL.md",
+      "targets": [
+        "skills/how/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The How skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/how/references/explainer-prompt.md",
+      "targets": [
+        "skills/how/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Explanation and reconciliation are performed by the lead in the How workflow; no separate explainer agent or fixed report structure is required."
+    },
+    {
+      "source": "pstack/skills/how/references/explorer-prompt.md",
+      "targets": [
+        "skills/how/references/explorer-prompt.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The explorer brief scopes one read-only mechanism question, evidence and gaps; it removes mandatory multi-agent exploration and recursive delegation."
+    },
+    {
+      "source": "pstack/skills/in-your-own-words/SKILL.md",
+      "targets": [
+        "skills/in-your-own-words/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The In your own words skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/interrogate/SKILL.md",
+      "targets": [
+        "skills/interrogate/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Interrogate skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/interrogate/references/code-quality-review.md",
+      "targets": [
+        "skills/interrogate/references/code-quality-review.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Code quality concerns remain a review reference while findings must be scoped and supported by current evidence."
+    },
+    {
+      "source": "pstack/skills/interrogate/references/lead-judgment.md",
+      "targets": [
+        "skills/interrogate/references/lead-judgment.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The lead owns triage of supported findings and candidate-aware evidence; review output alone does not authorize edits."
+    },
+    {
+      "source": "pstack/skills/interrogate/references/reviewer-prompt.md",
+      "targets": [
+        "skills/interrogate/references/reviewer-prompt.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The independent reviewer receives explicit scope, candidate identity and read-only evidence/report duties using the available host."
+    },
+    {
+      "source": "pstack/skills/interrogate/references/rubric.md",
+      "targets": [
+        "skills/interrogate/references/rubric.md",
+        ".codex/agents/critic.toml"
+      ],
+      "disposition": "adapted",
+      "reason": "The review rubric focuses on consequential, evidenced defects and contract risk within the requested review. The critic Codex profile directly credits this rubric and adapts its risk prioritization, evidence requirements and concise findings format."
+    },
+    {
+      "source": "pstack/skills/ketchup-video/SKILL.md",
+      "targets": [
+        "skills/ketchup-video/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Ketchup video skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/ketchup/SKILL.md",
+      "targets": [
+        "skills/ketchup/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Ketchup skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/maintain-formal-verification-skill/SKILL.md",
+      "targets": [
+        "skills/maintain-formal-verification-skill/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Maintain a formal verification skill skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/maintain-verification-skill/SKILL.md",
+      "targets": [
+        "skills/maintain-verification-skill/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Maintain a verification skill skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/make-bot-ui/SKILL.md",
+      "targets": [
+        "skills/make-bot-ui/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Make a bot UI skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/no-comments/SKILL.md",
+      "targets": [
+        "skills/no-comments/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The No comments skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/poteto-help/SKILL.md",
+      "targets": [
+        "skills/simplicit-help/SKILL.md",
+        "skills/simplicit/references/catalog.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Command discovery and capability limits are adapted to Codex selection syntax, renamed entrypoints and the complete installed catalog."
+    },
+    {
+      "source": "pstack/skills/poteto-help/references/prompting.md",
+      "targets": [
+        "README.md",
+        "skills/simplicit/SKILL.md",
+        "skills/simplicit/references/runtime.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Goal, acceptance, evidence and scope guidance is consolidated into Codex usage examples and the lead workflow; the runtime contract handles continuing work and authorization."
+    },
+    {
+      "source": "pstack/skills/poteto-help/references/recipes.md",
+      "targets": [
+        "README.md",
+        "skills/simplicit-help/SKILL.md",
+        "skills/simplicit/references/catalog.md",
+        "skills/simplicit/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Source command recipes become Codex invocation examples, a complete installed catalog and the portable routing table; source slash-command syntax is not installed."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/SKILL.md",
+      "targets": [
+        "skills/simplicit/SKILL.md",
+        "skills/simplicit-mode/SKILL.md",
+        "skills/simplicit/references/runtime.md",
+        "skills/simplicit/references/engineering.md",
+        "skills/simplicit/playbooks/review.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The main mode is renamed Simplicit, with a compatibility alias; host/tool, delegation and authorization rules live in the runtime contract, engineering guidance is split into a reference, and candidate review has a dedicated portable playbook."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/authoring-a-skill.md",
+      "targets": [
+        "skills/simplicit/playbooks/authoring-a-skill.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Authoring or modifying a skill workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/autonomous-run.md",
+      "targets": [
+        "skills/simplicit/playbooks/autonomous-run.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Autonomous run workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/autopilot-full.md",
+      "targets": [
+        "skills/simplicit/playbooks/autopilot-full.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Autopilot for independent changes workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/autopilot-stack.md",
+      "targets": [
+        "skills/simplicit/playbooks/autopilot-stack.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Autopilot for a dependent stack workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/babysit.md",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Babysit workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/bug-fix.md",
+      "targets": [
+        "skills/simplicit/playbooks/bug-fix.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Bug fix workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/eval.md",
+      "targets": [
+        "skills/simplicit/playbooks/eval.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Eval workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/feature.md",
+      "targets": [
+        "skills/simplicit/playbooks/change.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Feature and refactoring workflows converge in the shared Change playbook; preserve the requested behavior and verification contract when reviewing upstream changes."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/hillclimb.md",
+      "targets": [
+        "skills/simplicit/playbooks/hillclimb.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Hillclimb workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/investigation.md",
+      "targets": [
+        "skills/simplicit/playbooks/investigation.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Investigation workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/multi-phase-plan.md",
+      "targets": [
+        "skills/simplicit/playbooks/multi-phase-plan.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Multi-phase or multi-PR plan workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/opening-a-pr.md",
+      "targets": [
+        "skills/simplicit/playbooks/opening-a-pr.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Opening a PR workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/orchestrate.md",
+      "targets": [
+        "skills/simplicit/playbooks/orchestrate.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Orchestrate workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/pause-safely.md",
+      "targets": [
+        "skills/simplicit/playbooks/pause-safely.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Pause safely workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/perf-issue.md",
+      "targets": [
+        "skills/simplicit/playbooks/perf-issue.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Performance issue workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/prototype.md",
+      "targets": [
+        "skills/simplicit/playbooks/prototype.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Prototype workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/refactoring.md",
+      "targets": [
+        "skills/simplicit/playbooks/change.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Feature and refactoring workflows converge in the shared Change playbook; preserve the requested behavior and verification contract when reviewing upstream changes."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/runtime-forensics.md",
+      "targets": [
+        "skills/simplicit/playbooks/runtime-forensics.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Runtime forensics workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/session-pickup.md",
+      "targets": [
+        "skills/simplicit/playbooks/session-pickup.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Session pickup workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/shipping.md",
+      "targets": [
+        "skills/simplicit/playbooks/shipping.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Shipping workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/trace-forensics.md",
+      "targets": [
+        "skills/simplicit/playbooks/trace-forensics.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Trace forensics workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/visual-parity.md",
+      "targets": [
+        "skills/simplicit/playbooks/visual-parity.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Visual parity workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/playbooks/worktree-cleanup.md",
+      "targets": [
+        "skills/simplicit/playbooks/worktree-cleanup.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Worktree cleanup workflow is adapted into the portable mode playbook with actual host tools, evidence requirements and explicit authorization boundaries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/references/bugbot-triage.md",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Review-bot claims are classified against current code as supported, disproved or unresolved; the babysit playbook preserves scoped fixes, explicit reply authority and bounded CI retries."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/bootstrap.ts",
+      "targets": [
+        "skills/simplicit/references/runtime.md",
+        "skills/simplicit/playbooks/orchestrate.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Automatic Bun dependency bootstrap is not installed; orchestration uses actual host tools under the runtime contract and durable workflow instructions without adding a service."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/bun.lock",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "The dependency/build metadata belongs only to the uninstalled upstream Bun orchestration and watcher package; no active Simplicit package consumes it."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/check-plan.mjs",
+      "targets": [
+        "skills/simplicit/playbooks/multi-phase-plan.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Plan acceptance becomes a portable evidence/dependency/ownership contract that preserves repository templates rather than enforcing Cursor-specific headings, fixed lanes and loop commands."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/check-plan.test.ts",
+      "targets": [
+        "skills/simplicit/playbooks/multi-phase-plan.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Markdown checker test suite is not installed because its exact-format checker is replaced by the portable plan contract; this target is the workflow review location, not an equivalent executable test suite."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/orch/orch.test.ts",
+      "targets": [
+        "skills/simplicit/playbooks/orchestrate.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Store lifecycle, ledgers, queues and frontier invariants have a workflow review destination in Orchestrate; upstream Bun implementation tests remain source-only and are not claimed as portable test coverage."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/orch/orch.ts",
+      "targets": [
+        "skills/simplicit/playbooks/orchestrate.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The orch CLI command workflow becomes lead-owned unit/evidence ledgers, completion draining, frontier tracking and actual host collaboration; no CLI compatibility is claimed."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/orch/store.ts",
+      "targets": [
+        "skills/simplicit/playbooks/orchestrate.md",
+        "skills/simplicit/playbooks/autopilot-stack.md",
+        "skills/simplicit/playbooks/shipping.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Durable unit/verdict/gate records, stale evidence, frontier and topology ownership become portable orchestration and stack/shipping rules; the Bun file-store/lock implementation is not installed."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/package.json",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "The dependency/build metadata belongs only to the uninstalled upstream Bun orchestration and watcher package; no active Simplicit package consumes it."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/watch-pr/cli.test.ts",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "CLI usage, status-only and blocker cases route to the babysit mode/reporting contract for review; the source Bun CLI tests are not installed or claimed to have executable equivalents."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/watch-pr/cli.ts",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Watch modes, status-only behavior and bounded polling are expressed through the babysit playbook using actual forge and continuation tools."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/watch-pr/fakes.test-helper.ts",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Fake CI/review fixtures are source-only; changes to their modeled facts should be reviewed against the babysit workflow's actual-fact and readiness requirements, not copied into a nonexistent watcher runtime."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/watch-pr/github.test.ts",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Forge parsing and status edge cases route to the babysit evidence/readiness contract for review; vendor API test coverage is not claimed for the workflow adaptation."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/watch-pr/github.ts",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Forge discovery, checks, review threads and stack facts are obtained through actual supported tools; current head/base, CI and mergeability are re-read by the babysit workflow."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/watch-pr/policy.test.ts",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Readiness, queue cadence, timeouts and failure cases identify the babysit workflow to review; the original watcher state-machine tests are not installed or claimed as portable tests."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/watch-pr/policy.ts",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Conflict/review/CI ordering, queue frontier, bounded retries, status checks and explicit human gates are adapted into the babysit workflow."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/watch-pr/render.ts",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The babysit report names current frontier/candidate, blocker class, evidence and readiness instead of depending on the upstream JSON/Markdown renderer."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/watch-pr/tsconfig.json",
+      "targets": [],
+      "disposition": "omitted",
+      "reason": "This compiler configuration applies only to the uninstalled Bun/TypeScript PR watcher package; Simplicit has no corresponding watcher compilation target."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/watch-pr/types.compile.ts",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The compile-time readiness/CI consistency assertions route to the babysit readiness contract for review; they are not represented as executable checks of prose."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/watch-pr/types.ts",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Watcher state distinctions become explicit blocker, readiness, failure and pending-evidence categories in the babysit contract; no TypeScript runtime types are installed."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/watch-pr/watch-pr",
+      "targets": [
+        "skills/simplicit/playbooks/babysit.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Bun launch wrapper is replaced by invoking the portable babysit workflow through the current host; no persistent watcher binary is installed."
+    },
+    {
+      "source": "pstack/skills/poteto-mode/scripts/worktree-audit.sh",
+      "targets": [
+        "skills/simplicit/playbooks/worktree-cleanup.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The read-only Bash/macOS audit becomes portable worktree inventory, merge/unique-state and ownership checks with exact path verification; removal remains separately authorized."
+    },
+    {
+      "source": "pstack/skills/principle-attack-the-premise/SKILL.md",
+      "targets": [
+        "skills/principle-attack-the-premise/SKILL.md",
+        "skills/simplicit/references/engineering.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Attack the Premise skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review. Its ownership, root-cause, evidence or structural-learning guidance is also summarized in the engineering reference."
+    },
+    {
+      "source": "pstack/skills/principle-boundary-discipline/SKILL.md",
+      "targets": [
+        "skills/principle-boundary-discipline/SKILL.md",
+        "skills/simplicit/references/engineering.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Boundary Discipline skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review. Its ownership, root-cause, evidence or structural-learning guidance is also summarized in the engineering reference."
+    },
+    {
+      "source": "pstack/skills/principle-build-the-lever/SKILL.md",
+      "targets": [
+        "skills/principle-build-the-lever/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Build the Lever skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-encode-lessons-in-structure/SKILL.md",
+      "targets": [
+        "skills/principle-encode-lessons-in-structure/SKILL.md",
+        "skills/simplicit/references/engineering.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Encode Lessons in Structure skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review. Its ownership, root-cause, evidence or structural-learning guidance is also summarized in the engineering reference."
+    },
+    {
+      "source": "pstack/skills/principle-exhaust-the-design-space/SKILL.md",
+      "targets": [
+        "skills/principle-exhaust-the-design-space/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Exhaust the Design Space skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-experience-first/SKILL.md",
+      "targets": [
+        "skills/principle-experience-first/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Experience First skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-explain-the-number/SKILL.md",
+      "targets": [
+        "skills/principle-explain-the-number/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Explain the Number skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-fix-root-causes/SKILL.md",
+      "targets": [
+        "skills/principle-fix-root-causes/SKILL.md",
+        "skills/simplicit/references/engineering.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Fix Root Causes skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review. Its ownership, root-cause, evidence or structural-learning guidance is also summarized in the engineering reference."
+    },
+    {
+      "source": "pstack/skills/principle-foundational-thinking/SKILL.md",
+      "targets": [
+        "skills/principle-foundational-thinking/SKILL.md",
+        "skills/simplicit/references/engineering.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Foundational Thinking skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review. Its ownership, root-cause, evidence or structural-learning guidance is also summarized in the engineering reference."
+    },
+    {
+      "source": "pstack/skills/principle-guard-the-context-window/SKILL.md",
+      "targets": [
+        "skills/principle-guard-the-context-window/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Guard the Context Window skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-laziness-protocol/SKILL.md",
+      "targets": [
+        "skills/principle-laziness-protocol/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Laziness Protocol skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-make-operations-idempotent/SKILL.md",
+      "targets": [
+        "skills/principle-make-operations-idempotent/SKILL.md",
+        "skills/simplicit/references/engineering.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Make Operations Idempotent skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review. Its ownership, root-cause, evidence or structural-learning guidance is also summarized in the engineering reference."
+    },
+    {
+      "source": "pstack/skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md",
+      "targets": [
+        "skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Migrate Callers Then Delete Legacy APIs skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-minimize-reader-load/SKILL.md",
+      "targets": [
+        "skills/principle-minimize-reader-load/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Minimize Reader Load skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-model-the-domain/SKILL.md",
+      "targets": [
+        "skills/principle-model-the-domain/SKILL.md",
+        "skills/simplicit/references/engineering.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Model the Domain skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review. Its ownership, root-cause, evidence or structural-learning guidance is also summarized in the engineering reference."
+    },
+    {
+      "source": "pstack/skills/principle-never-block-on-the-human/SKILL.md",
+      "targets": [
+        "skills/principle-never-block-on-the-human/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Never Block on the Human skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-outcome-oriented-execution/SKILL.md",
+      "targets": [
+        "skills/principle-outcome-oriented-execution/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Outcome-Oriented Execution skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-prove-it-works/SKILL.md",
+      "targets": [
+        "skills/principle-prove-it-works/SKILL.md",
+        "skills/simplicit/references/engineering.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Prove It Works skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review. Its ownership, root-cause, evidence or structural-learning guidance is also summarized in the engineering reference."
+    },
+    {
+      "source": "pstack/skills/principle-redesign-from-first-principles/SKILL.md",
+      "targets": [
+        "skills/principle-redesign-from-first-principles/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Redesign From First Principles skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-separate-before-serializing-shared-state/SKILL.md",
+      "targets": [
+        "skills/principle-separate-before-serializing-shared-state/SKILL.md",
+        "skills/simplicit/references/engineering.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Separate Before Serializing Shared State skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review. Its ownership, root-cause, evidence or structural-learning guidance is also summarized in the engineering reference."
+    },
+    {
+      "source": "pstack/skills/principle-sequence-verifiable-units/SKILL.md",
+      "targets": [
+        "skills/principle-sequence-verifiable-units/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Sequence work into verifiable units skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-subtract-before-you-add/SKILL.md",
+      "targets": [
+        "skills/principle-subtract-before-you-add/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Subtract Before You Add skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/principle-test-behavior-not-implementation/SKILL.md",
+      "targets": [
+        "skills/principle-test-behavior-not-implementation/SKILL.md",
+        "skills/simplicit/references/engineering.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Test Behavior, Not Implementation skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review. Its ownership, root-cause, evidence or structural-learning guidance is also summarized in the engineering reference."
+    },
+    {
+      "source": "pstack/skills/principle-type-system-discipline/SKILL.md",
+      "targets": [
+        "skills/principle-type-system-discipline/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Type System Discipline skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/recall/SKILL.md",
+      "targets": [
+        "skills/recall/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Recall skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/reflect/SKILL.md",
+      "targets": [
+        "skills/reflect/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Reflect skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/reflect/references/divergent-reviewer.md",
+      "targets": [
+        "skills/reflect/references/divergent-reviewer.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The divergent blind spots brief uses read-only available sources, transcript-grounded scope and the parent-owned reflection workflow, including evidenced new-skill proposals."
+    },
+    {
+      "source": "pstack/skills/reflect/references/judgment-reviewer.md",
+      "targets": [
+        "skills/reflect/references/judgment-reviewer.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The durable judgment brief uses read-only available sources, transcript-grounded scope and the parent-owned reflection workflow, including evidenced new-skill proposals."
+    },
+    {
+      "source": "pstack/skills/reflect/references/synthesizer.md",
+      "targets": [
+        "skills/reflect/references/synthesizer.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The evidence-backed synthesis and proposal routing brief uses read-only available sources, transcript-grounded scope and the parent-owned reflection workflow, including evidenced new-skill proposals."
+    },
+    {
+      "source": "pstack/skills/reflect/references/tooling-reviewer.md",
+      "targets": [
+        "skills/reflect/references/tooling-reviewer.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The concrete tools and recurring workflows brief uses read-only available sources, transcript-grounded scope and the parent-owned reflection workflow, including evidenced new-skill proposals."
+    },
+    {
+      "source": "pstack/skills/setup-pstack/SKILL.md",
+      "targets": [
+        "skills/setup-simplicit/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Setup configures the selected project and actual host capabilities; it replaces Cursor/global model rules with supported options and inherited models."
+    },
+    {
+      "source": "pstack/skills/sharpen/SKILL.md",
+      "targets": [
+        "skills/sharpen/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Sharpen skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/show-me-your-work/SKILL.md",
+      "targets": [
+        "skills/show-me-your-work/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Show me your work skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/show-me-your-work/references/decision-log-template.tsv",
+      "targets": [
+        "skills/show-me-your-work/references/decision-log-template.tsv"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. The six-column ts/phase/decision/why/evidence/result header remains the logger contract."
+    },
+    {
+      "source": "pstack/skills/show-me-your-work/scripts/log.sh",
+      "targets": [
+        "skills/show-me-your-work/scripts/log.py",
+        "skills/show-me-your-work/references/helper.md",
+        "scripts/test_decision_log.py"
+      ],
+      "disposition": "adapted",
+      "reason": "The Bash appender is replaced by a Python standard-library helper preserving UTC six-column TSV output, with literal arguments, whitespace/formula sanitation, malformed-log rejection and portable behavioral checks."
+    },
+    {
+      "source": "pstack/skills/statechart/SKILL.md",
+      "targets": [
+        "skills/statechart/SKILL.md",
+        "skills/statechart/references/runtime.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The statechart workflow invokes the installed JavaScript modules and documents explicit Java/TLC configuration and opt-in renderer dependency installation."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/bug-states.mjs",
+      "targets": [
+        "skills/statechart/scripts/bug-states.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/chart-edges.mjs",
+      "targets": [
+        "skills/statechart/scripts/chart-edges.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/chart-parts.mjs",
+      "targets": [
+        "skills/statechart/scripts/chart-parts.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/chart-to-tla.mjs",
+      "targets": [
+        "skills/statechart/scripts/chart-to-tla.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/compare-charts.mjs",
+      "targets": [
+        "skills/statechart/scripts/compare-charts.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/lib.mjs",
+      "targets": [
+        "skills/statechart/scripts/lib.mjs"
+      ],
+      "disposition": "adapted",
+      "reason": "The shared parser preserves string escapes, rejects ambiguous duplicate region captions and treats object-property captions as data."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/map-view.mjs",
+      "targets": [
+        "skills/statechart/scripts/map-view.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/property-loop.mjs",
+      "targets": [
+        "skills/statechart/scripts/property-loop.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/read-check.mjs",
+      "targets": [
+        "skills/statechart/scripts/read-check.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/regions-chart.mjs",
+      "targets": [
+        "skills/statechart/scripts/regions-chart.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/render.mjs",
+      "targets": [
+        "skills/statechart/scripts/render.mjs"
+      ],
+      "disposition": "adapted",
+      "reason": "The renderer retains pinned packages but requires STATECHART_ALLOW_INSTALL=1 before a missing dependency can be installed."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/rule-book.mjs",
+      "targets": [
+        "skills/statechart/scripts/rule-book.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/second-replay.mjs",
+      "targets": [
+        "skills/statechart/scripts/second-replay.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/snapshot.mjs",
+      "targets": [
+        "skills/statechart/scripts/snapshot.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/spec-text.mjs",
+      "targets": [
+        "skills/statechart/scripts/spec-text.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/statechart-help.mjs",
+      "targets": [
+        "skills/statechart/scripts/statechart-help.mjs"
+      ],
+      "disposition": "adapted",
+      "reason": "CLI help documents explicit Java/TLC configuration, opt-in renderer installation and safe regeneration/publication with recoverable source backups."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/statechart.mjs",
+      "targets": [
+        "skills/statechart/scripts/statechart.mjs"
+      ],
+      "disposition": "adapted",
+      "reason": "The active CLI preserves configuration syntax, normalizes mapping failures and stages/restores Windows-safe regeneration and output publication with retained backups."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/test/band.mmd",
+      "targets": [
+        "scripts/test_statechart.mjs",
+        "scripts/test_statechart_values.mjs"
+      ],
+      "disposition": "adapted",
+      "reason": "The group entry/exit fixture is not installed as a runtime asset. Changes route to the portable statechart test suites for coverage review; their local fixtures are not copies and do not promise identical scenario coverage."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/test/regions.mmd",
+      "targets": [
+        "scripts/test_statechart.mjs",
+        "scripts/test_statechart_values.mjs"
+      ],
+      "disposition": "adapted",
+      "reason": "The parallel-region display fixture is not installed as a runtime asset. Changes route to the portable statechart test suites for coverage review; their local fixtures are not copies and do not promise identical scenario coverage."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/test/statechart.test.mjs",
+      "targets": [
+        "scripts/test_statechart.mjs",
+        "scripts/test_statechart_values.mjs"
+      ],
+      "disposition": "adapted",
+      "reason": "The upstream suite remains in the source snapshot; portable tests exercise the active helpers and adaptation regressions. Review changed source cases here, without claiming one-for-one case coverage."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/test/sync.mmd",
+      "targets": [
+        "scripts/test_statechart.mjs",
+        "scripts/test_statechart_values.mjs"
+      ],
+      "disposition": "adapted",
+      "reason": "The parallel-region synchronization and forbidden states fixture is not installed as a runtime asset. Changes route to the portable statechart test suites for coverage review; their local fixtures are not copies and do not promise identical scenario coverage."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/test/upload.mmd",
+      "targets": [
+        "scripts/test_statechart.mjs",
+        "scripts/test_statechart_values.mjs"
+      ],
+      "disposition": "adapted",
+      "reason": "The composite upload transitions fixture is not installed as a runtime asset. Changes route to the portable statechart test suites for coverage review; their local fixtures are not copies and do not promise identical scenario coverage."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/tlc-to-chart-args.mjs",
+      "targets": [
+        "skills/statechart/scripts/tlc-to-chart-args.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/tlc-to-chart.mjs",
+      "targets": [
+        "skills/statechart/scripts/tlc-to-chart.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/tlc-tools.mjs",
+      "targets": [
+        "skills/statechart/scripts/tlc-tools.mjs"
+      ],
+      "disposition": "adapted",
+      "reason": "TLC setup uses an existing configured JAR and Java executable; automatic mise/Java/TLC downloads are removed."
+    },
+    {
+      "source": "pstack/skills/statechart/scripts/ways-in.mjs",
+      "targets": [
+        "skills/statechart/scripts/ways-in.mjs"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. This production module is installed under the active statechart skill; upstream changes must be reviewed together with the modified CLI/runtime boundary."
+    },
+    {
+      "source": "pstack/skills/swarm/SKILL.md",
+      "targets": [
+        "skills/swarm/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Swarm skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/tdd/SKILL.md",
+      "targets": [
+        "skills/tdd/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The TDD Bug Fix skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/teach/SKILL.md",
+      "targets": [
+        "skills/teach/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Teach skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/technical-writing/SKILL.md",
+      "targets": [
+        "skills/technical-writing/SKILL.md",
+        "skills/technical-writing/references/writing-guide.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Codex entrypoint selects the writing task and loads the extracted technical-writing guide, which contains the detailed writing rules."
+    },
+    {
+      "source": "pstack/skills/typescript-best-practices/SKILL.md",
+      "targets": [
+        "skills/typescript-best-practices/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The TypeScript best practices skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/typescript-best-practices/references/patterns.md",
+      "targets": [
+        "skills/typescript-best-practices/references/patterns.md"
+      ],
+      "disposition": "adapted",
+      "reason": "TypeScript examples link installed principles and use repository branding conventions, validated duration invariants and evidence-based assertion guidance."
+    },
+    {
+      "source": "pstack/skills/unslop/SKILL.md",
+      "targets": [
+        "skills/unslop/SKILL.md",
+        "skills/unslop/references/patterns.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Codex entrypoint handles scope and editing; the extracted patterns reference contains the substantive anti-slop rules."
+    },
+    {
+      "source": "pstack/skills/why/SKILL.md",
+      "targets": [
+        "skills/why/SKILL.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The Why skill is installed at the migration-map Codex entrypoint; its workflow uses available host tools and the shared runtime contract for scope, authorization and review."
+    },
+    {
+      "source": "pstack/skills/why/references/epistemics.md",
+      "targets": [
+        "skills/why/references/epistemics.md"
+      ],
+      "disposition": "retained",
+      "reason": "Retained upstream implementation; checkout line endings or subsequent local edits may differ. The five confidence tiers, citation discipline, contradictions and explicit evidence gaps are preserved."
+    },
+    {
+      "source": "pstack/skills/why/references/investigator-prompt.md",
+      "targets": [
+        "skills/why/references/investigator-prompt.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The investigator is a bounded read-only helper for one chosen source with citations, dates, contradictions and explicit coverage limits; the lead synthesizes."
+    },
+    {
+      "source": "pstack/skills/why/references/source-playbook.md",
+      "targets": [
+        "skills/why/references/source-playbook.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Service-specific source playbooks consolidate into an evidence-category selection table; actual connector documentation supplies tool schemas and bounded query syntax."
+    },
+    {
+      "source": "pstack/skills/why/references/sources/code-archaeology.md",
+      "targets": [
+        "skills/why/references/source-playbook.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Source-control introduction, renames, tests, reverts, PRs and comments are covered by the consolidated source guide; vendor-specific queries and a mandatory category sweep are deliberately not carried over."
+    },
+    {
+      "source": "pstack/skills/why/references/sources/databricks.md",
+      "targets": [
+        "skills/why/references/source-playbook.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Product measurements, metric definitions, timeframe and experiments are covered by the consolidated source guide; vendor-specific queries and a mandatory category sweep are deliberately not carried over."
+    },
+    {
+      "source": "pstack/skills/why/references/sources/datadog.md",
+      "targets": [
+        "skills/why/references/source-playbook.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Historical runtime incidents, failure modes, deployed versions and corrective changes are covered by the consolidated source guide; vendor-specific queries and a mandatory category sweep are deliberately not carried over."
+    },
+    {
+      "source": "pstack/skills/why/references/sources/incident-postmortem.md",
+      "targets": [
+        "skills/why/references/source-playbook.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Incident/postmortem evidence for defensive code when linked history supports that investigation are covered by the consolidated source guide; vendor-specific queries and a mandatory category sweep are deliberately not carried over."
+    },
+    {
+      "source": "pstack/skills/why/references/sources/linear.md",
+      "targets": [
+        "skills/why/references/source-playbook.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Linked issue acceptance criteria, scope changes and resolved product discussion are covered by the consolidated source guide; vendor-specific queries and a mandatory category sweep are deliberately not carried over."
+    },
+    {
+      "source": "pstack/skills/why/references/sources/notion.md",
+      "targets": [
+        "skills/why/references/source-playbook.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Relevant proposals, accepted design decisions and considered alternatives are covered by the consolidated source guide; vendor-specific queries and a mandatory category sweep are deliberately not carried over."
+    },
+    {
+      "source": "pstack/skills/why/references/sources/sentry.md",
+      "targets": [
+        "skills/why/references/source-playbook.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Historical errors, timeframe, affected version and corrective change are covered by the consolidated source guide; vendor-specific queries and a mandatory category sweep are deliberately not carried over."
+    },
+    {
+      "source": "pstack/skills/why/references/sources/slack.md",
+      "targets": [
+        "skills/why/references/source-playbook.md"
+      ],
+      "disposition": "adapted",
+      "reason": "Narrow searches for relevant decisions with full message context and citations are covered by the consolidated source guide; vendor-specific queries and a mandatory category sweep are deliberately not carried over."
+    },
+    {
+      "source": "pstack/skills/why/references/synthesizer-prompt.md",
+      "targets": [
+        "skills/why/SKILL.md",
+        "skills/why/references/epistemics.md"
+      ],
+      "disposition": "adapted",
+      "reason": "The lead performs confidence-weighted synthesis, retains contradictions and records unsearched sources using the epistemics reference; no separate synthesizer agent is required."
+    }
+  ]
+}
