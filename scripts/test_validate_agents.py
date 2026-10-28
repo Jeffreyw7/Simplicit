@@ -27,6 +27,8 @@ class AgentTests(unittest.TestCase):
         self.destination.mkdir()
         self.write(self.source)
         self.write(self.destination)
+        for root in (self.source, self.destination):
+            self.write(root, VALID.replace('"critic"', '"comment-sicko"'), "comment-sicko.toml")
 
     def write(self, root, text=VALID, filename="critic.toml"):
         path = root / filename
@@ -97,22 +99,38 @@ class AgentTests(unittest.TestCase):
                 self.write(self.destination, VALID + setting + "\n")
                 self.assert_error("unsupported")
 
-    def test_missing_source_critic_even_with_other_profiles(self):
-        (self.source / "critic.toml").unlink()
-        self.write(self.source, VALID.replace('"critic"', '"other"'), "other.toml")
-        self.assert_error("missing expected source")
+    def test_each_required_source_profile_is_independent_of_inventory(self):
+        for filename in ("critic.toml", "comment-sicko.toml"):
+            with self.subTest(profile=filename):
+                profile = self.source / filename
+                before = profile.read_bytes()
+                profile.unlink()
+                for args in ([], [str(self.destination)]):
+                    output = io.StringIO()
+                    with contextlib.redirect_stdout(output):
+                        status = main(args, source_root=self.source)
+                    self.assertEqual(1, status, output.getvalue())
+                    self.assertIn(f"{profile}: missing expected source profile", output.getvalue())
+                    self.assertNotIn("Valid profiles", output.getvalue())
+                profile.write_bytes(before)
 
     def test_empty_source_inventory(self):
-        (self.source / "critic.toml").unlink()
+        for profile in self.source.glob("*.toml"):
+            profile.unlink()
         self.assert_error("no agents")
 
     def test_missing_source_directory(self):
         self.source = self.base / "absent"
         self.assert_error("missing")
 
-    def test_missing_destination_critic(self):
-        (self.destination / "critic.toml").unlink()
-        self.assert_error("missing expected")
+    def test_each_required_destination_profile_is_checked(self):
+        for filename in ("critic.toml", "comment-sicko.toml"):
+            with self.subTest(profile=filename):
+                profile = self.destination / filename
+                before = profile.read_bytes()
+                profile.unlink()
+                self.assert_error(f"{filename}: missing expected destination profile")
+                profile.write_bytes(before)
 
     def test_missing_destination_directory(self):
         self.destination = self.base / "absent"
@@ -191,11 +209,12 @@ class AgentTests(unittest.TestCase):
             with contextlib.redirect_stdout(output):
                 status = main(args, source_root=self.source)
             self.assertEqual(0, status)
-            self.assertIn("1 agent", output.getvalue())
+            self.assertIn("2 agent", output.getvalue())
 
     def test_cli_never_reports_success_for_empty_source_or_missing_destination(self):
         for root in (self.destination, self.source):
-            (root / "critic.toml").unlink()
+            for profile in root.glob("*.toml"):
+                profile.unlink()
             output = io.StringIO()
             with contextlib.redirect_stdout(output):
                 status = main([str(self.destination)], source_root=self.source)

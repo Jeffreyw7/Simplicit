@@ -1,5 +1,6 @@
 """Append a sanitized UTC decision row to a single-writer TSV log."""
 import argparse
+import csv
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,7 +29,8 @@ def append(logfile, cells):
     with path.open("a", encoding="utf-8", newline="") as handle:
         if needs_header:
             handle.write(HEADER)
-        handle.write("\t".join([stamp] + [clean(cell) for cell in cells]) + "\n")
+        writer = csv.writer(handle, delimiter="\t", lineterminator="\n")
+        writer.writerow([stamp] + [clean(cell) for cell in cells])
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

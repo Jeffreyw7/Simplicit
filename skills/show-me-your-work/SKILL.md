@@ -36,7 +36,9 @@ ts	phase	decision	why	evidence	result
 
 Write each entry the way you'd tell a teammate what you did. Plain words, concrete actions, no AI speak or abstract jargon (the **unslop** skill applies to log text too).
 
-Use `python <installed-skill>/scripts/log.py <logfile> <phase> <decision> <why> <evidence> <result>` with the installed skill's actual absolute path. Read [helper behavior](references/helper.md) before first use. It stamps `ts`, writes the header on first use, strips stray tabs/newlines, and prefixes any cell starting with `=`, `+`, `-`, or `@` with a single quote. A bare `printf` appending a row works too, but mind those same bytes if cells come from generated or user-supplied text.
+Use `python <installed-skill>/scripts/log.py <logfile> <phase> <decision> <why> <evidence> <result>` with the installed skill's actual absolute path. Read [helper behavior](references/helper.md) before first use. It stamps `ts`, writes the header on first use, replaces tabs and line endings with spaces, and prefixes any cell starting with `=`, `+`, `-`, or `@` after leading whitespace with a single quote. It escapes literal double quotes with standard TSV quoting so CSV readers preserve the original text.
+
+Manual appenders must apply that sanitization before serialization. Open the UTF-8 file with `newline=""`, then write all six cells with `csv.writer(handle, delimiter="\t", lineterminator="\n").writerow(cells)`. A field containing double quotes is enclosed in double quotes, with each literal double quote doubled inside it. Raw tab joining or bare `printf` does not perform this escaping. Keep the header and final-newline checks described in the helper contract.
 
 Log decision points and checkpoints, not every action: a fork chosen, a unit completed with its verification result, a pivot or revert with its trigger, a blocker surfaced, a gate fixed. For loop runs, one row per iteration. Skip the trivial and self-evident.
 
