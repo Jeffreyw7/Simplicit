@@ -1517,7 +1517,8 @@
     {
       "source": "pstack/skills/statechart/scripts/statechart.mjs",
       "targets": [
-        "skills/statechart/scripts/statechart.mjs"
+        "skills/statechart/scripts/statechart.mjs",
+        "skills/statechart/scripts/lib.mjs"
       ],
       "disposition": "adapted",
       "reason": "The active CLI preserves configuration syntax, normalizes mapping failures and stages/restores Windows-safe regeneration and output publication with retained backups."
@@ -1546,7 +1547,9 @@
         "scripts/test_statechart.mjs",
         "scripts/test_statechart_values.mjs",
         "scripts/test_statechart_config.mjs",
-        "scripts/test_statechart_recovery.mjs"
+        "scripts/test_statechart_recovery.mjs",
+        "scripts/test_statechart_symbols.mjs",
+        "scripts/test_statechart_windows.mjs"
       ],
       "disposition": "adapted",
       "reason": "The upstream suite remains in the source snapshot; portable tests exercise the active helpers and adaptation regressions. Review changed source cases here, without claiming one-for-one case coverage."

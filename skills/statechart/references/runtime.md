@@ -6,6 +6,8 @@ Use Node.js 22 or later. The bundled JavaScript is local and works independently
 
 Every replaced output folder is preserved at a unique sibling path ending in `-old`, and each retained path is printed. Matching generated names/extensions cannot prove that files were generated: the folder may contain a manually added configuration, model or log. Review these backups and remove them manually when no longer needed; repeated runs can retain large TLC graphs. Unrecognized output names and linked paths are still rejected before source generation. Overlapping publications retain each displaced folder separately.
 
+On Windows, publication briefly retries directory renames blocked by temporary file handles or sharing denials. Retries are bounded, preserve existing output checks, and recheck inputs before publication. Persistent denials still return exit 2 with recovery diagnostics; no permissions are changed.
+
 If only PNG rendering fails after model results are published, exit 2 retains those results, generated sources, source backups and previous-output backups. If publication and restoration fail, the diagnostic identifies the old output's recovery location even if staging cleanup also fails; the operation exits 2.
 
 Temporary-folder cleanup failures report the retained path without cancelling a source transaction or changing a completed result. Remove retained temporary files only after reviewing the reported location.
@@ -17,6 +19,8 @@ Install or reuse Java 11+ and the official immutable [TLC 1.7.4 release](https:/
 In PowerShell, set `$env:TLA2TOOLS` to the absolute JAR path. Optionally set `$env:JAVA` to the absolute Java executable. On POSIX shells, export the same environment variables. Without JAVA, Java is resolved from PATH. Missing dependencies are a blocked model-checking step, not a verification pass.
 
 Run `node <skill-directory>/scripts/statechart.mjs --help` for commands. Quote paths containing spaces. Chart parsing and `chart-to-tla.mjs CHART.mmd --module NAME` need only Node; checking a model needs TLC.
+
+Symbolic model values, including operators and names starting with digits, remain strings inside state records, tuples, sets and functions. Numbers and booleans retain their existing types. TLC can print different delimiter-shaped values identically; ambiguous or malformed marked broken-state output is rejected with its file and line instead of being interpreted as state data.
 
 ## Optional PNG rendering
 

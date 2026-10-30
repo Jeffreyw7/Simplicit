@@ -157,6 +157,8 @@ const COMMON = `Both commands
                      The command prints each retained path and never automatically deletes these
                      backups. On a filesystem that cannot rename, it copies the files into place,
                      and overlapping runs can mix their files.
+                     Windows retries brief directory sharing/permission denials with a fixed
+                     limit, rechecking inputs and output safety. Persistent denials still exit 2.
   --png              Also draw each chart as a PNG. The PNG section tells how.
   --theme NAME       The colors of each PNG: light, dark, or classic. Default: light. It needs
                      --png.

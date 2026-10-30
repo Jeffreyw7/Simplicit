@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { HELP, more, USAGE, usage } from "./statechart-help.mjs";
 import {
   BROKEN_PROPERTY,
+  tlaToken,
   checkedOnlyInInitialStates,
   joinAnd,
   parseDot,
@@ -131,34 +132,6 @@ function script(name, scriptArgs, about, { okExits = [0] } = {}) {
 const KEYWORD =
   /^(SPECIFICATION|INIT|NEXT|CONSTANTS?|INVARIANTS?|PROPERTY|PROPERTIES|SYMMETRY|VIEW|CONSTRAINTS?|ACTION_CONSTRAINTS?|TYPE|TYPE_CONSTRAINT|CHECK_DEADLOCK|POSTCONDITION|ALIAS)$/;
 
-// ModelConfig uses SANY's SPEC lexer, even for otherwise opaque model values.
-// Match its longest token (TLC 2.19, 5a47802, javacc/tla+.jj): punctuation can
-// belong to a value such as =>, [] or (+), and need not be surrounded by spaces.
-const CONFIG_SYMBOLS = String.raw`
-  []ASSUME []PROVE SF_ WF_ , : :: . _ == ( ) -|- [ ]_ ] {| |} { } << >>_ >> ! -> <- |->
-  \E \exists \A \forall \EE \AA ' ^+ ^* ^# -. \lnot \neg ~ [] <> // /\ /= / \/
-  \approx \asymp \bigcirc \bullet \cap \cdot \circ \cong \cup \div \doteq \equiv
-  \geq \gg \in \intersect \union \land \leq \ll \lor \o \odot \ominus \oplus
-  \oslash \otimes \prec \preceq \propto \sim \simeq \sqcap \sqcup \sqsubset
-  \sqsupset \sqsubseteq \sqsupseteq \star \subset \subseteq \succ \succeq \supset
-  \supseteq \uplus \wr \ ~> => =< =| = ## # ^^ ^ -- -| -+-> - ** * ++ + <=> <: <= <
-  >= > ... .. || | |- |= && & $$ $ ?? %% % @@ !! :> := ::= (+) (-) (.) (/) (\X)
-  \notin \times \X @
-`.trim().split(/\s+/).sort((a, b) => b.length - a.length);
-const CONFIG_LEXEMES = [
-  /----+(?: *MODULE)?/y,
-  /====+/y,
-  /[0-9]+|\\[oO][0-7]+|\\[bB][01]+|\\[hH][0-9a-fA-F]+/y,
-  /"(?:[^"`\r\n\\]|`[^']*'|\\[ntrf\\"])*"/y,
-  // Identifiers may start with digits/underscores but must contain a letter.
-  // WF_ and SF_ are separate tokens, including when followed by an identifier.
-  /[0-9_][A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*|[WS]F(?:[A-Za-z0-9][A-Za-z0-9_]*)?|[WS](?:[a-zA-EG-Z_0-9][A-Za-z0-9_]*)?|[a-zA-RT-VX-Z][A-Za-z0-9_]*/y,
-  /(?:[0-9][A-Za-z0-9]*|[WS][a-zA-EG-Z0-9][A-Za-z0-9]*|[a-zA-RT-VX-Z][A-Za-z0-9]*)\.(?:\/\\|\\\/)/y,
-  /<[0-9]+>[A-Za-z0-9_]+/y,
-  /<[+*]>[A-Za-z0-9]+/y,
-  /<(?:[0-9]+|[+*])>(?:[A-Za-z0-9_]+\.+|[*-]\.*|\.+)?/y,
-];
-
 function splitRules(cfg) {
   const tokens = [];
   for (let i = 0; i < cfg.length;) {
@@ -179,12 +152,7 @@ function splitRules(cfg) {
       continue;
     }
     const start = i;
-    let text = CONFIG_SYMBOLS.find((symbol) => cfg.startsWith(symbol, i)) ?? "";
-    for (const pattern of CONFIG_LEXEMES) {
-      pattern.lastIndex = i;
-      const match = pattern.exec(cfg)?.[0];
-      if (match && match.length > text.length) text = match;
-    }
+    const text = tlaToken(cfg, i);
     if (!text) throw new CannotFinish(`the config has an invalid token near ${cfg.slice(i, i + 20)}`);
     i += text.length;
     tokens.push({start, end: i, text});
@@ -769,21 +737,43 @@ function removeTemporary(dir) {
   }
 }
 
-const moved = (from, to, ...missed) => {
+function renameFolder(from, to, missed, beforeAttempt, afterFailure) {
+  const waits = [25, 50, 100, 200, 400];
+  let firstDenial;
+  for (let attempt = 0; ; attempt++) {
+    beforeAttempt?.();
+    try {
+      fs.renameSync(from, to);
+      return true;
+    } catch (e) {
+      afterFailure?.();
+      if (missed.includes(e.code)) return false;
+      if (process.platform !== "win32" || !["EPERM", "EACCES", "EBUSY"].includes(e.code)) throw e;
+      firstDenial ??= e;
+      let source, target;
+      try {
+        source = fs.lstatSync(from, {throwIfNoEntry: false});
+        target = fs.lstatSync(to, {throwIfNoEntry: false});
+      } catch { throw firstDenial; }
+      if (missed.includes("EEXIST") && source?.isDirectory() && target?.isDirectory()) return false;
+      if (!source?.isDirectory() || target || attempt === waits.length) throw firstDenial;
+      // Windows can deny a directory rename while a child file is briefly open without delete
+      // sharing. Retry only an absent destination; a competing output must be checked again.
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, waits[attempt]);
+    }
+  }
+}
+
+const moved = (from, to, missed, beforeAttempt, afterFailure) => {
   try {
-    fs.renameSync(from, to);
-    return true;
+    return renameFolder(from, to, missed, beforeAttempt, afterFailure);
   } catch (e) {
-    if (missed.includes(e.code)) return false;
-    if (process.platform === "win32" && e.code === "EPERM" && missed.includes("EEXIST") &&
-        fs.lstatSync(from, {throwIfNoEntry: false})?.isDirectory() &&
-        fs.lstatSync(to, {throwIfNoEntry: false})?.isDirectory()) return false;
     if (!["ENOSYS", "EXDEV", "EISDIR"].includes(e.code)) throw e;
   }
   // Some filesystems, such as FUSE mounts, cannot rename a folder that has files. They fail with
   // ENOSYS, or with EISDIR when the target exists. They can rename an empty folder.
   if (!fs.existsSync(from) && missed.includes("ENOENT")) return false;
-  const claimed = claimedFolder(to, missed);
+  const claimed = claimedFolder(to, missed, beforeAttempt, afterFailure);
   if (claimed === null) return false;
   try {
     copyExclusive(from, to);
@@ -799,22 +789,26 @@ const moved = (from, to, ...missed) => {
   return true;
 };
 
-function claimedFolder(to, missed) {
+function claimedFolder(to, missed, beforeAttempt, afterFailure) {
   // Making a folder and opening it take two calls. Another run can replace the folder at `to`
   // between them. So the run opens its folder before it moves the folder to `to`.
   // A filesystem can reuse a removed folder's inode number. Holding this folder open keeps its
   // number, so a folder that another run makes in its place cannot match it.
   const mine = fs.mkdtempSync(path.join(path.dirname(to), `.${path.basename(to)}-`));
   const claimed = fs.openSync(mine, "r");
+  let renamed;
   try {
-    fs.renameSync(mine, to);
-    return claimed;
+    renamed = renameFolder(mine, to, missed, beforeAttempt, afterFailure);
   } catch (e) {
     fs.closeSync(claimed);
     fs.rmdirSync(mine);
     if (missed.includes(e.code)) return null;
     throw e;
   }
+  if (renamed) return claimed;
+  fs.closeSync(claimed);
+  fs.rmdirSync(mine);
+  return null;
 }
 
 function sameFolder(at, claimed) {
@@ -846,26 +840,64 @@ function publish(work, out, inputs) {
   const parent = path.dirname(path.resolve(out));
   fs.mkdirSync(parent, { recursive: true });
   const next = fs.mkdtempSync(path.join(parent, `.${path.basename(out)}-`));
+  const stage = fs.lstatSync(next, {bigint: true});
+  const summary = path.join(next, "summary.json");
+  let pin, held;
   let old = `${next}-old`;
   let displaced = 0;
   let aside = false;
-  try {
-    fs.cpSync(work, next, { recursive: true });
+  const ownsStage = () => {
+    try {
+      const now = fs.lstatSync(next, {bigint: true, throwIfNoEntry: false});
+      if (!now?.isDirectory() || now.isSymbolicLink() || now.dev !== stage.dev || now.ino !== stage.ino) return false;
+      if (held === undefined) return true;
+      const file = fs.lstatSync(summary, {bigint: true, throwIfNoEntry: false});
+      return file?.isFile() && !file.isSymbolicLink() && file.dev === held.dev && file.ino === held.ino;
+    } catch { return false; }
+  };
+  const closePin = () => {
+    if (pin !== undefined) { fs.closeSync(pin); pin = undefined; }
+  };
+  const cleanupPin = () => {
+    try { closePin(); }
+    catch (e) { console.error("Stage identity handle cleanup failed: " + errorText(e)); }
+  };
+  const pinStage = () => {
+    if (!ownsStage()) throw new CannotFinish(`staging folder changed during publication; retained ${rel(next)} for review`);
+    if (pin === undefined) {
+      pin = fs.openSync(summary, "r");
+      const file = fs.fstatSync(pin, {bigint: true});
+      held ??= file;
+      if (file.dev !== held.dev || file.ino !== held.ino || !ownsStage())
+        throw new CannotFinish(`staging folder changed during publication; retained ${rel(next)} for review`);
+    }
+  };
+  const ready = () => {
+    if (!ownsStage()) throw new CannotFinish(`staging folder changed during publication; retained ${rel(next)} for review`);
     unchanged(inputs, out);
     refuseForeign(out);
-    while (!moved(next, out, "ENOTEMPTY", "EEXIST")) {
+    closePin();
+  };
+  try {
+    fs.cpSync(work, next, { recursive: true });
+    // Hold identity across retry waits, releasing the handle for each actual
+    // rename: Windows can deny directory moves while this child file is open.
+    pinStage();
+    while (!moved(next, out, ["ENOTEMPTY", "EEXIST"], ready, pinStage)) {
       if (aside) {
         refuseForeign(out);
         console.log("Previous output preserved in " + rel(old) + ".");
         old = `${next}-${++displaced}-old`;
         aside = false;
       }
-      aside = moved(out, old, "ENOENT");
+      aside = moved(out, old, ["ENOENT"], ready, pinStage);
       if (aside) refuseForeign(out, foreign(old));
     }
   } catch (e) {
     const back = !aside || putBack(old, out);
-    removeTemporary(next);
+    cleanupPin();
+    if (ownsStage()) removeTemporary(next);
+    else console.error(`Staging ownership changed; retained ${rel(next)} for review.`);
     const why = e instanceof CannotFinish ? errorText(e) : `cannot replace ${rel(out)}: ${errorText(e)}.`;
     if (!back)
       throw new NotPublished(
@@ -874,6 +906,8 @@ function publish(work, out, inputs) {
     throw new NotPublished(
       e instanceof CannotFinish ? why : `${why} The run left ${rel(out)} as it was.`,
     );
+  } finally {
+    cleanupPin();
   }
   if (aside) {
     console.log("Previous output preserved in " + rel(old) + ".");
@@ -882,7 +916,7 @@ function publish(work, out, inputs) {
 
 function putBack(old, out) {
   try {
-    return moved(old, out, "ENOTEMPTY", "EEXIST");
+    return moved(old, out, ["ENOTEMPTY", "EEXIST"]);
   } catch {
     return false;
   }

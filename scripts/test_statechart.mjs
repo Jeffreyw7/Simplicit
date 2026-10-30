@@ -8,6 +8,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import "./test_statechart_values.mjs";
 import "./test_statechart_recovery.mjs";
 import "./test_statechart_config.mjs";
+import "./test_statechart_symbols.mjs";
+import "./test_statechart_windows.mjs";
 
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
