@@ -30,6 +30,84 @@ test("TLC checks the generated model and round-trips the chart", {skip: !hasTlc 
   } finally { fs.rmSync(dir, {recursive: true, force: true}); }
 });
 
+test("rerunning a chart replaces stale output and preserves model inputs", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, () => {
+  const dir = scratch();
+  try {
+    fs.writeFileSync(path.join(dir, "Flow.mmd"), chart);
+    const first = node("statechart.mjs", ["from-chart", "Flow.mmd"], dir);
+    assert.equal(first.status, 0, first.stdout + first.stderr);
+    const output = path.join(dir, "Flow-statechart");
+    fs.writeFileSync(path.join(output, "bug-99.mmd"), "stale generated chart");
+    fs.writeFileSync(path.join(dir, "Flow.mmd"), chart.replaceAll("Done", "Complete"));
+    const spec = path.join(dir, "Flow.tla");
+    fs.writeFileSync(spec, fs.readFileSync(spec, "utf8").replaceAll('"Done"', '"Complete"'));
+    const inputs = ["Flow.mmd", "Flow.tla", "Flow.cfg", "Flow.map.mjs"]
+      .map(name => [name, fs.readFileSync(path.join(dir, name))]);
+
+    const second = node("statechart.mjs", ["from-chart", "Flow.mmd"], dir);
+
+    assert.equal(second.status, 0, second.stdout + second.stderr);
+    assert.match(second.stdout, /back unchanged/);
+    const updated = fs.readFileSync(path.join(output, "chart.mmd"), "utf8");
+    assert.match(updated, /Complete/);
+    assert.doesNotMatch(updated, /Done/);
+    assert.equal(fs.existsSync(path.join(output, "bug-99.mmd")), false);
+    for (const [name, contents] of inputs) {
+      assert.deepEqual(fs.readFileSync(path.join(dir, name)), contents);
+    }
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+});
+
+test("output containing model inputs is rejected without replacing them", () => {
+  const dir = scratch();
+  try {
+    fs.writeFileSync(path.join(dir, "Flow.mmd"), chart);
+    const compiled = node("chart-to-tla.mjs", ["Flow.mmd", "--module", "Flow", "--dir", "output/tlc"], dir);
+    assert.equal(compiled.status, 0, compiled.stdout + compiled.stderr);
+    const inputs = ["Flow.tla", "Flow.cfg", "Flow.map.mjs"]
+      .map(name => [name, fs.readFileSync(path.join(dir, "output/tlc", name))]);
+
+    const result = node("statechart.mjs", ["from-spec", "output/tlc/Flow.tla", "--out", "output"], dir);
+
+    assert.equal(result.status, 2, result.stdout + result.stderr);
+    assert.match(result.stderr, /contains.*input/);
+    for (const [name, contents] of inputs) {
+      assert.deepEqual(fs.readFileSync(path.join(dir, "output/tlc", name)), contents);
+    }
+    assert.deepEqual(fs.readdirSync(path.join(dir, "output")), ["tlc"]);
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+});
+
+test("output containing model inputs reached through a directory alias is rejected", t => {
+  const dir = scratch();
+  const alias = path.join(dir, "model");
+  try {
+    fs.writeFileSync(path.join(dir, "Flow.mmd"), chart);
+    const compiled = node("chart-to-tla.mjs", ["Flow.mmd", "--module", "Flow", "--dir", "output/tlc"], dir);
+    assert.equal(compiled.status, 0, compiled.stdout + compiled.stderr);
+    try {
+      fs.symlinkSync(path.join(dir, "output/tlc"), alias, process.platform === "win32" ? "junction" : "dir");
+    } catch (error) {
+      if (!["EPERM", "EACCES", "ENOTSUP"].includes(error.code)) throw error;
+      t.skip("directory aliases are unavailable");
+      return;
+    }
+    const inputs = ["Flow.tla", "Flow.cfg", "Flow.map.mjs"]
+      .map(name => [name, fs.readFileSync(path.join(dir, "output/tlc", name))]);
+
+    const result = node("statechart.mjs", ["from-spec", "model/Flow.tla", "--out", "output"], dir);
+
+    assert.equal(result.status, 2, result.stdout + result.stderr);
+    assert.match(result.stderr, /contains.*input/);
+    for (const [name, contents] of inputs) {
+      assert.deepEqual(fs.readFileSync(path.join(dir, "output/tlc", name)), contents);
+    }
+  } finally {
+    if (fs.existsSync(alias)) fs.unlinkSync(alias);
+    fs.rmSync(dir, {recursive: true, force: true});
+  }
+});
+
 test("a reachable forbidden state reports a failed invariant with a counterexample", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, () => {
   const dir = scratch();
   try {

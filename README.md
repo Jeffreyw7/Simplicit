@@ -102,7 +102,7 @@ python -B scripts/validate_agents.py
 node --test scripts/test_statechart.mjs
 ```
 
-The Node suite runs local checks without Java/TLC and explicitly skips the two model-checking cases when `TLA2TOOLS` is unset. Set it to the verified JAR path to run those cases too. To validate an installed copy:
+The Node suite runs local checks without Java/TLC and explicitly skips model-checking cases when `TLA2TOOLS` is unset. Set it to the verified JAR path to run those cases too. To validate an installed copy:
 
 ```sh
 python -B scripts/validate_skills.py "/absolute/path/to/project/.agents/skills"

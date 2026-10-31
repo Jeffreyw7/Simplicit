@@ -601,9 +601,10 @@ function refuseForeign(out, files = foreign(out)) {
     );
 }
 
-function outDir(flagged, input, name) {
+function outDir(flagged, input, name, inputs) {
   const out = flagged ?? path.join(path.dirname(input), `${name}-statechart`);
   refuseForeign(out);
+  unchanged(inputs, out);
   return out;
 }
 
@@ -629,6 +630,12 @@ const moved = (from, to, ...missed) => {
     return true;
   } catch (e) {
     if (missed.includes(e.code)) return false;
+    if (
+      process.platform === "win32" &&
+      e.code === "EPERM" &&
+      missed.includes("EEXIST") &&
+      fs.lstatSync(to, { throwIfNoEntry: false })?.isDirectory()
+    ) return false;
     if (!["ENOSYS", "EXDEV", "EISDIR"].includes(e.code)) throw e;
   }
   // Some filesystems, such as FUSE mounts, cannot rename a folder that has files. They fail with
@@ -686,6 +693,11 @@ function copyExclusive(from, to) {
 }
 
 function unchanged(inputs, out) {
+  const contained = inputs.inside(out);
+  if (contained)
+    throw new NotPublished(
+      `${rel(out)} contains input ${rel(contained)}, so it cannot be replaced. Pass --out with a folder outside the input files.`,
+    );
   const changed = inputs.changed();
   if (changed)
     throw new NotPublished(
@@ -818,7 +830,7 @@ async function fromSpec(input, { "expect-broken": expected, title, cover, ...fla
   const second = secondModel(input, otherCfg, flags, inputs);
   const listed = second?.role === "against" ? listedBreaks(second.model.spec) : undefined;
   const model = readInput(input, cfg, expected, inputs);
-  const out = outDir(flags.out, input, name);
+  const out = outDir(flags.out, input, name, inputs);
   if (!fs.existsSync(map)) {
     fs.writeFileSync(map, SCAFFOLD(name, input));
     throw new CannotFinish(`Wrote ${rel(map)}. Fill in its labels, then run this command again.`);
@@ -863,7 +875,7 @@ async function fromChart(input, { "expect-broken": expected, ...flags }, rendere
   inputs.add([spec, cfgOf(spec), map]);
   const tools = findTools();
   const model = readInput(spec, cfgOf(spec), expected, inputs);
-  const out = outDir(flags.out, input, name);
+  const out = outDir(flags.out, input, name, inputs);
   return inWorkFolder(async (work) => {
     const now = await check(tools, model, { work, out }, expected);
     const drawn = await draw({ now, map, work, out, title: flags.title, comparing: true });
