@@ -43,6 +43,8 @@ Comment Sicko inherits the host model and reads its portable brief from the inst
 
 The critic pins `gpt-6.1-sol` with `high` reasoning. Honor those choices when using the role; model availability and the host's supported role selector must be checked. Effective permissions come from the host/parent; the critic's instructions do not enforce a separate sandbox. See [OpenAI's custom-agent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents).
 
+Native execution of both roles and a small set of automatic-selection cases passed on Windows with Codex 0.165.0. For app-server tests on that version, use a persisted parent thread (`thread/start` with `ephemeral: false`): named-role launches from ephemeral parents failed while loading missing parent rollout context. The disclosed generic fallback worked, but did not satisfy the critic's model pin. See the [dated native validation record](docs/validation.md#native-roles-models-and-selection--october-31-2026) for the tested settings and remaining limits.
+
 Skills-only adoption uses the documented generic independent-reviewer fallback when permitted. For `$no-comments`, that helper receives the Comment Sicko brief and the fallback is disclosed. If independent execution is unavailable, the requested independent pass remains pending. Validate the complete copied role inventory with `python -B scripts/validate_agents.py "/path/to/project/.codex/agents"`, then separately confirm native role discovery and a real bounded review. The validator expects both shipped profiles; a parser pass does not establish native loading or model execution. Do not repeat an already valid review just to obtain a preferred role name.
 
 ### Continue through the authorized work

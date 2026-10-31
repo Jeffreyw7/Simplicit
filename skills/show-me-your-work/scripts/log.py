@@ -1,5 +1,6 @@
 """Append a sanitized UTC decision row to a single-writer TSV log."""
 import argparse
+import csv
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,6 +19,19 @@ def append(logfile, cells):
         with path.open("r", encoding="utf-8", newline="") as handle:
             if handle.readline().rstrip("\r\n") != HEADER.rstrip("\n"):
                 raise ValueError("existing log has an unexpected header")
+            previous_limit = csv.field_size_limit()
+            try:
+                try:
+                    csv.field_size_limit(sys.maxsize)
+                except OverflowError:
+                    csv.field_size_limit(2**31 - 1)
+                for row in csv.reader(handle, delimiter="\t", strict=True):
+                    if len(row) != 6:
+                        raise ValueError("existing log has a row without six columns")
+                    if any(char in cell for cell in row for char in "\t\r\n"):
+                        raise ValueError("existing log has a cell with a tab or line break")
+            finally:
+                csv.field_size_limit(previous_limit)
         with path.open("rb") as handle:
             handle.seek(-1, 2)
             if handle.read(1) != b"\n":
@@ -28,7 +42,8 @@ def append(logfile, cells):
     with path.open("a", encoding="utf-8", newline="") as handle:
         if needs_header:
             handle.write(HEADER)
-        handle.write("\t".join([stamp] + [clean(cell) for cell in cells]) + "\n")
+        csv.writer(handle, delimiter="\t", lineterminator="\n").writerow(
+            [stamp] + [clean(cell) for cell in cells])
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -45,7 +60,7 @@ def main():
     args = parser.parse_args(["--", *raw])
     try:
         append(args.logfile, [args.phase, args.decision, args.why, args.evidence, args.result])
-    except (OSError, UnicodeError, ValueError) as exc:
+    except (OSError, UnicodeError, ValueError, csv.Error) as exc:
         parser.exit(1, f"log: {exc}\n")
     return 0
 

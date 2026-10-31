@@ -1,5 +1,84 @@
 # Validation evidence
 
+## PR review and reliability repairs — October 31, 2026
+
+Parallel independent reviewers inspected PR #3 against `main` (`6c5cf96291c00262ad36d19db652849ea6b0e742`), starting from candidate `85809a64be7a670b895df3c73bba8b4b925d9874`. The review covered statechart helpers, packaging/installation/CI, decision logging, workflow instructions and validation claims. [Baseline Linux/Windows CI](https://github.com/Jeffreyw7/Simplicit/actions/runs/41165133519) was already passing with 52 Python and 10 Node/TLC tests; the following defects required additional regression cases.
+
+| Finding | Reproduction and repair |
+|---|---|
+| P1: CFG rewriting could falsely verify an invariant | Normalizing all whitespace changed the string `"two  spaces"` to `"two spaces"`. Direct TLC reported the invariant violated while the helper reported it held. The helper now extracts rule clauses without rewriting the remaining config text, including quoted whitespace, escapes and comment-like text. |
+| P2: Nested user files could be deleted during publication | A successful rerun removed `tlc/notes.txt` because the old ownership check accepted the entire `tlc` directory. Recursive checks now refuse unknown files, unexpected entry types and directory aliases before replacing output. The documented generated-file namespace remains replaceable; names do not establish provenance. |
+| P2: Automatic chart compilation could overwrite model companions | With `NAME.tla` absent, existing `NAME.cfg` and `NAME.map.mjs` were overwritten. `from-chart` now checks all three generated paths before writing any of them. Explicit standalone compiler behavior is unchanged and documented. |
+| P2: Quoted decision-log cells did not round-trip | Raw tab joining let TSV readers strip literal quotes, expose formula-like text or consume a later row after an unmatched quote. Standard TSV quoting now preserves sanitized cell values; Python CSV parsing and PowerShell `Import-Csv` confirmed the repair. Actual spreadsheet formula execution was not tested. |
+| P2: Malformed decision-log bodies accepted another append | A correct header followed by an incomplete six-column record was accepted. Appends now validate every existing record and refuse malformed quoting, wrong widths or embedded tabs/newlines without modifying the file. Valid large cells and LF/CRLF logs remain usable. |
+| P2: Native-validation claims were stale | README and the validation record still described native role/model execution and sampled selection as unverified. The dated native evidence below now records the successful persisted-parent checks and the remaining ephemeral-parent limitation. |
+
+Independent follow-up review caught three issues in the initial statechart repairs: CR-only line comments could hide an invariant, a disappearing/replaced output root could cause a spurious failure, and nested Finder `.DS_Store` metadata could prevent a rerun. The final parser handles CR and LF. Ownership scans tolerate a vanished root, rescan a replacement, and still refuse a missing nested entry under an unchanged root. Regular `.DS_Store` files are allowed in recognized generated directories, while links and wrong entry types remain refused.
+
+Regression evidence includes real TLC failures and successful model runs, companion collision preservation, nested-file/type/alias preservation, deterministic filesystem interleavings, ordinary reruns and quoted/malformed log records. Early CFG test fixtures included an invalid constant-only invariant and an incorrect assumption about CFG/TLA escape decoding; those fixtures were corrected and rerun against both the original and repaired implementation. Their original failures are not counted as proof of a product defect.
+
+### Final local verification
+
+The repaired working tree passed on Windows with Python 3.12.14, Node.js 25.2.0, Java 21.0.12.1 and TLC 1.7.4. `TLA2TOOLS` pointed to a task-local JAR with SHA-256 `936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88`; no global runtime configuration changed.
+
+| Command/check | Result |
+|---|---|
+| `python -B -m unittest discover -s scripts -p 'test_*.py'` | 57 tests, zero failures; two agent-validator tests skipped because unprivileged symbolic links are unavailable. Windows short-name and directory-junction cases executed. |
+| `python -B scripts/validate_skills.py` | All 62 skills valid, including local links and licenses. |
+| `python -B scripts/validate_agents.py` | Both reviewer profiles pass TOML parsing and package policy. |
+| `node --test scripts/test_statechart.mjs` with verified TLC | 35 tests including subtests, all passed, zero skips, 230.2 seconds. |
+| Independent repair review | No unresolved actionable findings after the logger, statechart and documentation follow-ups. |
+| `git diff --check` and pinned source comparison | Passed; no `pstack/` changes. |
+
+These are local repaired-tree results. The linked baseline CI above predates these repairs; the PR description records the hosted result for the pushed revision separately.
+
+Publication remains optimistic: concurrent nested mutation may conservatively stop a run. The deterministic race cases do not establish arbitrary concurrent-writer or non-rename-filesystem behavior. This repair pass does not repeat optional PNG rendering or broaden the native model study below. The original `pstack/` source tree remains `880564357e051d7c7802da1cb5d8df1d0b008299`.
+
+## Native roles, models, and selection — October 31, 2026
+
+These checks ran against `85809a64be7a670b895df3c73bba8b4b925d9874` on Windows with Codex CLI 0.165.0 and Node.js 25.2.0. They supersede the native-role and sampled-selection gaps in the October 27 records below. Earlier dated results retain their original scope and counts.
+
+Parallel, isolated native `critic` and `comment-sicko` probes completed in the chat host. The critic found a seeded retry-loss defect. Comment Sicko found redundant/dead comments and a false-success workaround, retained legal/API documentation and an unresolved external constraint, and applied no edits. The lead independently reproduced both seeded failures and verified unchanged fixture hashes. Two additional lead trials loaded Simplicit by file path and selected the appropriate native reviewer without receiving its expected name.
+
+Fresh native app-server sessions then executed **six parent turns and four reviewer turns** over four request types. Every session discovered all **62 adopted skills enabled**, with zero loading errors. The 200 copied skill files and both copied agent profiles matched the source bytes. Native prompts supplied no expected skill/role names or findings. The review prompts explicitly requested one independent reviewer, so they test skill/role choice rather than whether to delegate.
+
+| Request | Observed native behavior |
+|---|---|
+| Explain a module and its empty-input behavior | Loaded `how`, runtime guidance and source; returned the correct explanation. |
+| Audit unnecessary comments and comment-backed workarounds | Loaded `no-comments`; with a persisted parent, selected native `comment-sicko`, proposed two removals and retained license, public API and protocol comments. |
+| Review a queue against its serialized-caller contract | Loaded `interrogate`; with a persisted parent, selected native `critic`, reproduced the seeded failed-item loss, and kept concurrency outside the supplied contract. |
+| Calculate `17 + 25`, answering only with the number | Returned `42` without model-issued tools, skill reads or reviewers. The prompt did not prohibit tools. |
+
+Both persisted review parents used `gpt-6-astra` with `medium` reasoning, after the native model catalog confirmed availability. The actual spawn calls supplied the appropriate `agent_type` and **no model or effort override**:
+
+| Child role | Resolved model | Resolved effort | Result |
+|---|---|---|---|
+| `critic` | `gpt-6.1-sol` | `high` | Profile override observed; child and parent completed. |
+| `comment-sicko` | `gpt-6-astra` | `medium` | Parent settings inherited; child and parent completed. |
+
+Evidence combined actual spawn records, resolved-at-creation `subAgentActivity` fields, metadata-only `thread/read`, final responses and child completion events. The standalone walkthrough also completed under an explicit `gpt-6.1-sol`/`high` request. Each parent request disabled provider fallback, and no model-reroute event was observed. These establish actual execution under the reported configuration; backend serving-model identity is not independently exposed by these APIs.
+
+### Ephemeral parent limitation and reproduction
+
+Both initial review cases used ephemeral parents. Named-role startup failed with `failed to load model context ... no rollout found for thread id <parent-id>`. Each lead disclosed the failure and completed a generic independent review with the appropriate brief. Those helpers used `gpt-6-astra`/`medium`, leaving the critic's model pin unmet on that fallback path.
+
+Repeating the same prompts, files, profiles, model/effort and read-only policy with `thread/start.ephemeral: false` allowed both native roles to complete with the settings above. For a native app-server check on Codex 0.165.0:
+
+1. Install the full collection and both reviewer profiles in a disposable selected project. Initialize the app-server and verify `skills/list` with `forceReload: true`.
+2. Use a persisted parent with read-only permissions and the required model/effort available in the native catalog. The comparison parent used `gpt-6-astra`/`medium`; the critic profile retained its shipped pin.
+3. Ask for a bounded comment audit or contract review without naming the expected skill or role. Inspect actual skill reads, spawn arguments, resolved child role/model/effort, reviewer completion, lead triage and before/after hashes.
+4. Archive only the test-created persisted threads after collecting evidence and stop the app-server. In this run, all four persisted thread archives succeeded and all six app-server processes exited normally.
+
+The paired results isolate this limitation in the tested client path; they do not establish behavior for every version, transport or ephemeral delegation mode. Generic fallback itself worked. Restricted-shell initialization also failed before startup with `Could not find home directory`; approved host execution resolved that environment restriction without changing global configuration or copying credentials. The model tasks still used read-only permissions and approval policy `never`.
+
+The first observation harness missed `subAgentActivity` child IDs while looking for a different spawn event. Raw start/completion events established the generic reviews; later collection captured the correct IDs. Original failed-run evidence was retained. The harnesses and fixtures were disposable local artifacts, not automated repository CI.
+
+### Limits of the result
+
+This is a small smoke study, not a general accuracy or quality benchmark. Native reviewers in the automatic-dispatch cases inherited parent history (`fork_turns: all`); these checks do not establish blinded reviewer reasoning. The initial direct role probes used isolated contexts. All 62 skills loaded, but their individual behavior was not exhaustively tested. Linux/macOS native execution, other client versions, ambiguous or mixed-intent requests, repeated quality trials, unavailable-model errors, rate limits and cancellation remain untested. No token, cost, speed or quality savings are claimed. Behavioral role instructions alone do not enforce a separate sandbox.
+
+An independent critic audited the supplied protocol/metadata evidence, matched hashes and parent-persistence comparison and corroborated these bounded conclusions.
+
 ## Comment Sicko dispatch update — October 27, 2026
 
 The requested follow-up keeps `$no-comments` as the entrypoint and routes its comment-specific pass through `comment-sicko`. The new `.codex/agents/comment-sicko.toml` loads the installed portable reviewer brief; general candidate review still prefers `critic`. An unavailable named role uses a permitted independent generic helper with the same brief and an explicit disclosure. Without independent execution the Comment Sicko pass stays pending. Reviewers return proposals; the lead owns authorized edits and verifies findings.

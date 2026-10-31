@@ -123,30 +123,60 @@ function script(name, scriptArgs, about, { okExits = [0] } = {}) {
 const KEYWORD =
   /^(SPECIFICATION|INIT|NEXT|CONSTANTS?|INVARIANTS?|PROPERTY|PROPERTIES|SYMMETRY|VIEW|CONSTRAINTS?|ACTION_CONSTRAINTS?|CHECK_DEADLOCK|POSTCONDITION|ALIAS)$/;
 
+function* configTokens(cfg) {
+  for (let i = 0; i < cfg.length;) {
+    if (/\s/.test(cfg[i])) { i++; continue; }
+    if (cfg.startsWith("\\*", i)) {
+      while (i < cfg.length && cfg[i] !== "\r" && cfg[i] !== "\n") i++;
+      continue;
+    }
+    if (cfg.startsWith("(*", i)) {
+      let depth = 1;
+      i += 2;
+      while (i < cfg.length && depth) {
+        if (cfg.startsWith("(*", i)) { depth++; i += 2; }
+        else if (cfg.startsWith("*)", i)) { depth--; i += 2; }
+        else i++;
+      }
+      if (depth) throw new CannotFinish("the TLC config has an unterminated block comment");
+      continue;
+    }
+    const start = i;
+    const quoted = cfg[i] === '"';
+    if (quoted) {
+      i++;
+      while (i < cfg.length && cfg[i] !== '"') i += cfg[i] === "\\" ? 2 : 1;
+      if (i >= cfg.length) throw new CannotFinish("the TLC config has an unterminated string");
+      i++;
+    } else {
+      while (i < cfg.length && !/\s|"/.test(cfg[i]) &&
+        !cfg.startsWith("(*", i) && !cfg.startsWith("\\*", i)) i++;
+    }
+    yield { text: cfg.slice(start, i), start, quoted };
+  }
+}
+
 function splitRules(cfg) {
-  const words = cfg
-    .replace(/\(\*[^]*?\*\)/g, " ")
-    .replace(/\\\*.*/g, " ")
-    .split(/\s+/)
-    .filter(Boolean);
   const kept = [];
   const rules = [];
   const properties = [];
-  let section = "";
-  for (const w of words) {
-    if (KEYWORD.test(w)) section = w;
-    const list = /^INVARIANTS?$/.test(section)
-      ? rules
-      : /^PROPERT(Y|IES)$/.test(section)
-        ? properties
-        : null;
-    if (!list) kept.push(KEYWORD.test(w) && kept.length ? `\n${w}` : w);
-    else if (w !== section && !list.includes(w)) list.push(w);
+  let list = null;
+  let copied = 0;
+  for (const { text, start, quoted } of configTokens(cfg)) {
+    if (!quoted && KEYWORD.test(text)) {
+      const next = /^INVARIANTS?$/.test(text)
+        ? rules
+        : /^PROPERT(Y|IES)$/.test(text) ? properties : null;
+      if (next && !list) kept.push(cfg.slice(copied, start));
+      if (!next && list) copied = start;
+      list = next;
+    } else if (list && !list.includes(text)) list.push(text);
   }
+  if (!list) kept.push(cfg.slice(copied));
   // TLC takes only a state predicate as an INVARIANT, and checks a state predicate given as a
   // PROPERTY only in the initial states, which the INVARIANT run checks too.
   return {
-    cfgWithoutRules: `${kept.join(" ")}\n`,
+    cfgWithoutRules: `${kept.join("")}\n`,
     rules,
     properties: properties.filter((p) => !rules.includes(p)),
   };
@@ -579,16 +609,53 @@ function renderFile(input, flags, { lib, theme }) {
 const published = (work, out) => (file) => rel(path.join(out, path.relative(work, file)));
 
 const OWN =
-  /^((chart|bug-\d+(-developer|-layered)?)\.(mmd|png)|stories\.md|summary\.json|tlc|\.DS_Store)$/;
+  /^((chart|bug-\d+(-developer|-layered)?)\.(mmd|png)|stories\.md|summary\.json|\.DS_Store)$/;
 
 function foreign(dir) {
   try {
-    return fs
-      .readdirSync(dir)
-      .filter((f) => !OWN.test(f))
-      .sort();
+    for (;;) {
+      const root = fs.lstatSync(dir, { throwIfNoEntry: false });
+      if (!root) return [];
+      if (!root.isDirectory()) return ["."];
+      const found = [];
+      const visit = (relative = "") => {
+        const entries = fs.readdirSync(path.join(dir, relative)).map((name) => ({
+          name,
+          stat: fs.lstatSync(path.join(dir, relative, name)),
+        }));
+        const files = new Set(entries.filter((e) => e.stat.isFile()).map((e) => e.name));
+        const modules = [...files]
+          .filter((name) => /^[A-Za-z0-9_]+\.dot$/.test(name))
+          .map((name) => name.slice(0, -4))
+          .filter((name) => files.has(`${name}.cfg`) && files.has(`${name}.out`));
+        for (const { name, stat } of entries) {
+          const entry = path.join(relative, name);
+          const directory = (!relative && name === "tlc") ||
+            (relative === "tlc" && ["fixed", "against"].includes(name));
+          if (directory && stat.isDirectory()) { visit(entry); continue; }
+          const owned = !relative ? OWN.test(name) :
+            name === ".DS_Store" ||
+            (relative === "tlc" && /^regions-(all|proof)\.mmd$/.test(name)) ||
+            modules.some((module) =>
+              [ `${module}.cfg`, `${module}.out`, `${module}.dot`, `${module}_rules.tla` ].includes(name) ||
+              (name.startsWith(`${module}-`) && /^[A-Za-z0-9_!]+\.(cfg|out)$/.test(name.slice(module.length + 1))));
+          if (!stat.isFile() || !owned) found.push(entry);
+        }
+      };
+      let missing;
+      try {
+        visit();
+      } catch (e) {
+        if (e.code !== "ENOENT") throw e;
+        missing = e;
+      }
+      const current = fs.lstatSync(dir, { throwIfNoEntry: false });
+      if (!current) return [];
+      if (current.dev !== root.dev || current.ino !== root.ino) continue;
+      if (missing) throw missing;
+      return found.sort();
+    }
   } catch (e) {
-    if (e.code === "ENOENT") return [];
     throw new CannotFinish(`cannot use ${rel(dir)} as the output folder: ${e.message}`);
   }
 }
@@ -603,8 +670,8 @@ function refuseForeign(out, files = foreign(out)) {
 
 function outDir(flagged, input, name, inputs) {
   const out = flagged ?? path.join(path.dirname(input), `${name}-statechart`);
-  refuseForeign(out);
   unchanged(inputs, out);
+  refuseForeign(out);
   return out;
 }
 
@@ -867,8 +934,14 @@ async function fromChart(input, { "expect-broken": expected, ...flags }, rendere
   const map = spec.replace(/\.tla$/, ".map.mjs");
   const inputs = new Inputs().add([input]);
   if (fs.existsSync(spec)) {
-    console.log(`Kept ${rel(spec)}. Delete it to write the spec again from ${rel(input)}.`);
+    console.log(`Kept ${rel(spec)}. Move the spec and its .cfg and .map.mjs companions to generate them again from ${rel(input)}.`);
   } else {
+    const collisions = [spec, cfgOf(spec), map].filter((file) =>
+      fs.lstatSync(file, { throwIfNoEntry: false }));
+    if (collisions.length)
+      throw new CannotFinish(
+        `Cannot generate ${name}: ${collisions.map(rel).join(", ")} already ${collisions.length === 1 ? "exists" : "exist"}. Move these paths or choose another --module; no model files were written.`,
+      );
     script("chart-to-tla.mjs", [input, "--module", name], input);
     console.log(`Wrote ${name}.tla, ${name}.cfg, and ${name}.map.mjs from ${rel(input)}.`);
   }

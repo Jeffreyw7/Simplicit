@@ -75,8 +75,10 @@ const FROM_SPEC = `from-spec SPEC.tla
 
 const FROM_CHART = `from-chart CHART.mmd
   Writes NAME.tla, NAME.cfg, and NAME.map.mjs next to the chart. When NAME.tla already exists, it
-  writes none of them. Otherwise it replaces a NAME.cfg or NAME.map.mjs that is there. Then it
-  checks the spec as from-spec does, and compares the chart that the spec draws with CHART.mmd.
+  writes none of them. Otherwise all three paths must be absent; an existing companion stops the
+  command before it writes any of them. Move the companions or choose another --module to generate
+  a new model. Then it checks the spec as from-spec does, and compares the chart that the spec
+  draws with CHART.mmd.
 
   --module NAME      The TLA+ module name. Default: the chart's file name in CamelCase, such as
                      NotesApp for notes-app.mmd.
@@ -141,8 +143,10 @@ const COMMON = `Both commands
   --out DIR          The output folder. Default: NAME-statechart next to the input. A run writes its
                      files in a temporary folder, and then replaces the whole output folder with
                      it. When runs overlap, the output folder has the files of the run that
-                     finished last. The command does not use an output folder that has files that
-                     it did not write. On a filesystem that cannot rename, the command copies the
+                     finished last. The command refuses links, unexpected entry types, and files
+                     outside its reserved output names, including inside tlc/. Reserved names
+                     identify replaceable output, not proof of who wrote it; see references/runtime.md.
+                     On a filesystem that cannot rename, the command copies the
                      files into place, and overlapping runs can mix their files.
   --png              Also draw each chart as a PNG. The PNG section tells how.
   --theme NAME       The colors of each PNG: light, dark, or classic. Default: light. It needs
