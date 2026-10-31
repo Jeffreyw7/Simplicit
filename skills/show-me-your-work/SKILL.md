@@ -36,7 +36,7 @@ ts	phase	decision	why	evidence	result
 
 Write each entry the way you'd tell a teammate what you did. Plain words, concrete actions, no AI speak or abstract jargon (the **unslop** skill applies to log text too).
 
-Use `python <installed-skill>/scripts/log.py <logfile> <phase> <decision> <why> <evidence> <result>` with the installed skill's actual absolute path. Read [helper behavior](references/helper.md) before first use. It stamps `ts`, writes the header on first use, strips stray tabs/newlines, and prefixes any cell starting with `=`, `+`, `-`, or `@` with a single quote. A bare `printf` appending a row works too, but mind those same bytes if cells come from generated or user-supplied text.
+Use `python <installed-skill>/scripts/log.py <logfile> <phase> <decision> <why> <evidence> <result>` with the installed skill's actual absolute path. Read [helper behavior](references/helper.md) before first use. It stamps `ts`, writes the header on first use, replaces tabs and line breaks with spaces, and prefixes cells beginning with `=`, `+`, `-`, or `@` after leading whitespace with a single quote. It also applies TSV quoting to preserve literal double quotes. Prefer this helper to manual appends. Manual writers must apply the same sanitization and formula guards, double every literal double quote, and enclose any cell containing quotes in double quotes.
 
 Log decision points and checkpoints, not every action: a fork chosen, a unit completed with its verification result, a pivot or revert with its trigger, a blocker surfaced, a gate fixed. For loop runs, one row per iteration. Skip the trivial and self-evident.
 

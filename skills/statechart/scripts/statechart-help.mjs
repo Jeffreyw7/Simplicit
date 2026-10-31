@@ -141,13 +141,14 @@ const COMMON = `Both commands
                      break, and the --fixed or --against model breaks no other rule.
   --title TEXT       The chart title. Each bug chart adds ", bug N".
   --out DIR          The output folder. Default: NAME-statechart next to the input. A run writes its
-                     files in a temporary folder, and then replaces the whole output folder with
-                     it. When runs overlap, the output folder has the files of the run that
-                     finished last. The command refuses links, unexpected entry types, and files
-                     outside its reserved output names, including inside tlc/. Reserved names
-                     identify replaceable output, not proof of who wrote it; see references/runtime.md.
-                     On a filesystem that cannot rename, the command copies the
-                     files into place, and overlapping runs can mix their files.
+                     files in a temporary folder, and then attempts to replace the whole output folder.
+                     Overlapping runs may refuse publication. The run whose process finishes last is
+                     not guaranteed to supply the final output. The command refuses links, unexpected
+                     entry types, and files outside its reserved output names, including inside tlc/.
+                     These names identify replaceable output, not proof of who wrote it; see
+                     references/runtime.md.
+                     On a filesystem that cannot rename, the command copies files into place.
+                     Readers may see partial output during a copy, and overlapping publication may fail.
   --png              Also draw each chart as a PNG. The PNG section tells how.
   --theme NAME       The colors of each PNG: light, dark, or classic. Default: light. It needs
                      --png.
