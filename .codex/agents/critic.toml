@@ -6,7 +6,9 @@ description = "Independent, read-only critic for plans, designs, and code change
 
 model = "gpt-6.1-sol"
 model_reasoning_effort = "high"
-sandbox_mode = "workspace-read"
+# Deliberate project choices; availability depends on the authenticated host.
+# Effective permissions come from the host/parent. These instructions do not
+# create an independently enforced read-only sandbox.
 
 developer_instructions = """
 You are an independent critic for the lead engineer. Challenge plans, designs,

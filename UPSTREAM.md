@@ -1,41 +1,38 @@
-# Upstream source
+# Upstream source and complete adaptation map
 
-Simplicit imports only `pstack/` from [cursor/plugins](https://github.com/cursor/plugins/tree/99b609a72323b70204eab407c622f436e858e112/pstack).
+Simplicit preserves the original 200-file pstack subtree from [cursor/plugins](https://github.com/cursor/plugins/tree/99b609a72323b70204eab407c622f436e858e112/pstack).
 
-- Upstream commit: `99b609a72323b70204eab407c622f436e858e112`.
-- Imported: October 26, 2026.
-- Exact pstack Git tree: `880564357e051d7c7802da1cb5d8df1d0b008299`.
-- License: [MIT, copyright 2026 Lauren Tan](pstack/LICENSE).
+- Pinned commit: `99b609a72323b70204eab407c622f436e858e112`.
+- Imported October 26, 2026; this adaptation expanded October 27, 2026.
+- Git tree: `880564357e051d7c7802da1cb5d8df1d0b008299`.
+- License: [MIT, copyright 2026 Lauren Tan](pstack/LICENSE). Every installed skill carries the same license bytes.
 
-All 200 imported files remain unchanged. This is a subtree source import, not a GitHub fork relationship. Other upstream plugins and root build generators are outside this import.
+All imported files remain unchanged. This is a subtree source import, not a GitHub fork relationship. No automatic upstream updater is installed.
 
-## Supported adaptations
+## Coverage
 
-`skills/` is a separate Codex-oriented collection. Every skill includes the upstream license, so attribution travels with repository-local adoption. Install the collection together; its sibling links are required dependencies.
+Every one of the 58 top-level skills and all three nested Benny skills has a substantive adapter in `skills/`. `poteto-mode` maps to `simplicit`, `poteto-help` to `simplicit-help`, and `setup-pstack` to `setup-simplicit`. Other skill names are preserved. `simplicit-mode` is an additional compatibility alias, yielding 62 installed skills.
 
-| Adaptation | Upstream basis | Change |
-|---|---|---|
-| `simplicit`, mode alias, help, runtime, worker brief | `poteto-mode`, `poteto-help`, `automate-me` and mode playbooks | Implementing lead, risk-based routes, independent candidate review, scoped helpers, current host capabilities. |
-| Change/bug/investigation/review playbooks | Mode feature, bug-fix, investigation, session-pickup; `interrogate` | Progressive loading, read-only routes, evidence freshness, focused repair review. |
-| Engineering reference | `principle-prove-it-works`, `principle-fix-root-causes`, `principle-attack-the-premise`, `principle-test-behavior-not-implementation`, `principle-encode-lessons-in-structure` | Portable supporting guidance loaded when relevant. |
-| `architect` and two references | Same upstream skill, design-red-flags and rationale-template | Usage-first sketch retained; panels and duplicate implementations conditional; design-only scope respected. |
-| `how` and explorer brief | Same upstream skill and explorer/explainer prompts | Lead investigates/synthesizes; explorers conditional. |
-| `why` and three references | Same upstream skill, epistemics, investigator prompt, source playbooks | Epistemics copied unchanged; targeted source search replaces mandatory fan-out. |
-| `interrogate` and four references | Same upstream skill and review references | One independent reviewer by default; evidence over consensus; no arbitrary line threshold or scope-expanding cleanup mandate. |
-| `tdd` | Same upstream skill | Retains focused regression workflow; adds runtime contract and preserves authorization. |
-| `teach` | Same upstream skill | Reuses findings; no forced panels, writing dependency, or diagrams. |
-| `correct` | Same upstream skill | Structural enforcement within scope; no automatic broad refactor, rule-table expansion, or commits. |
-| `blast-radius` | Same upstream skill | Retains cross-contract investigation and real-code proof; allows multiple safety facts and marks unavailable evidence. |
-| `arena`, `swarm` | Same upstream skills | Conditional experiments or independent slices, actual host tools, explicit ownership, final integrated verification. |
-| `create-verification-skill` and feature-map outline | Same upstream skill and feature-map examples | Repository-local `.agents/skills`, observed host commands, end-to-end proof or draft status. |
-| `maintain-verification-skill` | Same upstream skill | Full requested coverage retained; source delegation optional; product edits excluded; no automatic PR. |
+The [machine-readable map](migration-map.json) enumerates every source skill and all 23 source playbooks. Feature and refactoring both use Simplicit's existing change playbook; review is an additional Simplicit playbook. The [installed catalog](skills/simplicit/references/catalog.md) explains direct invocation.
 
-The [reviewed revision plan](docs/superpowers/plans/2026-10-26-simplicit-specialists.md) records the shared-thread requirements and preimplementation review.
+## Adaptation policy
 
-## Naming and support boundary
+Retain substantive domain reasoning, evidence requirements and useful resources. Replace Cursor-only tool calls, fixed model rosters, mandatory multi-agent fan-out and global settings with actual Codex capabilities and the existing [runtime contract](skills/simplicit/references/runtime.md). The lead normally implements; helpers resolve bounded needs and independent review. No source instruction widens authorization for external actions.
 
-The main/alias/help pattern and worker-brief naming follow [Jimmy at revision 2bb05bc](https://github.com/ja153903/jimmy/tree/2bb05bcd288f60a9b435ddd156dabb8d88fafe80). Specialist names stay descriptive, as Jimmy's do. No Jimmy runtime or generated package is imported.
+The complete skill map is not a promise that the host supplies every external integration. History uses available sources, video uses available renderers, bot workflows require a configured webhook, and scheduled issue work requires an actual scheduler. Skills can be invoked manually without a scheduler. Missing capabilities have explicit outcomes.
 
-Only the 12 specialists above and the three Simplicit entrypoints are supported adaptations. Every other skill under `pstack/skills/` remains source-only, even if some of its guidance is host-neutral. In particular, formal verification and `statechart` scripts need separate Node/Java/TLC and rendering validation; transcript tools, platform setup, orchestration, automations, and shipping paths are not active routes.
+The upstream `pstack/agents/comment-sicko.md` is adapted as `.codex/agents/comment-sicko.toml` plus the installed `no-comments/references/comment-review.md` brief. `$no-comments` dispatches that named reviewer, or discloses a generic independent helper using the same brief when the host lacks the role. The lead verifies findings and owns edits. The adaptation preserves the keep categories and `MUST KILL` root-cause findings while retaining Simplicit's evidence-based treatment of uncertain safety constraints. It does not add another skill entrypoint or require the original `pstack/` tree at runtime.
 
-Do not read original host-specific instructions as an execution fallback for an unavailable adapted skill. Restore a missing collection dependency instead. Updates require deliberate source review and validation; there is no automatic upstream synchronization.
+### Executable helpers
+
+- Statechart retains all 21 production JavaScript modules from the pinned source. TLC setup now requires explicit existing Java/JAR configuration. PNG dependencies require a one-time opt-in; documented versions stay pinned. CLI help describes these differences. Original upstream tests remain in the source snapshot; portable behavioral tests are in `scripts/test_statechart.mjs`.
+- The Bash decision logger is replaced by a Python 3.10+ helper with the same six-column UTC TSV contract, literal argument handling, whitespace/formula sanitation and malformed-log rejection.
+- The upstream Bun orchestration framework, PR watcher and destructive shell cleanup helpers are not installed. Their workflows are adapted into the mode's portable playbooks: durable unit/evidence records, single topology writer, actual host collaboration/Git tools, bounded retries, and explicit shipping/cleanup authority. These are workflow adaptations, not claims of binary/CLI compatibility with `orch`.
+
+The naming pattern and worker brief established by the earlier adaptation continue to follow [Jimmy at 2bb05bc](https://github.com/ja153903/jimmy/tree/2bb05bcd288f60a9b435ddd156dabb8d88fafe80/plugins/adapters/common/skills). No Jimmy runtime is imported.
+
+## Validation and updates
+
+Run the [checks in README](README.md#validate). Coverage tests enumerate the pinned subtree independently of the map, then check every adapter, license and playbook target. Update the source snapshot, map, adapters and validation deliberately as one reviewed change. Never execute inactive upstream instructions as a fallback for missing installed resources.
+
+See [validation evidence](docs/validation.md) for actual trials and remaining limits. Instructions guide behavior; they do not enforce sandbox or service permissions.

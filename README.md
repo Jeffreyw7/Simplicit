@@ -1,86 +1,121 @@
 # Simplicit
 
-A personal development workflow built from [pstack](https://github.com/cursor/plugins/tree/main/pstack), adapted for Codex and selected repositories.
+All skills from the pinned [pstack](https://github.com/cursor/plugins/tree/99b609a72323b70204eab407c622f436e858e112/pstack) snapshot, adapted for Codex.
 
-One lead investigates, plans, implements, verifies, obtains independent review, repairs findings, and prepares a handoff. Specialists resolve bounded questions. The user controls merging and releasing.
+The collection contains **62 Codex skills**: adaptations of all 58 top-level pstack skills and all three nested Benny skills, plus the existing `simplicit-mode` alias. All 23 upstream mode playbooks have portable routes. The [migration map](migration-map.json) makes coverage explicit.
 
-## Use the workflow
+One lead investigates, plans, implements, verifies and integrates. Specialists resolve bounded needs; meaningful changes receive independent review. The user controls merging, deployment and external messaging.
 
-```text
-$simplicit Fix the duplicate-request bug using the current feature contract.
-Verify the result and prepare a reviewable change.
+## Install in a selected repository
+
+Use Python 3.11 or later. From this Simplicit checkout:
+
+```sh
+python -B scripts/install_skills.py "/absolute/path/to/your-project"
 ```
 
-[Simplicit](skills/simplicit/SKILL.md) is the main entrypoint. `$simplicit-mode` remains a compatibility alias; `$simplicit-help` explains the catalog. The naming follows [Jimmy](https://github.com/ja153903/jimmy/tree/2bb05bcd288f60a9b435ddd156dabb8d88fafe80/plugins/adapters/common/skills): a short main command, a mode alias, a help entry, and unchanged specialist names.
+On Windows, the destination can be a path such as `C:/dev/my-project`. The installer copies the **complete** collection into that project's `.agents/skills/`, validates the result, and preserves unrelated skills. An identical prior installation is a no-op. Any differing same-name folder aborts before copying; compare and reconcile it explicitly so local customizations are retained. There is no overwrite switch.
 
-| Task | Default |
-|---|---|
-| Mechanical edit | Lead, applicable checks, self-review. |
-| Meaningful feature, fix, or refactor | Lead implements; one independent candidate review and focused review of repairs. |
-| Consequential design uncertainty | Explicit invariants and contracts; a bounded specialist when needed. |
-| Explanation or review only | Read-only answer or findings. |
+Linked destination paths are rejected. Copies are staged and validated before complete skill folders are published. If publication is interrupted, rerun the command: completed folders are retained and missing folders are added. Do not run concurrent installers or edit the destination during installation.
 
-Start with one optional specialist at a time. Expand for independent work that earns its cost. Keep one active Draft PR by default unless the project or user specifies another convention. Reuse valid review and test evidence after checking all relevant inputs, including dirty changes, dependencies, configuration, generated artifacts, and runtime state.
+For a manual installation, copy the entire `skills/` collection to `<project>/.agents/skills/` with the same collision checks. Do not copy only one folder: these skills share references and sibling dependencies. Do not activate the original `pstack/` tree.
 
-## Pstack specialists on Codex
-
-The workflow now reads the actual adapted specialist instructions, not only condensed principles. You can also invoke them directly in Codex:
-
-| Skill | Job |
-|---|---|
-| [architect](skills/architect/SKILL.md) | Usage-first design, ownership, types, and tradeoffs. |
-| [how](skills/how/SKILL.md) / [why](skills/why/SKILL.md) | Runtime mechanisms / historical rationale with evidence. |
-| [interrogate](skills/interrogate/SKILL.md) | Independent review and judgment of findings. |
-| [tdd](skills/tdd/SKILL.md) | Practical failing-before and passing-after regression checks. |
-| [blast-radius](skills/blast-radius/SKILL.md) | Downstream, storage, wire, dependency, and lifecycle risks. |
-| [teach](skills/teach/SKILL.md) | Clear explanations that preserve uncertainty. |
-| [correct](skills/correct/SKILL.md) | Structural prevention of evidenced recurring mistakes. |
-| [arena](skills/arena/SKILL.md) / [swarm](skills/swarm/SKILL.md) | Conditional alternative comparison / bounded independent work. |
-| [create-verification-skill](skills/create-verification-skill/SKILL.md) | Author project-specific instructions for real runtime verification. |
-| [maintain-verification-skill](skills/maintain-verification-skill/SKILL.md) | Audit those instructions against source and live behavior. |
-
-Loading a skill does not automatically spawn an agent. These adaptations use available host tools and models. They do not require Cursor settings, a fixed model roster, or the upstream orchestrators.
-
-## Adopt in a selected repository
-
-Copy the **entire `skills/` collection** into the chosen repository's `.agents/skills/`. Keep every sibling skill, reference, and license together. Do not copy the original `pstack/` tree as active skills.
-
-1. Inventory existing destination names first. Generic names such as `architect` or `tdd` may already exist.
-2. Keep identical content and preserve unrelated skills. If ownership or replacement authorization is unclear, stop before overwriting and choose explicitly which version to retain. Do not silently skip a required sibling.
-3. For a known prior Simplicit installation, compare and preserve local customizations before an authorized upgrade.
-4. Copy the collection, then run the validator against that destination. Start Codex in the selected repository and invoke `$simplicit`.
+Start Codex in the selected project. Type:
 
 ```text
-<selected-repository>/.agents/skills/
-    simplicit/
-    simplicit-mode/
-    simplicit-help/
-    architect/
-    ...the other specialist folders...
+$simplicit Fix the duplicate-request bug, verify the result, and prepare a reviewable change.
 ```
 
-**Migration:** the old release supported copying only `simplicit-mode/`. This release requires the complete collection. Its alias points to the sibling `simplicit/` entrypoint; old playbooks should not be used as a fallback. Compare any locally customized old playbooks before retiring them.
+Use `$simplicit-help` to find a skill, or invoke one directly. Codex supports explicit `$skill-name` selection and automatic matching from descriptions; if new skills do not appear, restart the session. Same-name skills from other packages remain separate, so select the intended path. See [OpenAI's current skill documentation](https://learn.chatgpt.com/docs/build-skills).
 
-Codex CLI and IDE support explicit `$skill-name` invocation and automatic selection from descriptions. Local repository discovery uses `.agents/skills`; restart if changes do not appear. If another installed package exposes the same name, select the intended path rather than assuming the names merge. See [OpenAI's skill documentation](https://learn.chatgpt.com/docs/build-skills).
+Installation is project-local. It does not modify global model configuration, register a service, enable a scheduler, or install external dependencies.
 
-This repository stores reusable source. It does not install skills into other projects or user-wide locations. No installer, service, marketplace, or global configuration is required.
+### Custom reviewer roles
 
-## Validate the collection
+Adopt the shipped `.codex/agents/*.toml` files individually into the selected project's `.codex/agents/` to expose these named roles. Inspect existing files and linked paths first; keep identical content, preserve unrelated agents, and reconcile any collision explicitly. The skill installer deliberately handles only skills.
 
-Use Python 3.10 or later (`python3` on systems where that is the command):
+| Role | Used by |
+|---|---|
+| [critic](.codex/agents/critic.toml) | General independent candidate review. |
+| [comment-sicko](.codex/agents/comment-sicko.toml) | `$no-comments`: an independent comment review; the lead verifies findings and makes authorized edits. |
+
+Comment Sicko inherits the host model and reads its portable brief from the installed `no-comments` skill. Keep the complete skills collection alongside the roles.
+
+The critic pins `gpt-6.1-sol` with `high` reasoning. Honor those choices when using the role; model availability and the host's supported role selector must be checked. Effective permissions come from the host/parent; the critic's instructions do not enforce a separate sandbox. See [OpenAI's custom-agent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents).
+
+Native execution of both roles and a small set of automatic-selection cases passed on Windows with Codex 0.165.0. For app-server tests on that version, use a persisted parent thread (`thread/start` with `ephemeral: false`): named-role launches from ephemeral parents failed while loading missing parent rollout context. The disclosed generic fallback worked, but did not satisfy the critic's model pin. See the [dated native validation record](docs/validation.md#native-roles-models-and-selection--october-31-2026) for the tested settings and remaining limits.
+
+Skills-only adoption uses the documented generic independent-reviewer fallback when permitted. For `$no-comments`, that helper receives the Comment Sicko brief and the fallback is disclosed. If independent execution is unavailable, the requested independent pass remains pending. Validate the complete copied role inventory with `python -B scripts/validate_agents.py "/path/to/project/.codex/agents"`, then separately confirm native role discovery and a real bounded review. The validator expects both shipped profiles; a parser pass does not establish native loading or model execution. Do not repeat an already valid review just to obtain a preferred role name.
+
+### Continue through the authorized work
+
+One prompt can authorize investigation, implementation, verification, independent review and supported repairs. Ordinary stage transitions do not need another "continue"; material product decisions, authorization, access and host limits can still require a precise handoff. For example:
+
+```text
+$simplicit Fix the duplicate-request bug in this repository's in-memory ledger.
+Acceptance: retrying the same request ID with the same positive amount credits
+once; distinct IDs still add; negative amounts remain rejected. Preserve existing
+edits. Local edits, isolated fixtures, tests and internal independent review are
+authorized. Continue through repairs and final verification in this chat.
+Prefer the available critic; a generic independent reviewer is permitted if it
+is unavailable. Report actual evidence and gaps. Leave a reviewable local diff.
+Do not commit, push, create a PR, merge, deploy or send external messages.
+```
+
+Read-only and plan-only requests retain their boundaries. Honor existing commit/push/PR authorization; keep one active Draft PR by default. Evidence reuse checks relevant dirty changes, tests, dependencies, configuration, generated output and runtime state, not only the commit SHA.
+
+## What is included
+
+| Need | Examples |
+|---|---|
+| Main workflow and setup | `simplicit`, `simplicit-mode`, `simplicit-help`, `setup-simplicit` |
+| Understand, design and review | `how`, `why`, `architect`, `interrogate`, `blast-radius`, `teach` |
+| Verification | `tdd`, create/maintain verification skills, create/maintain formal-verification skills, `statechart` |
+| Parallel work and measurement | `arena`, `swarm`, `benchmark-checklist`, `show-me-your-work` |
+| Writing and communication | `unslop`, `technical-writing`, `bro`, `ketchup`, `ketchup-video`, `in-your-own-words`, `sharpen` |
+| Learning and context | `recall`, `reflect`, `correct`, `automate-me`, `figure-it-out` |
+| Code discipline | `no-comments`, `typescript-best-practices`, all 24 `principle-*` skills |
+| Bots and issue workflows | `make-bot-ui`, `setup-benny`, `triage-issue-reports`, `reproduce-and-fix-issues` |
+
+The [complete installed catalog](skills/simplicit/references/catalog.md) lists every skill and trigger. The [main router](skills/simplicit/SKILL.md) adds performance, hillclimb, forensics, visual parity, prototype, skill authoring/evaluation, resume/pause, multi-phase work, orchestration, PR readiness and authorized shipping/cleanup.
+
+Names follow the existing Simplicit convention. `poteto-mode` becomes `simplicit`, `poteto-help` becomes `simplicit-help`, and `setup-pstack` becomes `setup-simplicit`. Other specialist names are preserved.
+
+## Runtime-dependent capabilities
+
+Most skills need only Codex's normal file, shell and reasoning tools. They discover actual host capabilities rather than require Cursor tools or a fixed model roster.
+
+- **Statechart:** Node.js 22+; Java 11+ and the pinned TLC JAR for model checking. PNG rendering is optional and uses pinned packages with explicit installation opt-in. See [runtime setup](skills/statechart/references/runtime.md).
+- **Decision log:** the portable TSV helper uses Python 3.10+.
+- **History:** visible context or available transcript/search tools; no assumed access to other chats.
+- **Video:** an available local renderer. When unavailable, the catch-up remains available as text.
+- **Bot and issue automation:** a real configured webhook, source/tracker tools, and scheduler when scheduling is requested. Manual workflows remain usable without a scheduler.
+
+The source's Bun `orch` framework and host-specific watchers are replaced by portable workflow instructions, not a new orchestration service. Unsupported external operations remain explicit pending steps. A model result, local test, instruction trial and live service verification are different evidence.
+
+## Validate
+
+From this checkout:
 
 ```sh
 python -B -m unittest discover -s scripts -p 'test_*.py'
 python -B scripts/validate_skills.py
-python -B scripts/validate_skills.py /path/to/copied/.agents/skills
+python -B scripts/validate_agents.py
+node --test scripts/test_statechart.mjs
 ```
 
-Run the validator from this source checkout; it selects the skill names shipped here, leaving unrelated installed skills out of its checks. It checks simple flat frontmatter, licenses, and inline Markdown resource links. It is not a general Markdown parser, a native Codex discovery test, or proof of workflow behavior. [Validation evidence](docs/validation.md) records targeted trials and remaining limits.
+The Node suite runs local checks without Java/TLC and explicitly skips model-checking cases when `TLA2TOOLS` is unset. Set it to the verified JAR path to run those cases too. To validate an installed copy:
 
-## Source and limits
+```sh
+python -B scripts/validate_skills.py "/absolute/path/to/project/.agents/skills"
+```
 
-[pstack/](pstack/) preserves the original 200-file snapshot and MIT license. [UPSTREAM.md](UPSTREAM.md) maps the supported adaptations. The remaining upstream skills and scripts are source-only here, including `statechart` formal model checking, transcript mining, platform setup, orchestrators, and shipping automations. They have not been ported by this collection.
+Checks cover complete source mapping, licenses, metadata and local resource links, JavaScript module closure, collision-preserving installation, decision-log behavior, and statechart success/failure paths. [Validation evidence](docs/validation.md) records actual runtime and independent instruction trials, plus limits.
 
-The [simplicit-agent brief](skills/simplicit/references/simplicit-agent.md) is a worker template, not a registered Codex role. Helper cleanup uses available lifecycle tools. If deletion is unsupported, report completed/inactive status and that records were not deleted. Instructions guide behavior and do not enforce permissions.
+Both validators are read-only. The skill validator checks this package's simple flat frontmatter and inline links, not arbitrary Markdown/YAML. The agent validator uses Python's `tomllib` and a narrow package policy: role identity/instructions and optional model/effort/summary/verbosity strings only, with matching names and no path escapes. It rejects sandbox, approval, permission, provider, MCP, feature and skill overrides; it does not test account/model availability. Destination validation checks source-selected entries and preserves unrelated entries. [CI](.github/workflows/validate.yml) runs these checks on Linux and Windows; a workflow definition alone is not evidence of a completed run.
 
-No token or speed savings are claimed. Assess those through comparable project trials that include review, repairs, delegates, and verification.
+## Source and upgrading
+
+The original 200-file `pstack/` snapshot remains unchanged. [UPSTREAM.md](UPSTREAM.md) records provenance, source mapping and runtime differences; each installed skill carries the MIT license.
+
+Earlier Simplicit releases adapted only a subset or installed a single mode folder. Upgrade to the full collection after comparing local customizations. The installer deliberately refuses conflicting upgrades instead of overwriting them. Updates to the pinned source require deliberate review; no background updater runs.
