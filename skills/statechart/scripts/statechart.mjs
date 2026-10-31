@@ -828,8 +828,8 @@ function copyExclusive(from, to) {
   }
 }
 
-function unchanged(inputs, out) {
-  const changed = inputs.changed();
+function unchanged(inputs, out, resolve) {
+  const changed = inputs.changed(resolve);
   if (changed)
     throw new NotPublished(
       `${rel(changed)} changed while this run read it, so the run left ${rel(out)} as it was. Run the command again.`,
@@ -846,6 +846,12 @@ function publish(work, out, inputs) {
   let old = `${next}-old`;
   let displaced = 0;
   let aside = false;
+  let originalOutput;
+  const currentInput = (file) => {
+    const relative = path.relative(out, file);
+    return originalOutput && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative)
+      ? path.join(originalOutput, relative) : file;
+  };
   const ownsStage = () => {
     try {
       const now = fs.lstatSync(next, {bigint: true, throwIfNoEntry: false});
@@ -874,7 +880,7 @@ function publish(work, out, inputs) {
   };
   const ready = () => {
     if (!ownsStage()) throw new CannotFinish(`staging folder changed during publication; retained ${rel(next)} for review`);
-    unchanged(inputs, out);
+    unchanged(inputs, out, currentInput);
     refuseForeign(out);
     closePin();
   };
@@ -891,7 +897,10 @@ function publish(work, out, inputs) {
         aside = false;
       }
       aside = moved(out, old, ["ENOENT"], ready, pinStage);
-      if (aside) refuseForeign(out, foreign(old));
+      if (aside) {
+        originalOutput ??= old;
+        refuseForeign(out, foreign(old));
+      }
     }
   } catch (e) {
     const back = !aside || putBack(old, out);

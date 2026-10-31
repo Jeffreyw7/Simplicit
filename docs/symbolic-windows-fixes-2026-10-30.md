@@ -63,3 +63,16 @@ Local evidence is in `.scratch/renderer-windows-fixes-2026-10-29/`, including th
 The upstream assertions are adapted only in that temporary copy: compare configuration tokens while retaining source formatting/comments, accept Windows recovery paths, and account for the already-documented previous-output backup message. Original upstream tests remain unchanged.
 
 All three task helpers completed, and interruption controls were applied after collecting reports. This host has no agent-session deletion API. Changes are committed locally as requested; no push, merge, installation, upstream adoption or external message was performed.
+
+## Follow-up: minimal corrections to `bce74d5`
+
+Review confirmed two regressions in that commit. Both are corrected with 17 added and seven removed production lines across three files:
+
+- Publication now checks inputs inside the output folder at their first backup location after moving that folder. This accepts the command's own move while continuing to reject genuine edits, report original input filenames and preserve competing outputs and rollback behavior. Inputs outside the output folder keep their existing checks.
+- The multiline broken-state reader now invokes the existing parser only when the appended line can close the outer tuple. This avoids repeatedly parsing incomplete text. The value parser, symbolic-value support, ambiguity diagnostics and parsing work limits are unchanged. The original 11,437-byte TLC fixture returns identical data; independent measurement improved from about 18 seconds to 34 milliseconds on this host.
+
+Seven regression cases cover nested inputs, preserved backups, genuine edits, overlapping publications, an outside-prefix control and the large multiline entry. Independent review found no additional actionable issues: 385 parser differential cases retained acceptance, data and diagnostics; ten publication CLI probes and seven Windows path checks passed.
+
+Final verification on the reviewed source: **119 Node/TLC tests, 118 passed, zero failures, one junction capability skip**; all 64 selected upstream compatibility cases passed; 70 Python tests completed with zero failures and five environment/platform skips; validators accepted 62 skills and two agent profiles. The junction and native Linux/hosted CI limits above still apply. The pstack tree, source pin, agent profiles, CLI contracts and retry policy remain unchanged.
+
+Detailed local evidence is in `.scratch/minimal-regression-fixes-2026-10-30/`.

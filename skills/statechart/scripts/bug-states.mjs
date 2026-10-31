@@ -53,7 +53,8 @@ export function readBroken(file) {
     let parsed = parseValue(text);
     while (typeof parsed === "string" && i + 1 < lines.length && !marked.test(lines[i + 1])) {
       text += `\n${lines[++i]}`;
-      parsed = parseValue(text);
+      // A complete marked tuple must end in >>; avoid alternate parsing of each unfinished line.
+      parsed = lines[i].trimEnd().endsWith(">>") ? parseValue(text) : text;
     }
     if (!isTuple(parsed) || parsed.length !== 3 || parsed[0] !== BROKEN_MARK ||
         !isRecord(parsed[1]) || !Array.isArray(parsed[2]) || isTuple(parsed[2]) ||

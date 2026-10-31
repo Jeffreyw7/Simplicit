@@ -51,8 +51,8 @@ export class Inputs {
     return copyPath(this.#root, file);
   }
 
-  changed() {
-    return [...this.#files].find((file) => contentOf(file) !== contentOf(this.copyOf(file)));
+  changed(resolve = (file) => file) {
+    return [...this.#files].find((file) => contentOf(resolve(file)) !== contentOf(this.copyOf(file)));
   }
 
   #take(file, listed) {

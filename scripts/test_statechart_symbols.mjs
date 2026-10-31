@@ -201,3 +201,25 @@ Bad == x # x
     assert.ok(summary.classes.every(c => c.startsHere && c.invariant === "Bad"));
   } finally { clean(dir); }
 });
+
+test("large valid multiline broken states are read promptly with unchanged data", () => {
+  const dir = fixture();
+  try {
+    const file = path.join(dir, "large.out");
+    const empty = Array.from({length: 200}, (_, i) => "<<>>" + (i === 199 ? "" : ","));
+    const values = Array.from({length: 100}, (_, i) => "<<" + (i + 1) + ', {}, TRUE, "text">>' + (i === 99 ? "" : ","));
+    fs.writeFileSync(file, ['<<"statechart broken", [x |-> [empty |-> <<', ...empty, ">>, values |-> <<", ...values, '>>]], {"Bad"}>>'].join("\n"));
+    const script = "import {readBroken} from " + JSON.stringify(new URL("../skills/statechart/scripts/bug-states.mjs", import.meta.url).href) + "; console.log(JSON.stringify(readBroken(" + JSON.stringify(file) + ")));";
+    const result = spawnSync(process.execPath, ["--input-type=module", "-e", script], {encoding: "utf8", timeout: 3000});
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const [entry] = JSON.parse(result.stdout);
+    assert.deepEqual(entry.rules, ["Bad"]);
+    const {x} = JSON.parse(entry.key);
+    assert.equal(x.empty.length, 200);
+    assert.ok(x.empty.every(value => Array.isArray(value) && value.length === 0));
+    assert.equal(x.values.length, 100);
+    assert.deepEqual(x.values[0], [1, [], true, "text"]);
+    assert.deepEqual(x.values[99], [100, [], true, "text"]);
+  } finally { clean(dir); }
+});

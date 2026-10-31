@@ -17,7 +17,7 @@ const write = (dir, name, value) => {
 };
 const read = (dir, name) => fs.readFileSync(path.join(dir, name), "utf8");
 const fixture = () => fs.mkdtempSync(path.join(os.tmpdir(), "simplicit-recovery-"));
-const run = (dir, command, env = {}) => spawnSync(process.execPath, [cli, command, command === "from-spec" ? "Flow.tla" : "Flow.mmd"],
+const run = (dir, command, env = {}, args = [command === "from-spec" ? "Flow.tla" : "Flow.mmd"]) => spawnSync(process.execPath, [cli, command, ...args],
   {cwd: dir, env: {...process.env, ...env}, encoding: "utf8", timeout: 120000});
 function prepare(dir, command) {
   if (command === "from-chart") write(dir, "Flow.mmd", chart);
@@ -119,6 +119,95 @@ test("overlapping publications preserve each displaced output", required, () => 
     const backups = previousFolders(dir);
     assert.equal(backups.length, 2);
     assert.deepEqual(backups.map(n => read(dir, n + "/stories.md")).sort(), ["COMPETING", "ORIGINAL"]);
+    for (const folder of backups) assert.ok(result.stdout.includes(folder));
+    assert.equal(JSON.parse(read(dir, "Flow-statechart/summary.json")).modelStates, 1);
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+});
+
+for (const [name, spec, cfg] of [
+  ["nested config", "Flow.tla", "Flow-statechart/tlc/manual.cfg"],
+  ["nested spec", "Flow-statechart/tlc/Flow.tla", "Flow-statechart/tlc/manual.cfg"],
+  ["outside output", "Flow.tla", "Flow-statechart-other/manual.cfg"],
+]) {
+  test("publication inputs: " + name + " remain valid after output displacement", required, () => {
+    const dir = fixture();
+    try {
+      prepare(dir, "from-spec");
+      write(dir, spec, read(dir, "Flow.tla"));
+      write(dir, cfg, "SPECIFICATION Spec\n");
+      write(dir, "Flow-statechart/stories.md", "ORIGINAL");
+      const result = run(dir, "from-spec", {}, [spec, "--config", cfg, "--map", "Flow.map.mjs", "--out", "Flow-statechart"]);
+      assert.equal(result.status, 0, result.stdout + result.stderr);
+      assert.equal(JSON.parse(read(dir, "Flow-statechart/summary.json")).modelStates, 1);
+      assert.ok(fs.existsSync(path.join(dir, "Flow-statechart/chart.mmd")));
+      assert.ok(fs.existsSync(path.join(dir, "Flow-statechart/stories.md")));
+      const backups = previousFolders(dir);
+      assert.equal(backups.length, 1, result.stdout + result.stderr);
+      assert.ok(result.stdout.includes(backups[0]), "retained folder must be reported");
+      assert.equal(read(dir, backups[0] + "/stories.md"), "ORIGINAL");
+      assert.equal(read(dir, cfg.startsWith("Flow-statechart/") ? cfg.replace("Flow-statechart/", backups[0] + "/") : cfg), "SPECIFICATION Spec\n");
+      if (spec.startsWith("Flow-statechart/"))
+        assert.equal(read(dir, spec.replace("Flow-statechart/", backups[0] + "/")), read(dir, "Flow.tla"));
+    } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+  });
+}
+
+for (const [name, file] of [["config", "tlc/manual.cfg"], ["spec", "tlc/Flow.tla"]]) {
+  test("publication inputs: changes to a relocated " + name + " still abort publication", required, () => {
+    const dir = fixture();
+    try {
+      prepare(dir, "from-spec");
+      write(dir, "Flow-statechart/tlc/Flow.tla", read(dir, "Flow.tla"));
+      write(dir, "Flow-statechart/tlc/manual.cfg", "SPECIFICATION Spec\n");
+      write(dir, "Flow-statechart/stories.md", "ORIGINAL");
+      const hook = path.join(dir, "edit-relocated.mjs");
+      fs.writeFileSync(hook, [
+        "import fs from 'node:fs'; import path from 'node:path';",
+        "const target = path.resolve('Flow-statechart'); const rename = fs.renameSync;",
+        "fs.renameSync = (from,to) => {",
+        " const result = rename(from,to);",
+        " if (path.resolve(from) === target && String(to).endsWith('-old'))",
+        "  fs.appendFileSync(path.join(to," + JSON.stringify(file) + "), '\\n\\\\* EDITED\\n');",
+        " return result;",
+        "};",
+      ].join("\n"));
+      const result = run(dir, "from-spec", {NODE_OPTIONS: "--import=" + pathToFileURL(hook).href},
+        [name === "config" ? "Flow.tla" : "Flow-statechart/tlc/Flow.tla", "--config", "Flow-statechart/tlc/manual.cfg", "--map", "Flow.map.mjs", "--out", "Flow-statechart"]);
+      assert.equal(result.status, 2, result.stdout + result.stderr);
+      assert.ok(result.stderr.includes(path.normalize("Flow-statechart/" + file) + " changed while this run read it"), result.stderr);
+      assert.match(read(dir, "Flow-statechart/" + file), /EDITED/);
+      assert.equal(read(dir, "Flow-statechart/stories.md"), "ORIGINAL");
+      assert.equal(fs.existsSync(path.join(dir, "Flow-statechart/summary.json")), false);
+      assert.deepEqual(previousFolders(dir), []);
+    } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+  });
+}
+
+test("publication inputs: overlapping outputs keep validating the first displaced input", required, () => {
+  const dir = fixture();
+  try {
+    prepare(dir, "from-spec");
+    write(dir, "Flow-statechart/tlc/manual.cfg", "SPECIFICATION Spec\n");
+    write(dir, "Flow-statechart/stories.md", "ORIGINAL");
+    const hook = path.join(dir, "overlap-input.mjs");
+    fs.writeFileSync(hook, [
+      "import fs from 'node:fs'; import path from 'node:path';",
+      "const target = path.resolve('Flow-statechart'); const rename = fs.renameSync; let once = true;",
+      "fs.renameSync = (from,to) => {",
+      " const result = rename(from,to);",
+      " if (once && path.resolve(from) === target && String(to).endsWith('-old')) {",
+      "  once = false; fs.mkdirSync(target); fs.writeFileSync(path.join(target,'stories.md'), 'COMPETING');",
+      " } return result;",
+      "};",
+    ].join("\n"));
+    const result = run(dir, "from-spec", {NODE_OPTIONS: "--import=" + pathToFileURL(hook).href},
+      ["Flow.tla", "--config", "Flow-statechart/tlc/manual.cfg", "--map", "Flow.map.mjs", "--out", "Flow-statechart"]);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const backups = previousFolders(dir);
+    assert.equal(backups.length, 2, result.stdout + result.stderr);
+    assert.deepEqual(backups.map(n => read(dir, n + "/stories.md")).sort(), ["COMPETING", "ORIGINAL"]);
+    const original = backups.find(n => read(dir, n + "/stories.md") === "ORIGINAL");
+    assert.equal(read(dir, original + "/tlc/manual.cfg"), "SPECIFICATION Spec\n");
     for (const folder of backups) assert.ok(result.stdout.includes(folder));
     assert.equal(JSON.parse(read(dir, "Flow-statechart/summary.json")).modelStates, 1);
   } finally { fs.rmSync(dir, {recursive: true, force: true}); }
