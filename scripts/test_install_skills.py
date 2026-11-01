@@ -5,6 +5,8 @@ import unittest
 import os
 import subprocess
 import shutil
+import json
+import stat
 from pathlib import Path
 from unittest.mock import patch
 
@@ -146,6 +148,68 @@ class InstallationTests(unittest.TestCase):
                 link.rmdir()
             else:
                 link.unlink()
+
+    @unittest.skipUnless(os.name == "nt", "Windows inherited access permissions only")
+    def test_published_skills_retain_inherited_read_access(self):
+        parent = self.target.parent
+        parent.mkdir(parents=True)
+        nested = self.source / "one/references"
+        nested.mkdir()
+        (nested / "guide.md").write_text("installed reference", encoding="utf-8")
+        script = self.root / "check-access.ps1"
+        script.write_text(r'''
+$ErrorActionPreference = 'Stop'
+$parent = $env:SIMPLICIT_ACL_TEST_PARENT
+$sid = [System.Security.Principal.SecurityIdentifier]::new('S-1-5-32-545')
+if ($env:SIMPLICIT_ACL_TEST_STAGE -eq 'prepare') {
+    $acl = Get-Acl -LiteralPath $parent
+    $rule = [System.Security.AccessControl.FileSystemAccessRule]::new(
+        $sid, 'ReadAndExecute', 'ContainerInherit,ObjectInherit', 'None', 'Allow')
+    $acl.AddAccessRule($rule)
+    Set-Acl -LiteralPath $parent -AclObject $acl
+} else {
+    @('skills/one', 'skills/one/SKILL.md', 'skills/one/references/guide.md') | ForEach-Object {
+        $acl = Get-Acl -LiteralPath (Join-Path $parent $_)
+        $readable = @($acl.Access | Where-Object {
+            $_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value -eq $sid.Value -and
+            $_.AccessControlType -eq 'Allow' -and
+            ($_.FileSystemRights -band [System.Security.AccessControl.FileSystemRights]::ReadAndExecute) -eq
+                [System.Security.AccessControl.FileSystemRights]::ReadAndExecute
+        }).Count -gt 0
+        [pscustomobject]@{ path = $_; inheritedRead = $readable; protectedAcl = $acl.AreAccessRulesProtected }
+    } | ConvertTo-Json -Compress
+}
+''', encoding="utf-8")
+
+        def access_check(stage):
+            env = {**os.environ, "SIMPLICIT_ACL_TEST_PARENT": str(parent), "SIMPLICIT_ACL_TEST_STAGE": stage}
+            env = {key: value for key, value in env.items() if key.lower() != "psmodulepath"}
+            result = subprocess.run(
+                ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", str(script)],
+                env=env, capture_output=True, text=True, timeout=30)
+            self.assertEqual(0, result.returncode, result.stderr)
+            return result.stdout
+
+        access_check("prepare")
+        install(self.source, self.target)
+        for entry in json.loads(access_check("inspect")):
+            with self.subTest(path=entry["path"]):
+                self.assertTrue(entry["inheritedRead"], "installation lost the parent's read permission")
+                self.assertFalse(entry["protectedAcl"], "installation blocked permission inheritance")
+
+    @unittest.skipUnless(os.name == "nt", "Windows read-only file deletion behavior")
+    def test_partial_install_cleans_staged_readonly_files(self):
+        install(self.source, self.target)
+        license_file = self.source / "one/LICENSE"
+        license_file.chmod(stat.S_IREAD)
+        self.addCleanup(license_file.chmod, stat.S_IREAD | stat.S_IWRITE)
+        extra = self.source / "three"
+        shutil.copytree(self.source / "two", extra)
+        (extra / "SKILL.md").write_text("---\nname: three\ndescription: Use for three.\n---\n", encoding="utf-8")
+        self.assertEqual(1, install(self.source, self.target))
+        self.assertTrue((self.target / "three/SKILL.md").is_file())
+        self.assertEqual([], list(self.target.parent.glob(".simplicit-install-*")))
+        self.assertFalse(license_file.stat().st_mode & stat.S_IWRITE)
 
 
 if __name__ == "__main__":

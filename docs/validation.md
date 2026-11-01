@@ -1,5 +1,40 @@
 # Validation evidence
 
+## Native workflow acceptance and installation repair — November 1, 2026
+
+The candidate based on `eff203a39438a3e5cc2d9b58d99cadfac60e30c0` corrects the Statechart help command to `node "<skill dir>/scripts/statechart.mjs" --help`. Executing the corrected command succeeds. The new [native acceptance record](validation/native-workflow-2026-11-01.md) contains tested file hashes, the fixture contract, reproduction steps, actual thread IDs and evidence limits.
+
+The first native run exposed an installation defect that discovery alone had missed: Python's private temporary staging produced restrictive Windows permissions, so sandbox commands could not read installed references. Ordinary exclusive staging now preserves inherited access. A regression failed at the installed root, entrypoint and nested reference before repair and passes afterward. Independent review also caught read-only staged-file cleanup failing after a partial installation; a second regression reproduced that failure and passes after the cleanup repair. Existing byte-identical installations remain a no-op and do not automatically receive corrected permissions; README explains fresh installation or explicit permission reconciliation.
+
+All four bounded acceptance checks passed on fresh repaired installations with Windows Codex 0.165.0, parent `gpt-6-astra/medium`, explicit native skill invocation and provider-model fallback disabled:
+
+| Check | Actual result |
+|---|---|
+| Meaningful bug fix, one uninterrupted prompt | Read installed references, added four regressions to two seed tests, observed two failures, repaired duplicate crediting, obtained an actual `critic` review on `gpt-6.1-sol/high`, and passed final verification. The critic independently ran all six tests; a separate behavior oracle and full-suite check passed. |
+| Changed-evidence follow-up on the same parent | A deliberate policy change invalidated the earlier pass. Both independent execution and the native lead observed five errors in six tests. The lead reported the invalidated evidence, reused unchanged source-review evidence, ran a passing valid-amount diagnostic, and made no edits or helper calls. |
+| Mechanical edit in a fresh parent | Exact requested README spelling correction, no unrelated byte changes and no helper. |
+| Assigned independent review in a fresh parent | Read Interrogate references, ran seed tests and demonstrated the seeded retry bug; no edits or helper. |
+
+Installed skills, profiles, sentinel files and Git state remained unchanged. All owned threads were archived and app-server processes exited normally. The first partial-access cohort remains separately recorded; it is not pooled with the repaired passing cohort. The deliberately failing configuration-change fixture is evidence that stale results were rejected, not a failing repository test.
+
+Repository verification after the installer repair: **59 Python tests successful**, with two local unprivileged-symlink capability skips. The Windows inherited-permission, read-only cleanup, short-path and junction cases executed. Both package validators pass (62 skills and two profiles); diff checks and corrected Statechart help execution pass. The unchanged `pstack/` tree remains `880564357e051d7c7802da1cb5d8df1d0b008299`. Hosted checks for the pushed revision are recorded in PR #3; the last inspected pre-repair [PR run at `eff203a`](https://github.com/Jeffreyw7/Simplicit/actions/runs/41235730500) passed 57 Python and 35 real-TLC tests on both Linux and Windows, with the one expected Linux platform skip.
+
+This closes the bounded explicit native workflow acceptance gap. It does not establish automatic selection, behavior across every skill, other operating systems/client versions or a general quality improvement. Both native bug-fix reviewers returned no further findings, so a native review-driven repair/re-review branch remains unexercised. The separate installer review did exercise a real repair and follow-up review, but is not substituted for that native branch. Backend serving-model identity, missing-model errors and cancellation remain unverified.
+
+## Broader selection, concurrency and documentation quality — October 31, 2026
+
+These studies were completed before the November 1 acceptance test. Their outcomes remain candidate-specific; the later explicit invocation does not retroactively establish automatic routing in the earlier study.
+
+| Study and candidate | Observed result | Limits |
+|---|---|---|
+| Broader native selection, `465dcbf9ddc046a9b04f921467dd826e00cb82ac` | 23/24 trials completed; one stopped at the account usage limit. Clear functional routing met the frozen criterion in 19/22 trials. Frozen answer score was 67/72; all 23 completed answers were substantively correct. Four actual helper dispatches were generic, with 0/4 named-role executions. | Two repetitions per request, one client/model setting. Two review scores included an extra rubric expectation absent from the prompt; the helper expectation also had an assigned-reviewer ambiguity. Project-trust warnings and absent proof of named-role availability confound the generic fallbacks. No causal before/after conclusion. |
+| Concurrency stress, same candidate | 62 cases, 244 writer attempts and 74 completed TLC invocations. No stabilized final-output integrity failure; all 26 successful foreign-file insertions preserved. | Publication-only extraction and full CLI cohorts remain distinct. Windows sharing contention often prevented publication. Transient reader consistency, arbitrary schedules and guaranteed progress are not established. |
+| Two documentation corrections, `465dcbf` versus `eff203a` | Twelve real agent tasks: three conditions, two versions and two repetitions. Both versions scored 18/18; all eight produced logs passed independent byte/TSV/helper-compatibility checks. No observed task-quality difference. | Explicit instruction-guided tasks, not automatic selection. All scores reached the rubric ceiling. The final judge was blinded to version labels; the lead was not. Complete method traces were not available to establish every claimed instruction/tool use. |
+
+The documentation changes clarified concurrent publication limits and safe TSV appends; runtime algorithms and role/model pins did not change in `eff203a`. The new Statechart entrypoint correction likewise repairs an executable instruction. The November 1 installer repair changes fresh-installation access and cleanup behavior, with red/green regression and actual native-read evidence; it does not alter skill routing or model profiles.
+
+Detailed local protocols, complete answers, frozen rubrics, artifact checks and reports are retained under `.scratch/benchmark-2026-10-31/` and `.scratch/quality-change-2026-10-31/` and are ignored by Git. The dated summaries above preserve the conclusions and material limitations in the repository. No token, speed, cost, general quality gain or arbitrary-concurrency guarantee is claimed.
+
 ## PR review and reliability repairs — October 31, 2026
 
 Parallel independent reviewers inspected PR #3 against `main` (`6c5cf96291c00262ad36d19db652849ea6b0e742`), starting from candidate `85809a64be7a670b895df3c73bba8b4b925d9874`. The review covered statechart helpers, packaging/installation/CI, decision logging, workflow instructions and validation claims. [Baseline Linux/Windows CI](https://github.com/Jeffreyw7/Simplicit/actions/runs/41165133519) was already passing with 52 Python and 10 Node/TLC tests; the following defects required additional regression cases.

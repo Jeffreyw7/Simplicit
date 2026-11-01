@@ -18,6 +18,8 @@ On Windows, the destination can be a path such as `C:/dev/my-project`. The insta
 
 Linked destination paths are rejected. Copies are staged and validated before complete skill folders are published. If publication is interrupted, rerun the command: completed folders are retained and missing folders are added. Do not run concurrent installers or edit the destination during installation.
 
+New skill folders inherit the staging parent's access permissions, preserving inherited Windows read permissions. Older installations made through private temporary staging may have restrictive permissions even when discovery succeeds. Identical installations remain a no-op: this update does not rewrite their permissions. Use a fresh destination or reconcile affected folder permissions under the project's access policy after preserving and comparing local customizations.
+
 For a manual installation, copy the entire `skills/` collection to `<project>/.agents/skills/` with the same collision checks. Do not copy only one folder: these skills share references and sibling dependencies. Do not activate the original `pstack/` tree.
 
 Start Codex in the selected project. Type:
