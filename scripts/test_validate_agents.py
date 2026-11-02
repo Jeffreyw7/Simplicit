@@ -110,7 +110,7 @@ class AgentTests(unittest.TestCase):
                     with contextlib.redirect_stdout(output):
                         status = main(args, source_root=self.source)
                     self.assertEqual(1, status, output.getvalue())
-                    self.assertIn(f"{profile}: missing expected source profile", output.getvalue())
+                    self.assertIn(f"{profile.resolve()}: missing expected source profile", output.getvalue())
                     self.assertNotIn("Valid profiles", output.getvalue())
                 profile.write_bytes(before)
 
