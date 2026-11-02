@@ -17,6 +17,63 @@ const write = (dir, name, value) => {
 const read = (dir, name) => fs.readFileSync(path.join(dir, name), "utf8");
 const backups = dir => fs.readdirSync(dir).filter(n => n.startsWith(".Flow-statechart-") && n.endsWith("-old"));
 const output = result => result.stdout + result.stderr;
+
+for (const second of ["--fixed", "--against"]) {
+  test("Windows deep paths preserve model dependencies and " + second + " comparison", required, () => {
+    fixture((dir) => {
+      let deep = path.join(dir, "models");
+      while (deep.length < 320) deep = path.join(deep, "nested models");
+      fs.mkdirSync(deep, {recursive: true});
+      write(deep, "Base.tla", "---- MODULE Base ----\nSeed == 0\n====\n");
+      const spec = (name, next) => "---- MODULE " + name + " ----\nEXTENDS Base\nVARIABLE x\nInit == x = Seed\nNext == " + next + "\nSpec == Init /\\ [][Next]_x\nSafe == x = 0 \\/ x = 1\nNoDone == x = 0\n====\n";
+      write(deep, "Flow.tla", spec("Flow", "x = 0 /\\ x' = 1"));
+      write(deep, "Other.tla", spec("Other", "FALSE"));
+      for (const name of ["Flow", "Other"])
+        write(deep, name + ".cfg", "SPECIFICATION Spec\nINVARIANTS Safe NoDone\n");
+      write(deep, "labels.mjs", "export const label = x => x === 0 ? 'Waiting' : 'Completed';\n");
+      write(deep, "Flow.map.mjs", "import {label} from './labels.mjs'; export const state = v => label(v.x); export const step = () => 'complete';\n");
+      const result = spawnSync(process.execPath, [cli, "from-spec", path.join(deep, "Flow.tla"),
+        second, path.join(deep, "Other.tla"), "--expect-broken", "NoDone", "--out", path.join(deep, "output")],
+        {cwd: dir, env: process.env, encoding: "utf8", timeout: 120000});
+      assert.equal(result.status, 0, output(result));
+      const summary = JSON.parse(read(deep, "output/summary.json"));
+      assert.equal(summary.modelStates, 2);
+      assert.equal(summary.chartStates, 2);
+      assert.equal(summary.classes.length, 1);
+      assert.equal(summary.classes[0].invariant, "NoDone");
+      assert.match(read(deep, "output/chart.mmd"), /Waiting/);
+      assert.match(read(deep, "output/stories.md"), /Completed/);
+      assert.equal(read(deep, "Base.tla"), "---- MODULE Base ----\nSeed == 0\n====\n");
+    });
+  });
+}
+
+test("Windows deep paths compile and check a chart without changing its behavior", required, () => {
+  fixture((dir) => {
+    let deep = path.join(dir, "chart");
+    while (deep.length < 320) deep = path.join(deep, "nested chart");
+    write(deep, "Flow.mmd", "stateDiagram-v2\n  [*] --> Idle\n  Idle --> Done: finish\n");
+    const result = spawnSync(process.execPath, [cli, "from-chart", path.join(deep, "Flow.mmd")],
+      {cwd: dir, env: process.env, encoding: "utf8", timeout: 120000});
+    assert.equal(result.status, 0, output(result));
+    assert.match(result.stdout, /back unchanged/);
+    const summary = JSON.parse(read(deep, "Flow-statechart/summary.json"));
+    assert.equal(summary.modelStates, 2);
+    assert.equal(summary.classes.length, 0);
+  });
+});
+
+test("Windows Java startup failures report an operational error without an unhandled pipe error", required, () => {
+  fixture((dir) => {
+    write(dir, "invalid-java.exe", "This is not an executable.\n");
+    const result = spawnSync(process.execPath, [cli, "from-spec", "Flow.tla"],
+      {cwd: dir, env: {...process.env, JAVA: path.join(dir, "invalid-java.exe")}, encoding: "utf8", timeout: 30000});
+    assert.equal(result.status, 2, output(result));
+    assert.match(result.stderr, /cannot run TLC/);
+    assert.doesNotMatch(result.stderr, /Unhandled 'error' event/);
+    assert.equal(fs.existsSync(path.join(dir, "Flow-statechart")), false);
+  });
+});
 function fixture(body, command = "from-spec") {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "sc-win-"));
   try {

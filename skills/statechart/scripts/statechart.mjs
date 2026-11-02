@@ -243,7 +243,7 @@ function runJava(file, args, options, dot) {
     const r = { stdout: "", stderr: "", stopped: false, overflowed: false };
     const child = spawn(file, args, options);
     for (const stream of ["stdout", "stderr"])
-      child[stream].setEncoding("utf8").on("data", (text) => {
+      child[stream].on("error", (e) => { r.error ??= e; child.kill(); }).setEncoding("utf8").on("data", (text) => {
         if (r.overflowed) return;
         if (r[stream].length + text.length <= MAX_STRING_LENGTH) r[stream] += text;
         else {
@@ -263,7 +263,7 @@ function runJava(file, args, options, dot) {
       clearInterval(watch);
       resolve({ ...r, status, signal });
     });
-  });
+  }).catch(error => ({stdout: "", stderr: "", error}));
 }
 
 async function tlc(tools, spec, cfg, base, { dump, module, workers = "1" } = {}) {
@@ -273,13 +273,16 @@ async function tlc(tools, spec, cfg, base, { dump, module, workers = "1" } = {})
   // so runs that share that folder can read a module while another run rewrites it.
   const javaTmp = path.join(metadir, "tmp");
   fs.mkdirSync(javaTmp);
+  const specDir = path.dirname(path.resolve(spec));
+  // Windows process startup needs room for a trailing separator and NUL within MAX_PATH.
+  const cwd = process.platform === "win32" && specDir.length >= 258 ? metadir : specDir;
   // -deadlock: a system at rest has nothing left to do, which TLC would report as a deadlock.
   const r = await runJava(
     tools.java,
     [
       "-XX:+UseParallelGC",
       `-Djava.io.tmpdir=${javaTmp}`,
-      ...(module ? [`-DTLA-Library=${path.dirname(path.resolve(spec))}`] : []),
+      ...(module || cwd !== specDir ? [`-DTLA-Library=${specDir}`] : []),
       "-cp",
       tools.jar,
       "tlc2.TLC",
@@ -294,7 +297,7 @@ async function tlc(tools, spec, cfg, base, { dump, module, workers = "1" } = {})
       path.resolve(`${base}.cfg`),
       module ? path.resolve(module) : path.basename(spec),
     ],
-    { cwd: path.dirname(path.resolve(spec)) },
+    { cwd },
     dump,
   );
   fs.rmSync(metadir, { recursive: true, force: true });
@@ -737,6 +740,11 @@ function removeTemporary(dir) {
   }
 }
 
+function temporaryFolder(prefix) {
+  const made = fs.mkdtempSync(path.toNamespacedPath(prefix));
+  return path.join(path.dirname(prefix), path.basename(made));
+}
+
 function renameFolder(from, to, missed, beforeAttempt, afterFailure) {
   const waits = [25, 50, 100, 200, 400];
   let firstDenial;
@@ -794,7 +802,7 @@ function claimedFolder(to, missed, beforeAttempt, afterFailure) {
   // between them. So the run opens its folder before it moves the folder to `to`.
   // A filesystem can reuse a removed folder's inode number. Holding this folder open keeps its
   // number, so a folder that another run makes in its place cannot match it.
-  const mine = fs.mkdtempSync(path.join(path.dirname(to), `.${path.basename(to)}-`));
+  const mine = temporaryFolder(path.join(path.dirname(to), `.${path.basename(to)}-`));
   const claimed = fs.openSync(mine, "r");
   let renamed;
   try {
@@ -839,7 +847,7 @@ function unchanged(inputs, out, resolve) {
 function publish(work, out, inputs) {
   const parent = path.dirname(path.resolve(out));
   fs.mkdirSync(parent, { recursive: true });
-  const next = fs.mkdtempSync(path.join(parent, `.${path.basename(out)}-`));
+  const next = temporaryFolder(path.join(parent, `.${path.basename(out)}-`));
   const stage = fs.lstatSync(next, {bigint: true});
   const summary = path.join(next, "summary.json");
   let pin, held;
@@ -1081,7 +1089,7 @@ function generateSources(input, name) {
         throw new CannotFinish(rel(item.file) + " changed while compiling the chart");
     }
     if (files.some((f) => f.original !== null)) {
-      backup = fs.mkdtempSync(path.join(dir, "." + name + "-statechart-backup-"));
+      backup = temporaryFolder(path.join(dir, "." + name + "-statechart-backup-"));
       for (const item of files.filter((f) => f.original !== null))
         fs.writeFileSync(path.join(backup, path.basename(item.file)), item.original, {flag: "wx"});
     }

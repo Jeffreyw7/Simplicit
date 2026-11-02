@@ -76,3 +76,21 @@ Seven regression cases cover nested inputs, preserved backups, genuine edits, ov
 Final verification on the reviewed source: **119 Node/TLC tests, 118 passed, zero failures, one junction capability skip**; all 64 selected upstream compatibility cases passed; 70 Python tests completed with zero failures and five environment/platform skips; validators accepted 62 skills and two agent profiles. The junction and native Linux/hosted CI limits above still apply. The pstack tree, source pin, agent profiles, CLI contracts and retry policy remain unchanged.
 
 Detailed local evidence is in `.scratch/minimal-regression-fixes-2026-10-30/`.
+
+## Windows deep paths — November 1, 2026
+
+Deep input folders made the input snapshot too long to use as Java's Windows working directory. The failed spawn emitted secondary `ENOTCONN` errors on its output pipes, which escaped the existing process-error handling. A native probe reproduced the failure at 353 characters even with a namespace-prefixed path; the same Java executable started from a short temporary directory.
+
+The correction is confined to `statechart.mjs` (15 added and seven removed lines):
+
+- For Windows snapshot directories of at least 258 characters, launch Java in its existing isolated TLC temporary directory and supply the snapshot directory through `TLA-Library`. Ordinary Windows paths and non-Windows working directories keep their existing selection. Keeping the original module argument also preserves the pinned TLC configuration resolver's behavior.
+- Capture pipe failures and synchronous spawn errors so the command reports operational exit 2 and runs its existing recovery handling.
+- Create output stages, copy-fallback claims and source backups with namespace-prefixed filesystem paths, then return their original path form. Native end-to-end testing showed that `mkdtemp` also needed this adjustment to finish publication at deep paths.
+
+The model parser, snapshot layout, CLI options, output schemas, and publication/rollback policy are unchanged. Four new regression tests failed before the fix and passed afterward, exercising deep-path fixed/agreed comparisons with local TLA and mapping dependencies, chart compilation/checking, and an invalid Java executable.
+
+Final verification: **123 Node/TLC tests, 122 passed, zero failures, one native junction capability skip**; 70 Python tests with zero failures and five environment/platform skips; validators accepted 62 skills and two agent profiles. The runtime suite completed in about 4.9 minutes on the reviewed source.
+
+Independent review found no actionable issues. Native probes preserved source backups at 330-character paths, published through forced EXDEV copy fallback at a 337-character target, and returned operational exit 2 for a real asynchronous Java startup failure. Java launched at working-directory lengths 255–258 and failed at 259–270; the fallback threshold is conservative. Native Linux and UNC execution were not tested in this follow-up. The original pstack tree, source pin and agent profiles remain unchanged.
+
+References: [Windows working-directory limit](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setcurrentdirectory), [Node namespace-prefixed paths](https://nodejs.org/api/path.html#pathtonamespacedpathpath). Local evidence is in `.scratch/enotconn-2026-11-01/`.
