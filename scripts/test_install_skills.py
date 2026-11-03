@@ -211,6 +211,29 @@ if ($env:SIMPLICIT_ACL_TEST_STAGE -eq 'prepare') {
         self.assertEqual([], list(self.target.parent.glob(".simplicit-install-*")))
         self.assertFalse(license_file.stat().st_mode & stat.S_IWRITE)
 
+    @unittest.skipUnless(os.name == "posix" and os.geteuid() != 0, "unprivileged POSIX permissions only")
+    def test_partial_install_cleans_staged_readonly_directories(self):
+        existing = self.source / "one"
+        nested = existing / "references"
+        nested.mkdir()
+        (nested / "guide.md").write_text("reference", encoding="utf-8")
+        install(self.source, self.target)
+        parent_mode = self.target.parent.stat().st_mode
+        for folder in (existing, nested):
+            folder.chmod(0o555)
+            self.addCleanup(folder.chmod, 0o755)
+        extra = self.source / "three"
+        shutil.copytree(self.source / "two", extra)
+        (extra / "SKILL.md").write_text("---\nname: three\ndescription: Use for three.\n---\n", encoding="utf-8")
+
+        self.assertEqual(1, install(self.source, self.target))
+        self.assertTrue((self.target / "three/SKILL.md").is_file())
+        self.assertEqual([], list(self.target.parent.glob(".simplicit-install-*")))
+        self.assertEqual(parent_mode, self.target.parent.stat().st_mode)
+        for folder in (existing, nested):
+            self.assertEqual(0o555, stat.S_IMODE(folder.stat().st_mode))
+        self.assertEqual(0, install(self.source, self.target))
+
 
 if __name__ == "__main__":
     unittest.main()

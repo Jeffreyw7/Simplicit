@@ -21,6 +21,7 @@ import { ruleBook } from "./rule-book.mjs";
 import { Inputs } from "./snapshot.mjs";
 import { RULES_INVARIANT, SCAFFOLD, withoutComments, writeRulesModule } from "./spec-text.mjs";
 import { cannotRunTlc, findTlc } from "./tlc-tools.mjs";
+import { tlaToken } from "./tla-token.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const { MAX_STRING_LENGTH } = constants;
@@ -121,7 +122,9 @@ function script(name, scriptArgs, about, { okExits = [0] } = {}) {
 }
 
 const KEYWORD =
-  /^(SPECIFICATION|INIT|NEXT|CONSTANTS?|INVARIANTS?|PROPERTY|PROPERTIES|SYMMETRY|VIEW|CONSTRAINTS?|ACTION_CONSTRAINTS?|CHECK_DEADLOCK|POSTCONDITION|ALIAS)$/;
+  /^(SPECIFICATION|INIT|NEXT|CONSTANTS?|INVARIANTS?|PROPERTY|PROPERTIES|SYMMETRY|VIEW|CONSTRAINTS?|ACTION_CONSTRAINTS?|CHECK_DEADLOCK|TYPE|TYPE_CONSTRAINT|POSTCONDITION|ALIAS)$/;
+const ONE_ARGUMENT =
+  /^(SPECIFICATION|INIT|NEXT|SYMMETRY|VIEW|CHECK_DEADLOCK|TYPE|TYPE_CONSTRAINT|POSTCONDITION|ALIAS)$/;
 
 function* configTokens(cfg) {
   for (let i = 0; i < cfg.length;) {
@@ -149,11 +152,50 @@ function* configTokens(cfg) {
       if (i >= cfg.length) throw new CannotFinish("the TLC config has an unterminated string");
       i++;
     } else {
-      while (i < cfg.length && !/\s|"/.test(cfg[i]) &&
-        !cfg.startsWith("(*", i) && !cfg.startsWith("\\*", i)) i++;
+      const token = tlaToken(cfg, i);
+      if (!token) throw new CannotFinish(`unrecognized TLC config token at offset ${i}`);
+      i += token.length;
     }
     yield { text: cfg.slice(start, i), start, quoted };
   }
+}
+
+function configValueEnd(tokens, i) {
+  if (!tokens[i]) throw new CannotFinish("the TLC config is missing a constant value");
+  if (tokens[i]?.text !== "{") return i + 1;
+  i++;
+  if (tokens[i]?.text === "}") return i + 1;
+  for (;;) {
+    i = configValueEnd(tokens, i);
+    if (tokens[i]?.text === "}") return i + 1;
+    if (tokens[i]?.text !== ",") throw new CannotFinish("expected ',' or '}' in a TLC config set");
+    i++;
+  }
+}
+
+function configConstantEnd(tokens, i) {
+  i++;
+  while (tokens[i]?.text === "!") i += 2;
+  if (tokens[i]?.text === "(") {
+    i++;
+    if (tokens[i]?.text !== ")") {
+      for (;;) {
+        i = configValueEnd(tokens, i);
+        if (tokens[i]?.text === ")") break;
+        if (tokens[i]?.text !== ",") throw new CannotFinish("expected ',' or ')' in TLC config arguments");
+        i++;
+      }
+    }
+    i++;
+  }
+  const operator = tokens[i++]?.text;
+  if (operator !== "=" && operator !== "<-") throw new CannotFinish("expected '=' or '<-' in a TLC constant assignment");
+  if (tokens[i]?.text === "[") {
+    if (!tokens[i + 1] || tokens[i + 2]?.text !== "]") throw new CannotFinish("expected a module name followed by ']' in a TLC constant assignment");
+    i += 3;
+  }
+  if (!tokens[i]) throw new CannotFinish("the TLC config is missing a constant value");
+  return operator === "<-" ? i + 1 : configValueEnd(tokens, i);
 }
 
 function splitRules(cfg) {
@@ -161,8 +203,11 @@ function splitRules(cfg) {
   const rules = [];
   const properties = [];
   let list = null;
+  let inConstants = false;
   let copied = 0;
-  for (const { text, start, quoted } of configTokens(cfg)) {
+  const tokens = [...configTokens(cfg)];
+  for (let i = 0; i < tokens.length;) {
+    const { text, start, quoted } = tokens[i];
     if (!quoted && KEYWORD.test(text)) {
       const next = /^INVARIANTS?$/.test(text)
         ? rules
@@ -170,7 +215,14 @@ function splitRules(cfg) {
       if (next && !list) kept.push(cfg.slice(copied, start));
       if (!next && list) copied = start;
       list = next;
-    } else if (list && !list.includes(text)) list.push(text);
+      inConstants = /^CONSTANTS?$/.test(text);
+      i += ONE_ARGUMENT.test(text) ? 2 : 1;
+    } else if (inConstants) {
+      i = configConstantEnd(tokens, i);
+    } else {
+      if (list && !list.includes(text)) list.push(text);
+      i++;
+    }
   }
   if (!list) kept.push(cfg.slice(copied));
   // TLC takes only a state predicate as an INVARIANT, and checks a state predicate given as a

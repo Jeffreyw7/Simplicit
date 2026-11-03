@@ -5,6 +5,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { parseValue } from "../skills/statechart/scripts/lib.mjs";
+import { readBroken } from "../skills/statechart/scripts/bug-states.mjs";
+import { tlaToken } from "../skills/statechart/scripts/tla-token.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const scripts = path.join(root, "skills/statechart/scripts");
@@ -16,6 +19,160 @@ function node(script, args, cwd, env = {}) {
 }
 const chart = 'stateDiagram-v2\n  [*] --> Idle\n  Idle --> Done: finish\n';
 const hasTlc = Boolean(process.env.TLA2TOOLS);
+
+function writeWordsModel(dir, {declarations = "CONSTANT Value", value = "Value", aliases = ""} = {}) {
+  fs.writeFileSync(path.join(dir, "Words.tla"), `---- MODULE Words ----\n${declarations}\nVARIABLE x\nInit == x = ${value}\nNext == UNCHANGED x\nSpec == Init /\\ [][Next]_x\nExact == x = ${value}\nNoExactValue == ~Exact\n${aliases}\n====\n`);
+  fs.writeFileSync(path.join(dir, "Words.map.mjs"), 'export const state = () => "Waiting";\nexport const step = action => action;\n');
+}
+
+test("TLC rule extraction keeps keyword tokens inside complete constant assignments", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, async t => {
+  for (const fixture of [
+    {name: "scalar", constants: "CONSTANT Value = INVARIANT"},
+    {name: "compact scalar", constants: "CONSTANT Value=INVARIANT"},
+    {name: "nested set", constants: "CONSTANT Value = { INVARIANT , { PROPERTY } }"},
+    {name: "symbolic scalar brackets", constants: "CONSTANT Value = []"},
+    {name: "symbolic scalar equals", constants: "CONSTANT Value = =="},
+    {name: "dynamic equals token", value: "0", constants: "CONSTANT Value = ===="},
+    {name: "long dynamic equals token", value: "0", constants: "CONSTANT Value = ====="},
+    {name: "module header token", value: "0", constants: "CONSTANT Value = ---- MODULE"},
+    {name: "adjacent assignments", declarations: "CONSTANT Value, Other", value: "0", constants: "CONSTANTS Value=+Other=plain"},
+    {
+      name: "function table",
+      declarations: 'CONSTANT Key, Keys\nValue(a,b) == "original"',
+      value: "Value(Key, Keys)",
+      constants: "CONSTANTS Key = INVARIANT Keys = { PROPERTY } Value( INVARIANT, { PROPERTY } ) = { TYPE, { NEXT } }",
+    },
+    {name: "override", declarations: 'CONSTANT Value\nINVARIANT == "override"', constants: "CONSTANT Value <- INVARIANT"},
+    {name: "module value", declarations: "INSTANCE TYPE", constants: "CONSTANT Value = [TYPE] INVARIANT"},
+    {name: "module override", declarations: "INSTANCE TYPE", constants: "CONSTANT Value <- [TYPE] INVARIANT"},
+    {name: "qualified name", declarations: "Instance == INSTANCE TYPE", value: "Instance!INVARIANT", constants: "CONSTANT Instance ! INVARIANT = PROPERTY"},
+  ]) {
+    await t.test(fixture.name, () => {
+      const dir = scratch();
+      try {
+        writeWordsModel(dir, fixture);
+        fs.writeFileSync(path.join(dir, "TYPE.tla"), '---- MODULE TYPE ----\nValue == "original"\nINVARIANT == "override"\n====\n');
+        const kept = `SPECIFICATION Spec\r\n${fixture.constants}\r\n`;
+        const config = `${kept}INVARIANT NoExactValue\r\n`;
+        fs.writeFileSync(path.join(dir, "Words.cfg"), config);
+
+        const result = node("statechart.mjs", ["from-spec", "Words.tla"], dir);
+
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stdout, /NoExactValue is broken/);
+        for (const file of ["Words.cfg", "Words-NoExactValue.cfg"]) {
+          assert.ok(fs.readFileSync(path.join(dir, "Words-statechart/tlc", file), "utf8").startsWith(kept), file);
+        }
+        assert.equal(fs.readFileSync(path.join(dir, "Words.cfg"), "utf8"), config);
+        const summary = JSON.parse(fs.readFileSync(path.join(dir, "Words-statechart/summary.json"), "utf8"));
+        assert.equal(summary.chartStatus.wrong, 1);
+      } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+    });
+  }
+});
+
+test("symbolic model values retain broken-state metadata", () => {
+  const dir = scratch();
+  try {
+    for (const symbol of ["==", "====", "+", "=>", "\\notin"]) {
+      const text = `<<"statechart broken", [x |-> ${symbol}], {"NoExactValue"}>>`;
+      assert.deepEqual(parseValue(text), ["statechart broken", {x: symbol}, ["NoExactValue"]]);
+      const output = path.join(dir, "broken.out");
+      fs.writeFileSync(output, text + "\n");
+      assert.deepEqual(readBroken(output), [{key: JSON.stringify({x: symbol}), rules: ["NoExactValue"]}]);
+    }
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+});
+
+test("TLC token boundaries preserve native operator and identifier separation", () => {
+  for (const [text, expected] of [
+    ["Value=+Other=plain", ["Value", "=", "+", "Other", "=", "plain"]],
+    ["====", ["===="]],
+    ["---- MODULE", ["---- MODULE"]],
+    ["-----MODULE", ["-----MODULE"]],
+    ["*)Other", ["*", ")", "Other"]],
+    ["__", ["_", "_"]],
+    ["1_2", ["1", "_", "2"]],
+    ["_1", ["_", "1"]],
+    ["123abc", ["123abc"]],
+    ["__foo", ["__foo"]],
+    ["<1>Foo.Bar", ["<1>Foo.", "Bar"]],
+    ["\\notinOther", ["\\notin", "Other"]],
+  ]) {
+    const actual = [];
+    for (let i = 0; i < text.length;) {
+      const token = tlaToken(text, i);
+      assert.ok(token, text.slice(i));
+      actual.push(token);
+      i += token.length;
+    }
+    assert.deepEqual(actual, expected, text);
+  }
+});
+
+test("malformed broken-state metadata is rejected instead of becoming good states", () => {
+  const dir = scratch();
+  try {
+    const output = path.join(dir, "broken.out");
+    for (const text of [
+      '<<"statechart broken", [x |-> 0], "wrong shape">>',
+      '<<"statechart broken", [x |-> 0], {4}>>',
+      '<<"statechart broken", 0, {"NoExactValue"}>>',
+      '<<"statechart broken", [x |-> 0], {"NoExactValue"}',
+    ]) {
+      fs.writeFileSync(output, text + "\n");
+      assert.throws(() => readBroken(output), /cannot decode broken-state metadata.*broken\.out/i);
+    }
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+});
+
+test("TLC rule extraction consumes keyword-shaped directive arguments", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, async t => {
+  for (const {directives, aliases} of [
+    {directives: "INIT INVARIANT\r\nNEXT PROPERTY", aliases: "INVARIANT == Init\nPROPERTY == Next"},
+    {directives: "SPECIFICATION INVARIANT", aliases: "INVARIANT == Spec"},
+  ]) {
+    await t.test(directives, () => {
+      const dir = scratch();
+      try {
+        writeWordsModel(dir, {aliases});
+        const kept = `${directives}\r\nCONSTANT Value = plain\r\n`;
+        fs.writeFileSync(path.join(dir, "Words.cfg"), `${kept}INVARIANT NoExactValue\r\n`);
+
+        const result = node("statechart.mjs", ["from-spec", "Words.tla"], dir);
+
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stdout, /NoExactValue is broken/);
+        assert.ok(fs.readFileSync(path.join(dir, "Words-statechart/tlc/Words.cfg"), "utf8").startsWith(kept));
+        const summary = JSON.parse(fs.readFileSync(path.join(dir, "Words-statechart/summary.json"), "utf8"));
+        assert.equal(summary.chartStatus.wrong, 1);
+      } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+    });
+  }
+});
+
+test("TLC TYPE directives delimit extracted rule lists", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, async t => {
+  for (const directive of ["TYPE", "TYPE_CONSTRAINT"]) {
+    await t.test(directive, () => {
+      const dir = scratch();
+      try {
+        writeWordsModel(dir);
+        const before = "SPECIFICATION Spec\r\nCONSTANT Value = plain\r\n";
+        const after = `${directive} Exact\r\n`;
+        fs.writeFileSync(path.join(dir, "Words.cfg"), `${before}INVARIANT NoExactValue\r\n${after}`);
+
+        const result = node("statechart.mjs", ["from-spec", "Words.tla"], dir);
+
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stdout, /NoExactValue is broken/);
+        for (const file of ["Words.cfg", "Words-NoExactValue.cfg"]) {
+          assert.ok(fs.readFileSync(path.join(dir, "Words-statechart/tlc", file), "utf8").startsWith(before + after), file);
+        }
+        const summary = JSON.parse(fs.readFileSync(path.join(dir, "Words-statechart/summary.json"), "utf8"));
+        assert.equal(summary.chartStatus.wrong, 1);
+      } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+    });
+  }
+});
 
 test("TLC rule extraction preserves config string values and ignores quoted or commented keywords", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, async t => {
   for (const {literal, expected} of [

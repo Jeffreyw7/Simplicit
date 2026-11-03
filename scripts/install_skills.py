@@ -13,12 +13,18 @@ from pathlib import Path
 from validate_skills import validate
 
 
-def remove_readonly_staged_file(operation, filename, error):
-    if not isinstance(error[1], PermissionError):
-        raise error[1]
-    path = Path(filename)
-    path.chmod(path.stat().st_mode | stat.S_IWRITE)
-    operation(filename)
+def remove_staged_tree(staged):
+    def retry(operation, filename, error):
+        if not isinstance(error[1], PermissionError):
+            raise error[1]
+        path = Path(filename)
+        if path != staged:
+            parent = path.parent
+            parent.chmod(parent.stat().st_mode | stat.S_IWRITE)
+        path.chmod(path.stat().st_mode | stat.S_IWRITE)
+        operation(filename)
+
+    shutil.rmtree(staged, onerror=retry)
 
 
 def reject_link(path):
@@ -78,7 +84,7 @@ def install(source, destination):
             except OSError as error:
                 raise OSError(f"{error}; completed skills are intact; rerun this command to finish") from error
         finally:
-            shutil.rmtree(staged, onerror=remove_readonly_staged_file)
+            remove_staged_tree(staged)
     errors = validate(destination, names=[folder.name for folder in folders])
     if errors:
         raise ValueError("\n".join(errors))

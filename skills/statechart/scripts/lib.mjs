@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { tlaToken } from "./tla-token.mjs";
 
 const tuples = new WeakSet();
 export const isTuple = (v) => tuples.has(v);
@@ -36,6 +37,11 @@ export function parseValue(text) {
   };
   const value = () => {
     ws();
+    const head = tlaToken(src, i);
+    if (head?.startsWith("(") && head.length > 1) {
+      i += head.length;
+      return head;
+    }
     if (peek("<<")) {
       i += 2;
       const items = list(">>", value);
@@ -84,12 +90,13 @@ export function parseValue(text) {
       i++;
       return s;
     }
-    const m = /^-?\d+|^[A-Za-z_][A-Za-z0-9_]*/.exec(src.slice(i));
-    if (!m) throw new Error(`bad value at ${i} in ${src}`);
-    i += m[0].length;
-    if (m[0] === "TRUE") return true;
-    if (m[0] === "FALSE") return false;
-    return /^-?\d+$/.test(m[0]) ? Number(m[0]) : m[0];
+    const atom = /^-\d+(?![A-Za-z0-9_])/.exec(src.slice(i))?.[0] ?? head;
+    if (!atom || [",", ")", "]", "}", ">>", ":>", "@@"].includes(atom))
+      throw new Error(`bad value at ${i} in ${src}`);
+    i += atom.length;
+    if (atom === "TRUE") return true;
+    if (atom === "FALSE") return false;
+    return /^-?\d+$/.test(atom) ? Number(atom) : atom;
   };
   try {
     const v = value();

@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { BROKEN_MARK, parseValue, stateKey } from "./lib.mjs";
+import { BROKEN_MARK, isRecord, isTuple, parseValue, stateKey } from "./lib.mjs";
 import { SEP } from "./chart-parts.mjs";
 
 export function firstBad(raw) {
@@ -48,9 +48,14 @@ export function readBroken(file) {
   const out = [];
   for (let i = 0; i < lines.length; i++) {
     if (!marked.test(lines[i])) continue;
+    const firstLine = i + 1;
     let text = lines[i];
     while (typeof parseValue(text) === "string" && i + 1 < lines.length) text += `\n${lines[++i]}`;
-    const [, vars, broken] = parseValue(text);
+    const parsed = parseValue(text);
+    if (!isTuple(parsed) || parsed.length !== 3 || parsed[0] !== BROKEN_MARK || !isRecord(parsed[1]) ||
+      !Array.isArray(parsed[2]) || !parsed[2].every((rule) => typeof rule === "string"))
+      throw new Error(`cannot decode broken-state metadata in ${file} at line ${firstLine}`);
+    const [, vars, broken] = parsed;
     out.push({ key: stateKey(vars), rules: broken });
   }
   return out;
