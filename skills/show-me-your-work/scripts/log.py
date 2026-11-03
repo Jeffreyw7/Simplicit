@@ -42,8 +42,8 @@ def append(logfile, cells):
     with path.open("a", encoding="utf-8", newline="") as handle:
         if needs_header:
             handle.write(HEADER)
-        csv.writer(handle, delimiter="\t", lineterminator="\n").writerow(
-            [stamp] + [clean(cell) for cell in cells])
+        writer = csv.writer(handle, delimiter="\t", lineterminator="\n")
+        writer.writerow([stamp] + [clean(cell) for cell in cells])
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

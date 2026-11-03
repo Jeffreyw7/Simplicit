@@ -185,7 +185,8 @@ if ($env:SIMPLICIT_ACL_TEST_STAGE -eq 'prepare') {
             env = {**os.environ, "SIMPLICIT_ACL_TEST_PARENT": str(parent), "SIMPLICIT_ACL_TEST_STAGE": stage}
             env = {key: value for key, value in env.items() if key.lower() != "psmodulepath"}
             result = subprocess.run(
-                ["powershell.exe", "-NoProfile", "-NonInteractive", "-File", str(script)],
+                ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+                 "-File", str(script)],
                 env=env, capture_output=True, text=True, timeout=30)
             self.assertEqual(0, result.returncode, result.stderr)
             return result.stdout

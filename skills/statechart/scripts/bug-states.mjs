@@ -48,13 +48,18 @@ export function readBroken(file) {
   const out = [];
   for (let i = 0; i < lines.length; i++) {
     if (!marked.test(lines[i])) continue;
-    const firstLine = i + 1;
+    const line = i + 1;
     let text = lines[i];
-    while (typeof parseValue(text) === "string" && i + 1 < lines.length) text += `\n${lines[++i]}`;
-    const parsed = parseValue(text);
-    if (!isTuple(parsed) || parsed.length !== 3 || parsed[0] !== BROKEN_MARK || !isRecord(parsed[1]) ||
-      !Array.isArray(parsed[2]) || !parsed[2].every((rule) => typeof rule === "string"))
-      throw new Error(`cannot decode broken-state metadata in ${file} at line ${firstLine}`);
+    let parsed = parseValue(text);
+    while (typeof parsed === "string" && i + 1 < lines.length && !marked.test(lines[i + 1])) {
+      text += `\n${lines[++i]}`;
+      // A complete marked tuple must end in >>; avoid alternate parsing of each unfinished line.
+      parsed = lines[i].trimEnd().endsWith(">>") ? parseValue(text) : text;
+    }
+    if (!isTuple(parsed) || parsed.length !== 3 || parsed[0] !== BROKEN_MARK ||
+        !isRecord(parsed[1]) || !Array.isArray(parsed[2]) || isTuple(parsed[2]) ||
+        !parsed[2].every(rule => typeof rule === "string"))
+      throw new Error(`cannot read broken-state entry in ${file} at line ${line}: expected an unambiguous state record and a set of rule names`);
     const [, vars, broken] = parsed;
     out.push({ key: stateKey(vars), rules: broken });
   }

@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { HELP, more, USAGE, usage } from "./statechart-help.mjs";
 import {
   BROKEN_PROPERTY,
+  tlaToken,
   checkedOnlyInInitialStates,
   joinAnd,
   parseDot,
@@ -21,7 +22,6 @@ import { ruleBook } from "./rule-book.mjs";
 import { Inputs } from "./snapshot.mjs";
 import { RULES_INVARIANT, SCAFFOLD, withoutComments, writeRulesModule } from "./spec-text.mjs";
 import { cannotRunTlc, findTlc } from "./tlc-tools.mjs";
-import { tlaToken } from "./tla-token.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const { MAX_STRING_LENGTH } = constants;
@@ -29,6 +29,14 @@ const { MAX_STRING_LENGTH } = constants;
 class CannotFinish extends Error {}
 class TlcStopped extends CannotFinish {}
 class NotPublished extends CannotFinish {}
+
+function errorText(error) {
+  try {
+    return String(error instanceof Error ? error.message : error);
+  } catch {
+    return "unprintable thrown value";
+  }
+}
 
 const COMMANDS = {
   "from-spec": {
@@ -122,15 +130,14 @@ function script(name, scriptArgs, about, { okExits = [0] } = {}) {
 }
 
 const KEYWORD =
-  /^(SPECIFICATION|INIT|NEXT|CONSTANTS?|INVARIANTS?|PROPERTY|PROPERTIES|SYMMETRY|VIEW|CONSTRAINTS?|ACTION_CONSTRAINTS?|CHECK_DEADLOCK|TYPE|TYPE_CONSTRAINT|POSTCONDITION|ALIAS)$/;
-const ONE_ARGUMENT =
-  /^(SPECIFICATION|INIT|NEXT|SYMMETRY|VIEW|CHECK_DEADLOCK|TYPE|TYPE_CONSTRAINT|POSTCONDITION|ALIAS)$/;
+  /^(SPECIFICATION|INIT|NEXT|CONSTANTS?|INVARIANTS?|PROPERTY|PROPERTIES|SYMMETRY|VIEW|CONSTRAINTS?|ACTION_CONSTRAINTS?|TYPE|TYPE_CONSTRAINT|CHECK_DEADLOCK|POSTCONDITION|ALIAS)$/;
 
-function* configTokens(cfg) {
+function splitRules(cfg) {
+  const tokens = [];
   for (let i = 0; i < cfg.length;) {
     if (/\s/.test(cfg[i])) { i++; continue; }
     if (cfg.startsWith("\\*", i)) {
-      while (i < cfg.length && cfg[i] !== "\r" && cfg[i] !== "\n") i++;
+      while (i < cfg.length && cfg[i] !== "\n" && cfg[i] !== "\r") i++;
       continue;
     }
     if (cfg.startsWith("(*", i)) {
@@ -141,94 +148,94 @@ function* configTokens(cfg) {
         else if (cfg.startsWith("*)", i)) { depth--; i += 2; }
         else i++;
       }
-      if (depth) throw new CannotFinish("the TLC config has an unterminated block comment");
+      if (depth) throw new CannotFinish("the config has an unterminated block comment");
       continue;
     }
     const start = i;
-    const quoted = cfg[i] === '"';
-    if (quoted) {
-      i++;
-      while (i < cfg.length && cfg[i] !== '"') i += cfg[i] === "\\" ? 2 : 1;
-      if (i >= cfg.length) throw new CannotFinish("the TLC config has an unterminated string");
-      i++;
-    } else {
-      const token = tlaToken(cfg, i);
-      if (!token) throw new CannotFinish(`unrecognized TLC config token at offset ${i}`);
-      i += token.length;
-    }
-    yield { text: cfg.slice(start, i), start, quoted };
+    const text = tlaToken(cfg, i);
+    if (!text) throw new CannotFinish(`the config has an invalid token near ${cfg.slice(i, i + 20)}`);
+    i += text.length;
+    tokens.push({start, end: i, text});
   }
-}
-
-function configValueEnd(tokens, i) {
-  if (!tokens[i]) throw new CannotFinish("the TLC config is missing a constant value");
-  if (tokens[i]?.text !== "{") return i + 1;
-  i++;
-  if (tokens[i]?.text === "}") return i + 1;
-  for (;;) {
-    i = configValueEnd(tokens, i);
-    if (tokens[i]?.text === "}") return i + 1;
-    if (tokens[i]?.text !== ",") throw new CannotFinish("expected ',' or '}' in a TLC config set");
-    i++;
-  }
-}
-
-function configConstantEnd(tokens, i) {
-  i++;
-  while (tokens[i]?.text === "!") i += 2;
-  if (tokens[i]?.text === "(") {
-    i++;
-    if (tokens[i]?.text !== ")") {
-      for (;;) {
-        i = configValueEnd(tokens, i);
-        if (tokens[i]?.text === ")") break;
-        if (tokens[i]?.text !== ",") throw new CannotFinish("expected ',' or ')' in TLC config arguments");
-        i++;
-      }
-    }
-    i++;
-  }
-  const operator = tokens[i++]?.text;
-  if (operator !== "=" && operator !== "<-") throw new CannotFinish("expected '=' or '<-' in a TLC constant assignment");
-  if (tokens[i]?.text === "[") {
-    if (!tokens[i + 1] || tokens[i + 2]?.text !== "]") throw new CannotFinish("expected a module name followed by ']' in a TLC constant assignment");
-    i += 3;
-  }
-  if (!tokens[i]) throw new CannotFinish("the TLC config is missing a constant value");
-  return operator === "<-" ? i + 1 : configValueEnd(tokens, i);
-}
-
-function splitRules(cfg) {
-  const kept = [];
+  const kept = cfg.split("");
   const rules = [];
   const properties = [];
-  let list = null;
-  let inConstants = false;
-  let copied = 0;
-  const tokens = [...configTokens(cfg)];
-  for (let i = 0; i < tokens.length;) {
-    const { text, start, quoted } = tokens[i];
-    if (!quoted && KEYWORD.test(text)) {
-      const next = /^INVARIANTS?$/.test(text)
-        ? rules
-        : /^PROPERT(Y|IES)$/.test(text) ? properties : null;
-      if (next && !list) kept.push(cfg.slice(copied, start));
-      if (!next && list) copied = start;
-      list = next;
-      inConstants = /^CONSTANTS?$/.test(text);
-      i += ONE_ARGUMENT.test(text) ? 2 : 1;
-    } else if (inConstants) {
-      i = configConstantEnd(tokens, i);
+  const directives = {};
+  let cursor = 0;
+  const peek = () => tokens[cursor]?.text;
+  const take = () => {
+    if (cursor === tokens.length) throw new CannotFinish("the config ends before an expected value");
+    return tokens[cursor++];
+  };
+  const expect = (symbol) => {
+    if (peek() !== symbol) throw new CannotFinish(`the config expected ${symbol} near ${peek() ?? "the end"}`);
+    cursor++;
+  };
+  const mask = ({start, end}) => {
+    for (let i = start; i < end; i++) if (!/\s/.test(kept[i])) kept[i] = " ";
+  };
+  // ModelConfig's values are single tokens or recursively nested sets. A keyword is
+  // an ordinary model value here, including in constant-operator arguments.
+  const value = () => {
+    if (take().text !== "{") return;
+    if (peek() !== "}") {
+      value();
+      while (peek() === ",") { cursor++; value(); }
+    }
+    expect("}");
+  };
+  const moduleQualifier = () => {
+    if (peek() !== "[") return;
+    cursor++;
+    take();
+    expect("]");
+  };
+  while (cursor < tokens.length) {
+    const section = take();
+    if (!KEYWORD.test(section.text))
+      throw new CannotFinish(`the config expected a section keyword near ${section.text}`);
+    if (/^CONSTANTS?$/.test(section.text)) {
+      while (cursor < tokens.length && !KEYWORD.test(peek())) {
+        take(); // The left side can be qualified: instance!operator.
+        while (peek() === "!") { cursor++; take(); }
+        if (peek() === "<-") {
+          cursor++;
+          moduleQualifier();
+          take(); // The replacement is one token, even when it is a keyword.
+        } else {
+          if (peek() === "(") {
+            cursor++;
+            value();
+            while (peek() === ",") { cursor++; value(); }
+            expect(")");
+          }
+          expect("=");
+          moduleQualifier();
+          value();
+        }
+      }
+    } else if (/^(INVARIANTS?|PROPERT(Y|IES)|CONSTRAINTS?|ACTION_CONSTRAINTS?)$/.test(section.text)) {
+      const list = /^INVARIANTS?$/.test(section.text) ? rules
+        : /^PROPERT(Y|IES)$/.test(section.text) ? properties : null;
+      if (list) mask(section);
+      while (cursor < tokens.length && !KEYWORD.test(peek())) {
+        const token = take();
+        if (list) {
+          mask(token);
+          if (!list.includes(token.text)) list.push(token.text);
+        }
+      }
     } else {
-      if (list && !list.includes(text)) list.push(text);
-      i++;
+      // INIT, NEXT, TYPE, etc. each consume one operand before another section.
+      const operand = take().text;
+      if (section.text === "NEXT" || section.text === "SPECIFICATION") directives[section.text] = operand;
     }
   }
-  if (!list) kept.push(cfg.slice(copied));
   // TLC takes only a state predicate as an INVARIANT, and checks a state predicate given as a
   // PROPERTY only in the initial states, which the INVARIANT run checks too.
   return {
     cfgWithoutRules: `${kept.join("")}\n`,
+    directives,
     rules,
     properties: properties.filter((p) => !rules.includes(p)),
   };
@@ -239,7 +246,7 @@ function runJava(file, args, options, dot) {
     const r = { stdout: "", stderr: "", stopped: false, overflowed: false };
     const child = spawn(file, args, options);
     for (const stream of ["stdout", "stderr"])
-      child[stream].setEncoding("utf8").on("data", (text) => {
+      child[stream].on("error", (e) => { r.error ??= e; child.kill(); }).setEncoding("utf8").on("data", (text) => {
         if (r.overflowed) return;
         if (r[stream].length + text.length <= MAX_STRING_LENGTH) r[stream] += text;
         else {
@@ -259,7 +266,7 @@ function runJava(file, args, options, dot) {
       clearInterval(watch);
       resolve({ ...r, status, signal });
     });
-  });
+  }).catch(error => ({stdout: "", stderr: "", error}));
 }
 
 async function tlc(tools, spec, cfg, base, { dump, module, workers = "1" } = {}) {
@@ -269,13 +276,16 @@ async function tlc(tools, spec, cfg, base, { dump, module, workers = "1" } = {})
   // so runs that share that folder can read a module while another run rewrites it.
   const javaTmp = path.join(metadir, "tmp");
   fs.mkdirSync(javaTmp);
+  const specDir = path.dirname(path.resolve(spec));
+  // Windows process startup needs room for a trailing separator and NUL within MAX_PATH.
+  const cwd = process.platform === "win32" && specDir.length >= 258 ? metadir : specDir;
   // -deadlock: a system at rest has nothing left to do, which TLC would report as a deadlock.
   const r = await runJava(
     tools.java,
     [
       "-XX:+UseParallelGC",
       `-Djava.io.tmpdir=${javaTmp}`,
-      ...(module ? [`-DTLA-Library=${path.dirname(path.resolve(spec))}`] : []),
+      ...(module || cwd !== specDir ? [`-DTLA-Library=${specDir}`] : []),
       "-cp",
       tools.jar,
       "tlc2.TLC",
@@ -290,7 +300,7 @@ async function tlc(tools, spec, cfg, base, { dump, module, workers = "1" } = {})
       path.resolve(`${base}.cfg`),
       module ? path.resolve(module) : path.basename(spec),
     ],
-    { cwd: path.dirname(path.resolve(spec)) },
+    { cwd },
     dump,
   );
   fs.rmSync(metadir, { recursive: true, force: true });
@@ -313,12 +323,12 @@ async function tlc(tools, spec, cfg, base, { dump, module, workers = "1" } = {})
   }
 }
 
-function warnUnnamedSteps({ spec, copy }, cfg, dot) {
+function warnUnnamedSteps({ spec, copy, directives }, dot) {
   const text = withoutComments(copy);
-  const specName = /^SPECIFICATION\s+(\w+)/m.exec(cfg)?.[1];
+  const specName = directives.SPECIFICATION;
   const specBody = specName && new RegExp(`^${specName}\\s*==(.*(\\n[ \\t]+.*)*)`, "m").exec(text);
   const next =
-    /^NEXT\s+(\w+)/m.exec(cfg)?.[1] ?? /\[\]\s*\[\s*(\w+)\s*\]_/.exec(specBody?.[1] ?? text)?.[1];
+    directives.NEXT ?? /\[\]\s*\[\s*(\w+)\s*\]_/.exec(specBody?.[1] ?? text)?.[1];
   const graph = parseDot(fs.readFileSync(dot, "utf8"));
   const unnamed = [...graph.edges, ...graph.loops].filter((e) => e.action === next).length;
   if (unnamed > 0)
@@ -415,7 +425,7 @@ async function check(tools, model, { work, out, role }, expected) {
     workers: "1",
   });
   const dotBytes = fs.statSync(dot).size;
-  const next = dotBytes <= MAX_STRING_LENGTH && warnUnnamedSteps(model, cfgWithoutRules, dot);
+  const next = dotBytes <= MAX_STRING_LENGTH && warnUnnamedSteps(model, dot);
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
   console.log(`  TLC ran ${runs} ${runs === 1 ? "time" : "times"} in ${seconds} s.`);
   const broken = [...traces, ...temporal].some((t) => t.broken);
@@ -456,7 +466,12 @@ async function draw({ now, other, uncited, map, work, out, title, comparing, cov
       `${rel(huge.spec)}: TLC's state graph ${huge.stopped ? `passed ${limit} bytes, the most that the command can read, so the command stopped TLC and draws no chart` : `has ${huge.dotBytes.toLocaleString("en-US")} bytes, more than the ${limit} that the command can read, so it draws no chart`}. The rule results above stand. Smaller constants make a smaller graph.`,
     );
   const shown = published(work, out);
-  const mapping = await import(pathToFileURL(path.resolve(map)).href);
+  let mapping;
+  try {
+    mapping = await import(pathToFileURL(path.resolve(map)).href);
+  } catch (e) {
+    throw new CannotFinish("cannot load mapping " + rel(map) + ": " + errorText(e));
+  }
   const from = ["--dot", now.dot, "--broken", now.dumpOut, "--map", map, "--spec", now.copy];
   for (const m of [now, other]) if (m?.next) from.push("--next", m.next);
   from.push(...now.traces.flatMap((t) => ["--traces", t.file]));
@@ -666,7 +681,7 @@ const OWN =
 function foreign(dir) {
   try {
     for (;;) {
-      const root = fs.lstatSync(dir, { throwIfNoEntry: false });
+      const root = fs.lstatSync(dir, { throwIfNoEntry: false, bigint: true });
       if (!root) return [];
       if (!root.isDirectory()) return ["."];
       const found = [];
@@ -675,11 +690,6 @@ function foreign(dir) {
           name,
           stat: fs.lstatSync(path.join(dir, relative, name)),
         }));
-        const files = new Set(entries.filter((e) => e.stat.isFile()).map((e) => e.name));
-        const modules = [...files]
-          .filter((name) => /^[A-Za-z0-9_]+\.dot$/.test(name))
-          .map((name) => name.slice(0, -4))
-          .filter((name) => files.has(`${name}.cfg`) && files.has(`${name}.out`));
         for (const { name, stat } of entries) {
           const entry = path.join(relative, name);
           const directory = (!relative && name === "tlc") ||
@@ -688,9 +698,7 @@ function foreign(dir) {
           const owned = !relative ? OWN.test(name) :
             name === ".DS_Store" ||
             (relative === "tlc" && /^regions-(all|proof)\.mmd$/.test(name)) ||
-            modules.some((module) =>
-              [ `${module}.cfg`, `${module}.out`, `${module}.dot`, `${module}_rules.tla` ].includes(name) ||
-              (name.startsWith(`${module}-`) && /^[A-Za-z0-9_!]+\.(cfg|out)$/.test(name.slice(module.length + 1))));
+            /\.(tla|cfg|out|dot)$/.test(name);
           if (!stat.isFile() || !owned) found.push(entry);
         }
       };
@@ -701,7 +709,7 @@ function foreign(dir) {
         if (e.code !== "ENOENT") throw e;
         missing = e;
       }
-      const current = fs.lstatSync(dir, { throwIfNoEntry: false });
+      const current = fs.lstatSync(dir, { throwIfNoEntry: false, bigint: true });
       if (!current) return [];
       if (current.dev !== root.dev || current.ino !== root.ino) continue;
       if (missing) throw missing;
@@ -720,9 +728,8 @@ function refuseForeign(out, files = foreign(out)) {
     );
 }
 
-function outDir(flagged, input, name, inputs) {
+function outDir(flagged, input, name) {
   const out = flagged ?? path.join(path.dirname(input), `${name}-statechart`);
-  unchanged(inputs, out);
   refuseForeign(out);
   return out;
 }
@@ -739,28 +746,60 @@ async function inWorkFolder(body) {
       e.message += ` The files that this run wrote are in ${rel(work)}.`;
     throw e;
   } finally {
-    if (!keep) fs.rmSync(work, { recursive: true, force: true });
+    if (!keep) removeTemporary(work);
   }
 }
 
-const moved = (from, to, ...missed) => {
+function removeTemporary(dir) {
   try {
-    fs.renameSync(from, to);
-    return true;
+    fs.rmSync(dir, { recursive: true, force: true });
   } catch (e) {
-    if (missed.includes(e.code)) return false;
-    if (
-      process.platform === "win32" &&
-      e.code === "EPERM" &&
-      missed.includes("EEXIST") &&
-      fs.lstatSync(to, { throwIfNoEntry: false })?.isDirectory()
-    ) return false;
+    console.error("Temporary cleanup failed; temporary files remain in " + rel(dir) + ": " + errorText(e));
+  }
+}
+
+function temporaryFolder(prefix) {
+  const made = fs.mkdtempSync(path.toNamespacedPath(prefix));
+  return path.join(path.dirname(prefix), path.basename(made));
+}
+
+function renameFolder(from, to, missed, beforeAttempt, afterFailure) {
+  const waits = [25, 50, 100, 200, 400];
+  let firstDenial;
+  for (let attempt = 0; ; attempt++) {
+    beforeAttempt?.();
+    try {
+      fs.renameSync(from, to);
+      return true;
+    } catch (e) {
+      afterFailure?.();
+      if (missed.includes(e.code)) return false;
+      if (process.platform !== "win32" || !["EPERM", "EACCES", "EBUSY"].includes(e.code)) throw e;
+      firstDenial ??= e;
+      let source, target;
+      try {
+        source = fs.lstatSync(from, {throwIfNoEntry: false});
+        target = fs.lstatSync(to, {throwIfNoEntry: false});
+      } catch { throw firstDenial; }
+      if (missed.includes("EEXIST") && source?.isDirectory() && target?.isDirectory()) return false;
+      if (!source?.isDirectory() || target || attempt === waits.length) throw firstDenial;
+      // Windows can deny a directory rename while a child file is briefly open without delete
+      // sharing. Retry only an absent destination; a competing output must be checked again.
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, waits[attempt]);
+    }
+  }
+}
+
+const moved = (from, to, missed, beforeAttempt, afterFailure) => {
+  try {
+    return renameFolder(from, to, missed, beforeAttempt, afterFailure);
+  } catch (e) {
     if (!["ENOSYS", "EXDEV", "EISDIR"].includes(e.code)) throw e;
   }
   // Some filesystems, such as FUSE mounts, cannot rename a folder that has files. They fail with
   // ENOSYS, or with EISDIR when the target exists. They can rename an empty folder.
   if (!fs.existsSync(from) && missed.includes("ENOENT")) return false;
-  const claimed = claimedFolder(to, missed);
+  const claimed = claimedFolder(to, missed, beforeAttempt, afterFailure);
   if (claimed === null) return false;
   try {
     copyExclusive(from, to);
@@ -776,22 +815,26 @@ const moved = (from, to, ...missed) => {
   return true;
 };
 
-function claimedFolder(to, missed) {
+function claimedFolder(to, missed, beforeAttempt, afterFailure) {
   // Making a folder and opening it take two calls. Another run can replace the folder at `to`
   // between them. So the run opens its folder before it moves the folder to `to`.
   // A filesystem can reuse a removed folder's inode number. Holding this folder open keeps its
   // number, so a folder that another run makes in its place cannot match it.
-  const mine = fs.mkdtempSync(path.join(path.dirname(to), `.${path.basename(to)}-`));
+  const mine = temporaryFolder(path.join(path.dirname(to), `.${path.basename(to)}-`));
   const claimed = fs.openSync(mine, "r");
+  let renamed;
   try {
-    fs.renameSync(mine, to);
-    return claimed;
+    renamed = renameFolder(mine, to, missed, beforeAttempt, afterFailure);
   } catch (e) {
     fs.closeSync(claimed);
     fs.rmdirSync(mine);
     if (missed.includes(e.code)) return null;
     throw e;
   }
+  if (renamed) return claimed;
+  fs.closeSync(claimed);
+  fs.rmdirSync(mine);
+  return null;
 }
 
 function sameFolder(at, claimed) {
@@ -811,13 +854,8 @@ function copyExclusive(from, to) {
   }
 }
 
-function unchanged(inputs, out) {
-  const contained = inputs.inside(out);
-  if (contained)
-    throw new NotPublished(
-      `${rel(out)} contains input ${rel(contained)}, so it cannot be replaced. Pass --out with a folder outside the input files.`,
-    );
-  const changed = inputs.changed();
+function unchanged(inputs, out, resolve) {
+  const changed = inputs.changed(resolve);
   if (changed)
     throw new NotPublished(
       `${rel(changed)} changed while this run read it, so the run left ${rel(out)} as it was. Run the command again.`,
@@ -827,26 +865,75 @@ function unchanged(inputs, out) {
 function publish(work, out, inputs) {
   const parent = path.dirname(path.resolve(out));
   fs.mkdirSync(parent, { recursive: true });
-  const next = fs.mkdtempSync(path.join(parent, `.${path.basename(out)}-`));
-  const old = `${next}-old`;
+  const next = temporaryFolder(path.join(parent, `.${path.basename(out)}-`));
+  const stage = fs.lstatSync(next, {bigint: true});
+  const summary = path.join(next, "summary.json");
+  let pin, held;
+  let old = `${next}-old`;
+  let displaced = 0;
   let aside = false;
+  let originalOutput;
+  const currentInput = (file) => {
+    const relative = path.relative(out, file);
+    return originalOutput && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative)
+      ? path.join(originalOutput, relative) : file;
+  };
+  const ownsStage = () => {
+    try {
+      const now = fs.lstatSync(next, {bigint: true, throwIfNoEntry: false});
+      if (!now?.isDirectory() || now.isSymbolicLink() || now.dev !== stage.dev || now.ino !== stage.ino) return false;
+      if (held === undefined) return true;
+      const file = fs.lstatSync(summary, {bigint: true, throwIfNoEntry: false});
+      return file?.isFile() && !file.isSymbolicLink() && file.dev === held.dev && file.ino === held.ino;
+    } catch { return false; }
+  };
+  const closePin = () => {
+    if (pin !== undefined) { fs.closeSync(pin); pin = undefined; }
+  };
+  const cleanupPin = () => {
+    try { closePin(); }
+    catch (e) { console.error("Stage identity handle cleanup failed: " + errorText(e)); }
+  };
+  const pinStage = () => {
+    if (!ownsStage()) throw new CannotFinish(`staging folder changed during publication; retained ${rel(next)} for review`);
+    if (pin === undefined) {
+      pin = fs.openSync(summary, "r");
+      const file = fs.fstatSync(pin, {bigint: true});
+      held ??= file;
+      if (file.dev !== held.dev || file.ino !== held.ino || !ownsStage())
+        throw new CannotFinish(`staging folder changed during publication; retained ${rel(next)} for review`);
+    }
+  };
+  const ready = () => {
+    if (!ownsStage()) throw new CannotFinish(`staging folder changed during publication; retained ${rel(next)} for review`);
+    unchanged(inputs, out, currentInput);
+    refuseForeign(out);
+    closePin();
+  };
   try {
     fs.cpSync(work, next, { recursive: true });
-    unchanged(inputs, out);
-    refuseForeign(out);
-    while (!moved(next, out, "ENOTEMPTY", "EEXIST")) {
+    // Hold identity across retry waits, releasing the handle for each actual
+    // rename: Windows can deny directory moves while this child file is open.
+    pinStage();
+    while (!moved(next, out, ["ENOTEMPTY", "EEXIST"], ready, pinStage)) {
       if (aside) {
         refuseForeign(out);
-        fs.rmSync(old, { recursive: true, force: true });
+        console.log("Previous output preserved in " + rel(old) + ".");
+        old = `${next}-${++displaced}-old`;
         aside = false;
       }
-      aside = moved(out, old, "ENOENT");
-      if (aside) refuseForeign(out, foreign(old));
+      aside = moved(out, old, ["ENOENT"], ready, pinStage);
+      if (aside) {
+        originalOutput ??= old;
+        refuseForeign(out, foreign(old));
+      }
     }
   } catch (e) {
     const back = !aside || putBack(old, out);
-    fs.rmSync(next, { recursive: true, force: true });
-    const why = e instanceof CannotFinish ? e.message : `cannot replace ${rel(out)}: ${e.message}.`;
+    cleanupPin();
+    if (ownsStage()) removeTemporary(next);
+    else console.error(`Staging ownership changed; retained ${rel(next)} for review.`);
+    const why = e instanceof CannotFinish ? errorText(e) : `cannot replace ${rel(out)}: ${errorText(e)}.`;
     if (!back)
       throw new NotPublished(
         `${why} This run moved the previous ${rel(out)} to ${rel(old)} and could not put it back.`,
@@ -854,13 +941,17 @@ function publish(work, out, inputs) {
     throw new NotPublished(
       e instanceof CannotFinish ? why : `${why} The run left ${rel(out)} as it was.`,
     );
+  } finally {
+    cleanupPin();
   }
-  if (aside) fs.rmSync(old, { recursive: true, force: true });
+  if (aside) {
+    console.log("Previous output preserved in " + rel(old) + ".");
+  }
 }
 
 function putBack(old, out) {
   try {
-    return moved(old, out, "ENOTEMPTY", "EEXIST");
+    return moved(old, out, ["ENOTEMPTY", "EEXIST"]);
   } catch {
     return false;
   }
@@ -949,7 +1040,7 @@ async function fromSpec(input, { "expect-broken": expected, title, cover, ...fla
   const second = secondModel(input, otherCfg, flags, inputs);
   const listed = second?.role === "against" ? listedBreaks(second.model.spec) : undefined;
   const model = readInput(input, cfg, expected, inputs);
-  const out = outDir(flags.out, input, name, inputs);
+  const out = outDir(flags.out, input, name);
   if (!fs.existsSync(map)) {
     fs.writeFileSync(map, SCAFFOLD(name, input));
     throw new CannotFinish(`Wrote ${rel(map)}. Fill in its labels, then run this command again.`);
@@ -974,6 +1065,72 @@ async function fromSpec(input, { "expect-broken": expected, title, cover, ...fla
   });
 }
 
+function generateSources(input, name) {
+  const dir = path.dirname(path.resolve(input));
+  const files = [".tla", ".cfg", ".map.mjs"].map((suffix) => {
+    const file = path.join(dir, name + suffix);
+    const stat = fs.lstatSync(file, {throwIfNoEntry: false});
+    if (stat && !stat.isFile())
+      throw new CannotFinish("cannot replace non-file source " + rel(file));
+    return {file, original: stat ? fs.readFileSync(file) : null, written: false};
+  });
+  const stage = fs.mkdtempSync(path.join(os.tmpdir(), "statechart-sources-"));
+  let backup;
+  const matches = (file, content) => {
+    const stat = fs.lstatSync(file, {throwIfNoEntry: false});
+    return content === null ? !stat : stat?.isFile() && fs.readFileSync(file).equals(content);
+  };
+  const restore = () => {
+    const failed = [];
+    for (const item of files.filter((f) => f.written).reverse()) {
+      try {
+        if (!matches(item.file, item.generated)) {
+          failed.push(item.file);
+          continue;
+        }
+        if (item.original === null) fs.unlinkSync(item.file);
+        else fs.copyFileSync(path.join(backup, path.basename(item.file)), item.file);
+      } catch {
+        failed.push(item.file);
+      }
+    }
+    if (failed.length)
+      throw new CannotFinish("could not restore sources changed or locked during this run: " +
+        failed.map(rel).join(", ") + (backup ? ". Originals remain in " + rel(backup) : ""));
+    if (backup) fs.rmSync(backup, {recursive: true, force: true});
+  };
+  try {
+    script("chart-to-tla.mjs", [input, "--module", name, "--dir", stage], input);
+    for (const item of files) {
+      item.generated = fs.readFileSync(path.join(stage, path.basename(item.file)));
+      if (!matches(item.file, item.original))
+        throw new CannotFinish(rel(item.file) + " changed while compiling the chart");
+    }
+    if (files.some((f) => f.original !== null)) {
+      backup = temporaryFolder(path.join(dir, "." + name + "-statechart-backup-"));
+      for (const item of files.filter((f) => f.original !== null))
+        fs.writeFileSync(path.join(backup, path.basename(item.file)), item.original, {flag: "wx"});
+    }
+    for (const item of files) {
+      if (!matches(item.file, item.original))
+        throw new CannotFinish(rel(item.file) + " changed before source publication");
+      item.written = true;
+      fs.writeFileSync(item.file, item.generated, {flag: item.original === null ? "wx" : "w"});
+    }
+    return {
+      restore,
+      keep: () => {
+        if (backup) console.log("Backup of replaced sources: " + rel(backup) + ".");
+      },
+    };
+  } catch (e) {
+    try { restore(); } catch (rollback) { e.message += ". " + rollback.message; }
+    throw new CannotFinish(e.message);
+  } finally {
+    removeTemporary(stage);
+  }
+}
+
 async function fromChart(input, { "expect-broken": expected, ...flags }, renderer) {
   const name =
     flags.module ??
@@ -984,46 +1141,48 @@ async function fromChart(input, { "expect-broken": expected, ...flags }, rendere
     throw new CannotFinish(`cannot make a TLA+ module name from ${input}; add --module NAME`);
   const spec = path.join(path.dirname(input), `${name}.tla`);
   const map = spec.replace(/\.tla$/, ".map.mjs");
-  const inputs = new Inputs().add([input]);
-  if (fs.existsSync(spec)) {
-    console.log(`Kept ${rel(spec)}. Move the spec and its .cfg and .map.mjs companions to generate them again from ${rel(input)}.`);
-  } else {
-    const collisions = [spec, cfgOf(spec), map].filter((file) =>
-      fs.lstatSync(file, { throwIfNoEntry: false }));
-    if (collisions.length)
-      throw new CannotFinish(
-        `Cannot generate ${name}: ${collisions.map(rel).join(", ")} already ${collisions.length === 1 ? "exists" : "exist"}. Move these paths or choose another --module; no model files were written.`,
-      );
-    script("chart-to-tla.mjs", [input, "--module", name], input);
-    console.log(`Wrote ${name}.tla, ${name}.cfg, and ${name}.map.mjs from ${rel(input)}.`);
-  }
-  inputs.add([spec, cfgOf(spec), map]);
+  const out = outDir(flags.out, input, name);
   const tools = findTools();
-  const model = readInput(spec, cfgOf(spec), expected, inputs);
-  const out = outDir(flags.out, input, name, inputs);
-  return inWorkFolder(async (work) => {
-    const now = await check(tools, model, { work, out }, expected);
-    const drawn = await draw({ now, map, work, out, title: flags.title, comparing: true });
-    const compared = script(
-      "compare-charts.mjs",
-      [inputs.copyOf(input), drawn.files.overview],
-      input,
-      {
-        okExits: [0, 1],
-      },
-    );
-    if (compared.status === 0) console.log(`\nThe spec draws ${rel(input)} back unchanged.`);
-    else
-      console.log(
-        `\nThe spec does not draw ${rel(input)}:\n${compared.stdout.trimEnd().replace(/^/gm, "  ")}`,
+  const inputs = new Inputs().add([input]);
+  let generated;
+  try {
+    if (fs.existsSync(spec)) {
+      console.log(`Kept ${rel(spec)}. Delete it to write the spec again from ${rel(input)}.`);
+    } else {
+      generated = generateSources(input, name);
+      console.log(`Wrote ${name}.tla, ${name}.cfg, and ${name}.map.mjs from ${rel(input)}.`);
+    }
+    inputs.add([spec, cfgOf(spec), map]);
+    const model = readInput(spec, cfgOf(spec), expected, inputs);
+    const result = await inWorkFolder(async (work) => {
+      const now = await check(tools, model, { work, out }, expected);
+      const drawn = await draw({ now, map, work, out, title: flags.title, comparing: true });
+      const compared = script(
+        "compare-charts.mjs",
+        [inputs.copyOf(input), drawn.files.overview],
+        input,
+        {
+          okExits: [0, 1],
+        },
       );
-    return finish(
-      { work, out, inputs },
-      drawn,
-      rulesAsExpected(now, null, expected) && compared.status === 0,
-      renderer,
-    );
-  });
+      if (compared.status === 0) console.log(`\nThe spec draws ${rel(input)} back unchanged.`);
+      else
+        console.log(
+          `\nThe spec does not draw ${rel(input)}:\n${compared.stdout.trimEnd().replace(/^/gm, "  ")}`,
+        );
+      return finish(
+        { work, out, inputs },
+        drawn,
+        rulesAsExpected(now, null, expected) && compared.status === 0,
+        renderer,
+      );
+    });
+    generated?.keep();
+    return result;
+  } catch (e) {
+    try { generated?.restore(); } catch (rollback) { e.message += ". " + rollback.message; }
+    throw e instanceof CannotFinish ? e : new CannotFinish(e.message);
+  }
 }
 
 try {

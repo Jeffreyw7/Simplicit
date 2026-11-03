@@ -1,5 +1,10 @@
 # Validation evidence
 
+The dated sections below describe their named candidates, including evidence imported from main. Current integration checks are recorded separately in [the November 3 integration report](main-integration-2026-11-03.md).
+
+## Review fixes — October 27, 2026
+
+The [review-fix completion report](review-fixes-2026-10-27.md) records the eight repairs, source-preservation changes, independent review findings and compatibility limits. Final local verification passes 54 Python tests on Windows (3 skips) and Ubuntu (2 skips), 30 real Node/TLC regressions on Windows (no skips), all 62 skills and both agent profiles. Preserved CLI workflows and PNG success/partial-failure behavior were also exercised. Linux Node/TLC and native custom-role execution remain unverified. The earlier counts and hosted CI results below belong to their dated candidates.
 ## Legacy decision-log compatibility repair — November 3, 2026
 
 The repair starts from `f8463d4861d1b63c134233d1980a0efeef99a8b4`. The compatibility review reproduced a gap introduced by the quoted-TSV repair in `465dcbf`: logs produced by the earlier raw-tab writer with literal cells such as `"open` or `"closed"junk` could no longer receive an append. Rejection preserved the original bytes, but no migration path existed. Balanced literal quotes also make automatic old/new format detection ambiguous.
