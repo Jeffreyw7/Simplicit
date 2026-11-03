@@ -1,5 +1,28 @@
 # Validation evidence
 
+## Legacy decision-log compatibility repair — November 3, 2026
+
+The repair starts from `f8463d4861d1b63c134233d1980a0efeef99a8b4`. The compatibility review reproduced a gap introduced by the quoted-TSV repair in `465dcbf`: logs produced by the earlier raw-tab writer with literal cells such as `"open` or `"closed"junk` could no longer receive an append. Rejection preserved the original bytes, but no migration path existed. Balanced literal quotes also make automatic old/new format detection ambiguous.
+
+The new [legacy converter](../skills/show-me-your-work/scripts/migrate_legacy.py) explicitly reads a known raw-tab file, validates all records, and creates a new quoted-TSV destination using exclusive creation. It preserves the source, timestamps, literal quotes, empty cells and Unicode, and applies the current formula-prefix protection. Invalid source data creates no destination; existing destinations, including the source itself, are refused. Normal `log.py` append behavior and strict malformed-log rejection remain unchanged. The [conversion instructions](../skills/show-me-your-work/references/helper.md#continuing-a-legacy-log) explain selecting the new canonical log, format ambiguity and retrying interrupted writes to a fresh destination.
+
+The eight existing decision-log tests passed before the change. Regression-first conversion success cases failed before the new helper existed; after implementation all **16 decision-log tests** passed. Eight added tests cover the two reported quote failures, balanced quotes, empty cells, Unicode, LF/CRLF, formula guards, large cells, header-only input, invalid/missing source data, destination collisions, repeated conversion and continued appends. Existing malformed-modern-log rejection tests still pass.
+
+| Executed check | Result |
+|---|---|
+| Windows: `python -B -m unittest discover -s scripts -p 'test_*.py'` | 68 tests successful; two unprivileged-symlink skips and one POSIX-only skip. |
+| Ubuntu WSL: the same complete Python discovery | 68 tests successful; three Windows-only skips. |
+| `python -B scripts/validate_skills.py` and `python -B scripts/validate_agents.py` | 62 skills and two profiles valid. |
+| `node --test scripts/test_statechart.mjs` with checksum-pinned TLC 1.7.4 | 59 tests passed, zero failures or skips. |
+| Fresh installation into an isolated project whose path contains spaces | All 62 skills installed; both logging scripts matched source bytes. The actual pre-`465dcbf` writer produced two rows, the installed converter migrated them, and the installed appender added a third row from another working directory. Source bytes were preserved. |
+| Independent TSV consumer | PowerShell `Import-Csv` read all three rows and preserved literal quotes, Unicode and the empty cell. |
+| Independent repair review | No actionable production/test/documentation issue found. Separate probes verified mixed LF/CRLF, literal values, formula guards and rejection of a malformed late record before destination-parent creation. |
+| Diff and upstream checks | Clean whitespace check; original `pstack/` tree unchanged at `880564357e051d7c7802da1cb5d8df1d0b008299`. |
+
+Local execution used Windows Python 3.12.14, Node 25.2.0, Java 21 and Ubuntu WSL Python 3.12.3. Tests ran with ordinary host filesystem/process access because the previously diagnosed sandbox temporary-directory ACL and Java pipe restrictions prevent valid execution there. The isolated adoption evidence is retained under `.scratch/legacy-adoption-20261103-7f05d50c07464b3696c9ac7d5fa83146/`. Hosted results for the pushed revision are tracked separately in PR #3.
+
+Conversion is explicit and uses one writer per log. The format cannot distinguish all legacy data from modern quoted TSV; use it only for a known raw-tab source, and retain that original. Interrupted output writes may leave an incomplete new destination; retry to a fresh destination. Disk-full and process-termination failure injection were not run. This pass adds no native model turns or skill-quality measurements. The earlier native acceptance and its remaining platform/model/repair-branch limits below retain their original scope; the CLI conversion tests do not substitute for those trials.
+
 ## Functional follow-up review — November 2, 2026
 
 The follow-up began at `3aac00a0a0aa3dd4698e4e752209702b9ad18dda`. Independent reviewers inspected installation/validation, Statechart and decision logging, and skill instructions/role routing. The review distinguishes deliberate portability changes from functional defects, including defects inherited from the newly packaged upstream helper.

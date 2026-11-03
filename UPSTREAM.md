@@ -26,7 +26,7 @@ The upstream `pstack/agents/comment-sicko.md` is adapted as `.codex/agents/comme
 ### Executable helpers
 
 - Statechart retains all 21 production JavaScript modules from the pinned source. TLC setup now requires explicit existing Java/JAR configuration. PNG dependencies require a one-time opt-in; documented versions stay pinned. CLI help describes these differences. Original upstream tests remain in the source snapshot; portable behavioral tests are in `scripts/test_statechart.mjs`.
-- The Bash decision logger is replaced by a Python 3.10+ helper with the same six-column UTC TSV contract, literal argument handling, whitespace/formula sanitation and malformed-log rejection.
+- The Bash decision logger is replaced by a Python 3.10+ helper with the same six-column UTC TSV contract, literal argument handling, whitespace/formula sanitation and malformed-log rejection. Existing raw-tab logs have an explicit [conversion path](skills/show-me-your-work/references/helper.md#continuing-a-legacy-log) that preserves the original and writes quoted TSV to a new destination.
 - The upstream Bun orchestration framework, PR watcher and destructive shell cleanup helpers are not installed. Their workflows are adapted into the mode's portable playbooks: durable unit/evidence records, single topology writer, actual host collaboration/Git tools, bounded retries, and explicit shipping/cleanup authority. These are workflow adaptations, not claims of binary/CLI compatibility with `orch`.
 
 The naming pattern and worker brief established by the earlier adaptation continue to follow [Jimmy at 2bb05bc](https://github.com/ja153903/jimmy/tree/2bb05bcd288f60a9b435ddd156dabb8d88fafe80/plugins/adapters/common/skills). No Jimmy runtime is imported.

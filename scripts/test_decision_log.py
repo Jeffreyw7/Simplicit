@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[1] / "skills/show-me-your-work/scripts/log.py"
+MIGRATOR = SCRIPT.with_name("migrate_legacy.py")
 
 
 class DecisionLogTests(unittest.TestCase):
@@ -15,9 +16,145 @@ class DecisionLogTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.log = Path(self.temp.name) / "decisions.tsv"
 
-    def run_log(self, cells):
-        return subprocess.run([sys.executable, "-B", str(SCRIPT), str(self.log), *cells],
+    def run_log(self, cells, logfile=None):
+        return subprocess.run([sys.executable, "-B", str(SCRIPT), str(logfile or self.log), *cells],
                               capture_output=True, text=True, encoding="utf-8")
+
+    def run_migration(self, destination):
+        return subprocess.run([sys.executable, "-B", str(MIGRATOR), str(self.log), str(destination)],
+                              capture_output=True, text=True, encoding="utf-8")
+
+    def test_legacy_quotes_convert_and_remain_appendable_with_source_preserved(self):
+        for ending in ("\n", "\r\n"):
+            with self.subTest(ending=repr(ending)):
+                before = ("ts\tphase\tdecision\twhy\tevidence\tresult" + ending +
+                          '2026-11-03T10:00:00Z\t"open\t"closed"junk\t"balanced"\tproof "quoted"\tcafé ☃' + ending).encode("utf-8")
+                self.log.write_bytes(before)
+                failed_append = self.run_log(["review", "keep", "reason", "artifact", "ok"])
+                self.assertNotEqual(0, failed_append.returncode)
+                self.assertEqual(before, self.log.read_bytes())
+                converted = Path(self.temp.name) / ("lf.tsv" if ending == "\n" else "crlf.tsv")
+
+                result = self.run_migration(converted)
+
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assertEqual(before, self.log.read_bytes())
+                later = ["review", "keep", "reason", "artifact", "ok"]
+                result = self.run_log(later, converted)
+                self.assertEqual(0, result.returncode, result.stderr)
+                with converted.open(encoding="utf-8", newline="") as handle:
+                    rows = list(csv.reader(handle, delimiter="\t", strict=True))
+                self.assertEqual(["ts", "phase", "decision", "why", "evidence", "result"], rows[0])
+                self.assertEqual(['2026-11-03T10:00:00Z', '"open', '"closed"junk', '"balanced"', 'proof "quoted"', 'café ☃'], rows[1])
+                self.assertEqual(later, rows[2][1:])
+                self.assertEqual(3, len(rows))
+
+    def test_legacy_balanced_quotes_are_literal_and_empty_cells_keep_their_columns(self):
+        before = (b"ts\tphase\tdecision\twhy\tevidence\tresult\n"
+                  b'2026-11-03T10:00:00Z\t"balanced"\t\t""\tproof\t\n')
+        self.log.write_bytes(before)
+        converted = Path(self.temp.name) / "converted.tsv"
+        result = self.run_migration(converted)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(before, self.log.read_bytes())
+        with converted.open(encoding="utf-8", newline="") as handle:
+            rows = list(csv.reader(handle, delimiter="\t", strict=True))
+        self.assertEqual(['2026-11-03T10:00:00Z', '"balanced"', '', '""', 'proof', ''], rows[1])
+
+    def test_legacy_conversion_applies_formula_guards_without_double_prefixing(self):
+        before = (b"ts\tphase\tdecision\twhy\tevidence\tresult\n"
+                  b"2026-11-03T10:00:00Z\t =1+1\t +1\t -1\t @SUM(A1)\t'=already\n")
+        self.log.write_bytes(before)
+        converted = Path(self.temp.name) / "converted.tsv"
+        result = self.run_migration(converted)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(before, self.log.read_bytes())
+        with converted.open(encoding="utf-8", newline="") as handle:
+            rows = list(csv.reader(handle, delimiter="\t", strict=True))
+        self.assertEqual(["2026-11-03T10:00:00Z", "' =1+1", "' +1", "' -1", "' @SUM(A1)", "'=already"], rows[1])
+
+    def test_invalid_legacy_input_creates_no_destination(self):
+        header = b"ts\tphase\tdecision\twhy\tevidence\tresult\n"
+        cases = {
+            "missing": None,
+            "empty": b"",
+            "header": b"wrong\n",
+            "incomplete header": header[:-1],
+            "missing column": header + b"stamp\ta\tb\tc\td\n",
+            "extra column": header + b"stamp\ta\tb\tc\td\te\tf\n",
+            "blank record": header + b"\n",
+            "incomplete record": header + b"stamp\ta\tb\tc\td\te",
+            "bare carriage return": header + b"stamp\ta\tb\tc\td\te\rf\n",
+            "invalid encoding": header + b"stamp\ta\tb\tc\td\t\xff\n",
+        }
+        converted = Path(self.temp.name) / "absent-parent/converted.tsv"
+        for name, before in cases.items():
+            with self.subTest(name=name):
+                if before is not None:
+                    self.log.write_bytes(before)
+                result = self.run_migration(converted)
+                self.assertNotEqual(0, result.returncode)
+                self.assertFalse(converted.parent.exists())
+                if before is not None:
+                    self.assertEqual(before, self.log.read_bytes())
+
+    def test_migration_refuses_existing_destinations_including_its_source(self):
+        before = b'ts\tphase\tdecision\twhy\tevidence\tresult\nstamp\t"open\tb\tc\td\te\n'
+        self.log.write_bytes(before)
+        existing = Path(self.temp.name) / "existing.tsv"
+        existing.write_bytes(b"user data\n")
+        folder = Path(self.temp.name) / "folder"
+        folder.mkdir()
+        for destination in (self.log, existing, folder):
+            with self.subTest(destination=destination.name):
+                result = self.run_migration(destination)
+                self.assertNotEqual(0, result.returncode)
+                self.assertEqual(before, self.log.read_bytes())
+                self.assertEqual(b"user data\n", existing.read_bytes())
+                self.assertEqual([], list(folder.iterdir()))
+
+    def test_repeated_migration_preserves_the_converted_log_and_later_appends(self):
+        self.log.write_bytes(b'ts\tphase\tdecision\twhy\tevidence\tresult\nstamp\t"open\tb\tc\td\te\n')
+        converted = Path(self.temp.name) / "new-parent/converted.tsv"
+        first = self.run_migration(converted)
+        self.assertEqual(0, first.returncode, first.stderr)
+        appended = self.run_log(["review", "keep", "reason", "artifact", "ok"], converted)
+        self.assertEqual(0, appended.returncode, appended.stderr)
+        before = converted.read_bytes()
+        again = self.run_migration(converted)
+        self.assertNotEqual(0, again.returncode)
+        self.assertEqual(before, converted.read_bytes())
+
+    def test_legacy_header_only_conversion_can_receive_its_first_append(self):
+        self.log.write_bytes(b"ts\tphase\tdecision\twhy\tevidence\tresult\r\n")
+        converted = Path(self.temp.name) / "converted.tsv"
+        result = self.run_migration(converted)
+        self.assertEqual(0, result.returncode, result.stderr)
+        result = self.run_log(["review", "keep", "reason", "artifact", "ok"], converted)
+        self.assertEqual(0, result.returncode, result.stderr)
+        with converted.open(encoding="utf-8", newline="") as handle:
+            rows = list(csv.reader(handle, delimiter="\t", strict=True))
+        self.assertEqual(2, len(rows))
+        self.assertEqual(["review", "keep", "reason", "artifact", "ok"], rows[1][1:])
+
+    def test_large_legacy_cell_survives_conversion_and_later_append(self):
+        value = '"' + "x" * 140_000
+        before = ('ts\tphase\tdecision\twhy\tevidence\tresult\nstamp\treview\tkeep\t' + value + '\tproof\tok\n').encode()
+        self.log.write_bytes(before)
+        converted = Path(self.temp.name) / "converted.tsv"
+        result = self.run_migration(converted)
+        self.assertEqual(0, result.returncode, result.stderr)
+        result = self.run_log(["review", "keep", "reason", "artifact", "ok"], converted)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(before, self.log.read_bytes())
+        previous = csv.field_size_limit(200_000)
+        try:
+            with converted.open(encoding="utf-8", newline="") as handle:
+                rows = list(csv.reader(handle, delimiter="\t", strict=True))
+            self.assertEqual(value, rows[1][3])
+            self.assertEqual(3, len(rows))
+        finally:
+            csv.field_size_limit(previous)
 
     def test_appends_one_header_and_sanitizes_literal_cells(self):
         cells = ["-phase", "=SUM(A1)", "why\nline\ttwo", "proof", "done"]
