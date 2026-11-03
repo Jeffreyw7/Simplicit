@@ -11,11 +11,11 @@ The generated `features/README.md` indexes one file per user-facing feature. Eac
 User-visible operations covered and their acceptance criteria.
 
 ## How to get to it (user POV)
-Entry points, prerequisites, test data, and expected starting state.
+Every supported user entry point, its prerequisites, test data, and expected starting state.
 
 ## Driving it with <actual harness>
-Exact action sequence and the resulting visible state and side effects.
-Evidence location and what proves success.
+For each entry point: exact action sequence, resulting visible state and side effects, and what proves success.
+Record passed / failed / blocked / not run for each entry point, with its commands, evidence location, and any failure or skip reason. Identify the feature and entry point on each artifact.
 
 ## Gotchas
 Known limitations, auth/OS/data dependencies, failure recovery, and cleanup.
