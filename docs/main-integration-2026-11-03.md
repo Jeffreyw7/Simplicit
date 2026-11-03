@@ -1,0 +1,21 @@
+# Main integration — November 3, 2026
+
+Integrates origin/main `a8e0d75` into `feat/all-pstack-skills`, starting from `abea273`. Both branches changed configuration parsing, file publication and decision logging; taking either branch wholesale would discard fixes. The original pstack tree remains `880564357e051d7c7802da1cb5d8df1d0b008299`.
+
+## Problems and resolutions
+
+- Retain the feature branch's symbolic parsing, correct escapes, snapshot relocation, bounded Windows retries, deep-path launch handling, recoverable source regeneration and previous-output backups. Main's older parser collapsed distinct escaped strings, and its blanket rejection of inputs inside output conflicted with the supported relocation/backup workflow.
+- Integrate main's output-scan identity checks: retry a replaced root, and fail if a nested entry disappears while the root remains unchanged. Keep the feature branch's reserved TLC file extensions and preservation policy; a complete cfg/out/dot family is not required for files retained in a recoverable old output.
+- Carry parsed `NEXT` and `SPECIFICATION` operands into unnamed-action diagnostics. Inline, indented and comment-prefixed directives no longer lose their warning. All four new cases failed before the correction and passed afterward. Configuration text passed to TLC remains preserved.
+- Retain main's inherited-access installer staging and read-only staging cleanup, strict six-column quoted-TSV validation, and explicit legacy conversion to a new destination. Preserve the feature branch's Python and PowerShell quote round-trip checks. The Windows ACL fixture needs process-local `-ExecutionPolicy Bypass` to execute its own generated test script; no persistent execution policy changes are made.
+- Restore three pstack instruction gates identified in the earlier review: reroutes create no ticket and use the other marker; unattended UI reproduction requires affirmative independent evidence review before confirmation/fixing; practical runtime safety claims need executable proof or an explicit unproven result. Manual/non-UI workflows, purely static facts and explicit user alternatives retain their scope.
+- Preserve both branches' dated validation evidence and add the legacy converter to the original logger's upstream review targets. No automatic upstream adoption is enabled.
+- Correct an imported preflight test's stale diagnostic assertion. With TLC absent, the feature branch checks dependencies before touching generated companions and reports the missing dependency; it need not list unchanged companion filenames. Retain the assertions for exit status, dependency guidance, byte-for-byte companion preservation and absence of generated files. No production code changed for this test correction.
+
+## Verification
+
+The complete Python suite ran 86 tests successfully, with six environment/platform skips. Validators accepted all 62 skills and two profiles. Focused statechart checks passed 21 tests with one alias-capability skip. Independent instruction scenarios observed the permissive baseline, then verified the repaired gates and normal-workflow controls. Independent review checked package, documentation, mapping and runtime changes.
+
+The full Node/TLC run completed 180 tests in 853 seconds: 170 passed, six directory-alias/junction capability cases skipped, and four failures represented the stale preflight assertion's three child cases plus their parent. After removing that message-only assertion, a focused rerun passed all four affected tests. Across the full execution and corrected-test rerun, 174 tests passed and six were skipped; the complete suite was not repeated after this test-only edit. Real Windows sharing-lock, deep-path, rollback, symbolic-state, configuration and publication-race checks passed. The original unnamed-action story fixture also matched pstack's warning, story, model summary and exit status.
+
+Independent review found no further actionable issues in the reviewed integration. Local evidence is under `.scratch/main-review-2026-11-03/`; historical evidence imported from main is not a claim about the merged candidate. Native model-role discovery, live tracker/UI automation and hosted CI were not rerun for this integration.

@@ -7,10 +7,24 @@ the preflight; local customizations must be reconciled explicitly.
 import argparse
 import shutil
 import stat
-import tempfile
+import uuid
 from pathlib import Path
 
 from validate_skills import validate
+
+
+def remove_staged_tree(staged):
+    def retry(operation, filename, error):
+        if not isinstance(error[1], PermissionError):
+            raise error[1]
+        path = Path(filename)
+        if path != staged:
+            parent = path.parent
+            parent.chmod(parent.stat().st_mode | stat.S_IWRITE)
+        path.chmod(path.stat().st_mode | stat.S_IWRITE)
+        operation(filename)
+
+    shutil.rmtree(staged, onerror=retry)
 
 
 def reject_link(path):
@@ -52,8 +66,9 @@ def install(source, destination):
             pending.append((folder, target))
     if pending:
         destination.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(prefix=".simplicit-install-", dir=destination.parent) as temp:
-            staged = Path(temp)
+        staged = destination.parent / f".simplicit-install-{uuid.uuid4().hex}"
+        staged.mkdir()
+        try:
             for folder in folders:
                 shutil.copytree(folder, staged / folder.name)
             errors = validate(staged)
@@ -68,6 +83,8 @@ def install(source, destination):
                     (staged / folder.name).rename(target)
             except OSError as error:
                 raise OSError(f"{error}; completed skills are intact; rerun this command to finish") from error
+        finally:
+            remove_staged_tree(staged)
     errors = validate(destination, names=[folder.name for folder in folders])
     if errors:
         raise ValueError("\n".join(errors))

@@ -18,6 +18,8 @@ On Windows, the destination can be a path such as `C:/dev/my-project`. The insta
 
 Linked destination paths are rejected. Copies are staged and validated before complete skill folders are published. If publication is interrupted, rerun the command: completed folders are retained and missing folders are added. Do not run concurrent installers or edit the destination during installation.
 
+New skill folders inherit the staging parent's access permissions, preserving inherited Windows read permissions. Older installations made through private temporary staging may have restrictive permissions even when discovery succeeds. Identical installations remain a no-op: this update does not rewrite their permissions. Use a fresh destination or reconcile affected folder permissions under the project's access policy after preserving and comparing local customizations.
+
 For a manual installation, copy the entire `skills/` collection to `<project>/.agents/skills/` with the same collision checks. Do not copy only one folder: these skills share references and sibling dependencies. Do not activate the original `pstack/` tree.
 
 Start Codex in the selected project. Type:
@@ -42,6 +44,8 @@ Adopt the shipped `.codex/agents/*.toml` files individually into the selected pr
 Comment Sicko inherits the host model and reads its portable brief from the installed `no-comments` skill. Keep the complete skills collection alongside the roles.
 
 The critic pins `gpt-6.1-sol` with `high` reasoning. Honor those choices when using the role; model availability and the host's supported role selector must be checked. Effective permissions come from the host/parent; the critic's instructions do not enforce a separate sandbox. See [OpenAI's custom-agent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents).
+
+Native execution of both roles and a small set of automatic-selection cases passed on Windows with Codex 0.165.0. For app-server tests on that version, use a persisted parent thread (`thread/start` with `ephemeral: false`): named-role launches from ephemeral parents failed while loading missing parent rollout context. The disclosed generic fallback worked, but did not satisfy the critic's model pin. See the [dated native validation record](docs/validation.md#native-roles-models-and-selection--october-31-2026) for the tested settings and remaining limits.
 
 Skills-only adoption uses the documented generic independent-reviewer fallback when permitted. For `$no-comments`, that helper receives the Comment Sicko brief and the fallback is disclosed. If independent execution is unavailable, the requested independent pass remains pending. Validate the complete copied role inventory with `python -B scripts/validate_agents.py "/path/to/project/.codex/agents"`, then separately confirm native role discovery and a real bounded review. The validator expects both shipped profiles; a parser pass does not establish native loading or model execution. Do not repeat an already valid review just to obtain a preferred role name.
 
@@ -102,7 +106,7 @@ python -B scripts/validate_agents.py
 node --test scripts/test_statechart.mjs
 ```
 
-The Node suite runs local checks without Java/TLC and explicitly skips the two model-checking cases when `TLA2TOOLS` is unset. Set it to the verified JAR path to run those cases too. To validate an installed copy:
+The Node suite runs local checks without Java/TLC and explicitly skips model-checking cases when `TLA2TOOLS` is unset. Set it to the verified JAR path to run those cases too. To validate an installed copy:
 
 ```sh
 python -B scripts/validate_skills.py "/absolute/path/to/project/.agents/skills"

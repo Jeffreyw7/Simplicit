@@ -1,8 +1,169 @@
 # Validation evidence
 
+The dated sections below describe their named candidates, including evidence imported from main. Current integration checks are recorded separately in [the November 3 integration report](main-integration-2026-11-03.md).
+
 ## Review fixes — October 27, 2026
 
 The [review-fix completion report](review-fixes-2026-10-27.md) records the eight repairs, source-preservation changes, independent review findings and compatibility limits. Final local verification passes 54 Python tests on Windows (3 skips) and Ubuntu (2 skips), 30 real Node/TLC regressions on Windows (no skips), all 62 skills and both agent profiles. Preserved CLI workflows and PNG success/partial-failure behavior were also exercised. Linux Node/TLC and native custom-role execution remain unverified. The earlier counts and hosted CI results below belong to their dated candidates.
+## Legacy decision-log compatibility repair — November 3, 2026
+
+The repair starts from `f8463d4861d1b63c134233d1980a0efeef99a8b4`. The compatibility review reproduced a gap introduced by the quoted-TSV repair in `465dcbf`: logs produced by the earlier raw-tab writer with literal cells such as `"open` or `"closed"junk` could no longer receive an append. Rejection preserved the original bytes, but no migration path existed. Balanced literal quotes also make automatic old/new format detection ambiguous.
+
+The new [legacy converter](../skills/show-me-your-work/scripts/migrate_legacy.py) explicitly reads a known raw-tab file, validates all records, and creates a new quoted-TSV destination using exclusive creation. It preserves the source, timestamps, literal quotes, empty cells and Unicode, and applies the current formula-prefix protection. Invalid source data creates no destination; existing destinations, including the source itself, are refused. Normal `log.py` append behavior and strict malformed-log rejection remain unchanged. The [conversion instructions](../skills/show-me-your-work/references/helper.md#continuing-a-legacy-log) explain selecting the new canonical log, format ambiguity and retrying interrupted writes to a fresh destination.
+
+The eight existing decision-log tests passed before the change. Regression-first conversion success cases failed before the new helper existed; after implementation all **16 decision-log tests** passed. Eight added tests cover the two reported quote failures, balanced quotes, empty cells, Unicode, LF/CRLF, formula guards, large cells, header-only input, invalid/missing source data, destination collisions, repeated conversion and continued appends. Existing malformed-modern-log rejection tests still pass.
+
+| Executed check | Result |
+|---|---|
+| Windows: `python -B -m unittest discover -s scripts -p 'test_*.py'` | 68 tests successful; two unprivileged-symlink skips and one POSIX-only skip. |
+| Ubuntu WSL: the same complete Python discovery | 68 tests successful; three Windows-only skips. |
+| `python -B scripts/validate_skills.py` and `python -B scripts/validate_agents.py` | 62 skills and two profiles valid. |
+| `node --test scripts/test_statechart.mjs` with checksum-pinned TLC 1.7.4 | 59 tests passed, zero failures or skips. |
+| Fresh installation into an isolated project whose path contains spaces | All 62 skills installed; both logging scripts matched source bytes. The actual pre-`465dcbf` writer produced two rows, the installed converter migrated them, and the installed appender added a third row from another working directory. Source bytes were preserved. |
+| Independent TSV consumer | PowerShell `Import-Csv` read all three rows and preserved literal quotes, Unicode and the empty cell. |
+| Independent repair review | No actionable production/test/documentation issue found. Separate probes verified mixed LF/CRLF, literal values, formula guards and rejection of a malformed late record before destination-parent creation. |
+| Diff and upstream checks | Clean whitespace check; original `pstack/` tree unchanged at `880564357e051d7c7802da1cb5d8df1d0b008299`. |
+
+Local execution used Windows Python 3.12.14, Node 25.2.0, Java 21 and Ubuntu WSL Python 3.12.3. Tests ran with ordinary host filesystem/process access because the previously diagnosed sandbox temporary-directory ACL and Java pipe restrictions prevent valid execution there. The isolated adoption evidence is retained under `.scratch/legacy-adoption-20261103-7f05d50c07464b3696c9ac7d5fa83146/`. Hosted results for the pushed revision are tracked separately in PR #3.
+
+Conversion is explicit and uses one writer per log. The format cannot distinguish all legacy data from modern quoted TSV; use it only for a known raw-tab source, and retain that original. Interrupted output writes may leave an incomplete new destination; retry to a fresh destination. Disk-full and process-termination failure injection were not run. This pass adds no native model turns or skill-quality measurements. The earlier native acceptance and its remaining platform/model/repair-branch limits below retain their original scope; the CLI conversion tests do not substitute for those trials.
+
+## Functional follow-up review — November 2, 2026
+
+The follow-up began at `3aac00a0a0aa3dd4698e4e752209702b9ad18dda`. Independent reviewers inspected installation/validation, Statechart and decision logging, and skill instructions/role routing. The review distinguishes deliberate portability changes from functional defects, including defects inherited from the newly packaged upstream helper.
+
+| Finding | Executed evidence and correction |
+|---|---|
+| P2: Read-only source directories break partial-install cleanup on POSIX | After an initial install, make an existing source skill and its nested reference directory mode `0555`, then add another skill. Real Ubuntu execution as an ordinary user reproduced `PermissionError` while deleting staged `guide.md`, after publication. Cleanup now restores owner write permission on the affected staged parent as well as the failed path. It never changes the staging root's parent. The regression passes and checks publication, no residue, unchanged source/project-parent permissions and idempotence. |
+| P2: CFG keywords used as values or directive arguments become false rule sections | Direct checksum-pinned TLC accepts `CONSTANT Value = INVARIANT`, nested sets containing keyword-shaped model values, and `INIT INVARIANT` / `NEXT PROPERTY` when those operators are defined. The helper instead stripped the values or invented rules and exited 2. Tokenization now separates punctuation and the splitter consumes complete constant assignments and fixed-arity directive arguments before looking for sections, preserving the original retained text. |
+| P2: Valid `TYPE` / `TYPE_CONSTRAINT` directives become false invariants | Pinned TLC accepts those directives after an invariant section; the helper attempted to check `TYPE` as an invariant and exited 2. Both are now recognized with their single arguments, so they remain in the generated configurations. |
+| P2: Symbolic state values crash broken-state decoding | With the valid model value `==` in state, the original helper reported the broken invariant and then crashed because undecoded text was destructured as tuple fields. Symbolic atoms now use the shared token reader. Broken metadata must have the expected marker, variables record and string rule list; unsupported or malformed metadata raises an actionable error instead of being skipped or treated as good states. |
+
+The repaired installer passed independent re-review. The complete Python suite passed **60 tests** on Windows Python 3.12.14 (two unprivileged-symlink skips plus one POSIX-only skip) and Ubuntu WSL Python 3.12.3 (three Windows-only skips). The POSIX regression was observed failing before the production change and passing afterward. Earlier Windows inherited-access and read-only-file cleanup regressions remain covered.
+
+The initial real-TLC regression matrix covered 12 cases: spaced/compact model values, nested sets, function-table arguments, overrides, module-context values/overrides, qualified constant names, keyword-shaped initialization/next/specification arguments, and both type directives. Before repair, 11 cases failed with helper exit 2; the compact-value control already worked. Those cases pass with the deliberate violation still reported. A Windows temporary-folder permission error in an initial control run was isolated and rerun; it is not counted as parser-defect evidence.
+
+Follow-up review exposed false passes in an unpublished intermediate lexer repair: splitting symbolic values such as `[]`, `==` and `====`, or grouping `+Other` as one token, could hide the following invariant. The final shared reader preserves native token boundaries, including dynamic module tokens. Constant parsing checks assignment, set, argument and module delimiters instead of advancing blindly. An additional native comparison covered **388 token/boundary cases**, with zero mismatches after correcting the observed differences. The final 18-case CFG matrix includes those symbolic/adjacent cases and a module-header token; generated configurations preserve non-rule text and deliberately broken invariants produce exit 1 and a wrong-state summary. Nine separate positive-model checks also passed on the final candidate with inputs preserved.
+
+The decoder regressions cover symbolic atoms inside broken-state records and malformed/incomplete metadata. The original `==` renderer failure was independently reproduced with the committed pre-repair scripts before correction. Native token compatibility is checked against the pinned [TLC config parser](https://github.com/tlaplus/tlaplus/blob/v1.7.4/tlatools/org.lamport.tlatools/src/tlc2/tool/impl/ModelConfig.java) and its actual lexer. This does not establish lossless representation of every TLC value: textual collisions such as a model value named `[]` and an empty record remain outside the demonstrated cases. Unparseable broken metadata now fails explicitly.
+
+Final combined Windows verification passed **59 Node tests including subtests, zero skips**, with actual pinned TLC; **60 Python tests, three capability/platform skips**; both package validators (62 skills, two profiles); the upstream structured-value examples against the adapted parser; and `git diff --check`. Independent follow-up reviews found no remaining actionable installer or runtime issue in the reviewed scope. Skill instructions, role/model pins and the original `pstack/` tree are unchanged by this follow-up. These are local results; hosted verification is tracked separately in PR #3. Detailed local diagnostics are retained in `.scratch/cfg-parser-fix/`, `.scratch/review-tools/` and `.scratch/functional-review-2026-11-02/` and are not committed.
+
+This follow-up does not rerun native model turns or change role/model pins. The native acceptance, comparison-study conclusions and remaining native gaps below remain dated evidence for their original candidates. The new Python result adds actual Linux installer coverage; it is not Linux native model execution.
+
+## Native workflow acceptance and installation repair — November 1, 2026
+
+The candidate based on `eff203a39438a3e5cc2d9b58d99cadfac60e30c0` corrects the Statechart help command to `node "<skill dir>/scripts/statechart.mjs" --help`. Executing the corrected command succeeds. The new [native acceptance record](validation/native-workflow-2026-11-01.md) contains tested file hashes, the fixture contract, reproduction steps, actual thread IDs and evidence limits.
+
+The first native run exposed an installation defect that discovery alone had missed: Python's private temporary staging produced restrictive Windows permissions, so sandbox commands could not read installed references. Ordinary exclusive staging now preserves inherited access. A regression failed at the installed root, entrypoint and nested reference before repair and passes afterward. Independent review also caught read-only staged-file cleanup failing after a partial installation; a second regression reproduced that failure and passes after the cleanup repair. Existing byte-identical installations remain a no-op and do not automatically receive corrected permissions; README explains fresh installation or explicit permission reconciliation.
+
+All four bounded acceptance checks passed on fresh repaired installations with Windows Codex 0.165.0, parent `gpt-6-astra/medium`, explicit native skill invocation and provider-model fallback disabled:
+
+| Check | Actual result |
+|---|---|
+| Meaningful bug fix, one uninterrupted prompt | Read installed references, added four regressions to two seed tests, observed two failures, repaired duplicate crediting, obtained an actual `critic` review on `gpt-6.1-sol/high`, and passed final verification. The critic independently ran all six tests; a separate behavior oracle and full-suite check passed. |
+| Changed-evidence follow-up on the same parent | A deliberate policy change invalidated the earlier pass. Both independent execution and the native lead observed five errors in six tests. The lead reported the invalidated evidence, reused unchanged source-review evidence, ran a passing valid-amount diagnostic, and made no edits or helper calls. |
+| Mechanical edit in a fresh parent | Exact requested README spelling correction, no unrelated byte changes and no helper. |
+| Assigned independent review in a fresh parent | Read Interrogate references, ran seed tests and demonstrated the seeded retry bug; no edits or helper. |
+
+Installed skills, profiles, sentinel files and Git state remained unchanged. All owned threads were archived and app-server processes exited normally. The first partial-access cohort remains separately recorded; it is not pooled with the repaired passing cohort. The deliberately failing configuration-change fixture is evidence that stale results were rejected, not a failing repository test.
+
+Repository verification after the installer repair: **59 Python tests successful**, with two local unprivileged-symlink capability skips. The Windows inherited-permission, read-only cleanup, short-path and junction cases executed. Both package validators pass (62 skills and two profiles); diff checks and corrected Statechart help execution pass. The unchanged `pstack/` tree remains `880564357e051d7c7802da1cb5d8df1d0b008299`. Hosted checks for the pushed revision are recorded in PR #3; the last inspected pre-repair [PR run at `eff203a`](https://github.com/Jeffreyw7/Simplicit/actions/runs/41235730500) passed 57 Python and 35 real-TLC tests on both Linux and Windows, with the one expected Linux platform skip.
+
+This closes the bounded explicit native workflow acceptance gap. It does not establish automatic selection, behavior across every skill, other operating systems/client versions or a general quality improvement. Both native bug-fix reviewers returned no further findings, so a native review-driven repair/re-review branch remains unexercised. The separate installer review did exercise a real repair and follow-up review, but is not substituted for that native branch. Backend serving-model identity, missing-model errors and cancellation remain unverified.
+
+## Broader selection, concurrency and documentation quality — October 31, 2026
+
+These studies were completed before the November 1 acceptance test. Their outcomes remain candidate-specific; the later explicit invocation does not retroactively establish automatic routing in the earlier study.
+
+| Study and candidate | Observed result | Limits |
+|---|---|---|
+| Broader native selection, `465dcbf9ddc046a9b04f921467dd826e00cb82ac` | 23/24 trials completed; one stopped at the account usage limit. Clear functional routing met the frozen criterion in 19/22 trials. Frozen answer score was 67/72; all 23 completed answers were substantively correct. Four actual helper dispatches were generic, with 0/4 named-role executions. | Two repetitions per request, one client/model setting. Two review scores included an extra rubric expectation absent from the prompt; the helper expectation also had an assigned-reviewer ambiguity. Project-trust warnings and absent proof of named-role availability confound the generic fallbacks. No causal before/after conclusion. |
+| Concurrency stress, same candidate | 62 cases, 244 writer attempts and 74 completed TLC invocations. No stabilized final-output integrity failure; all 26 successful foreign-file insertions preserved. | Publication-only extraction and full CLI cohorts remain distinct. Windows sharing contention often prevented publication. Transient reader consistency, arbitrary schedules and guaranteed progress are not established. |
+| Two documentation corrections, `465dcbf` versus `eff203a` | Twelve real agent tasks: three conditions, two versions and two repetitions. Both versions scored 18/18; all eight produced logs passed independent byte/TSV/helper-compatibility checks. No observed task-quality difference. | Explicit instruction-guided tasks, not automatic selection. All scores reached the rubric ceiling. The final judge was blinded to version labels; the lead was not. Complete method traces were not available to establish every claimed instruction/tool use. |
+
+The documentation changes clarified concurrent publication limits and safe TSV appends; runtime algorithms and role/model pins did not change in `eff203a`. The new Statechart entrypoint correction likewise repairs an executable instruction. The November 1 installer repair changes fresh-installation access and cleanup behavior, with red/green regression and actual native-read evidence; it does not alter skill routing or model profiles.
+
+Detailed local protocols, complete answers, frozen rubrics, artifact checks and reports are retained under `.scratch/benchmark-2026-10-31/` and `.scratch/quality-change-2026-10-31/` and are ignored by Git. The dated summaries above preserve the conclusions and material limitations in the repository. No token, speed, cost, general quality gain or arbitrary-concurrency guarantee is claimed.
+
+## PR review and reliability repairs — October 31, 2026
+
+Parallel independent reviewers inspected PR #3 against `main` (`6c5cf96291c00262ad36d19db652849ea6b0e742`), starting from candidate `85809a64be7a670b895df3c73bba8b4b925d9874`. The review covered statechart helpers, packaging/installation/CI, decision logging, workflow instructions and validation claims. [Baseline Linux/Windows CI](https://github.com/Jeffreyw7/Simplicit/actions/runs/41165133519) was already passing with 52 Python and 10 Node/TLC tests; the following defects required additional regression cases.
+
+| Finding | Reproduction and repair |
+|---|---|
+| P1: CFG rewriting could falsely verify an invariant | Normalizing all whitespace changed the string `"two  spaces"` to `"two spaces"`. Direct TLC reported the invariant violated while the helper reported it held. The helper now extracts rule clauses without rewriting the remaining config text, including quoted whitespace, escapes and comment-like text. |
+| P2: Nested user files could be deleted during publication | A successful rerun removed `tlc/notes.txt` because the old ownership check accepted the entire `tlc` directory. Recursive checks now refuse unknown files, unexpected entry types and directory aliases before replacing output. The documented generated-file namespace remains replaceable; names do not establish provenance. |
+| P2: Automatic chart compilation could overwrite model companions | With `NAME.tla` absent, existing `NAME.cfg` and `NAME.map.mjs` were overwritten. `from-chart` now checks all three generated paths before writing any of them. Explicit standalone compiler behavior is unchanged and documented. |
+| P2: Quoted decision-log cells did not round-trip | Raw tab joining let TSV readers strip literal quotes, expose formula-like text or consume a later row after an unmatched quote. Standard TSV quoting now preserves sanitized cell values; Python CSV parsing and PowerShell `Import-Csv` confirmed the repair. Actual spreadsheet formula execution was not tested. |
+| P2: Malformed decision-log bodies accepted another append | A correct header followed by an incomplete six-column record was accepted. Appends now validate every existing record and refuse malformed quoting, wrong widths or embedded tabs/newlines without modifying the file. Valid large cells and LF/CRLF logs remain usable. |
+| P2: Native-validation claims were stale | README and the validation record still described native role/model execution and sampled selection as unverified. The dated native evidence below now records the successful persisted-parent checks and the remaining ephemeral-parent limitation. |
+
+Independent follow-up review caught three issues in the initial statechart repairs: CR-only line comments could hide an invariant, a disappearing/replaced output root could cause a spurious failure, and nested Finder `.DS_Store` metadata could prevent a rerun. The final parser handles CR and LF. Ownership scans tolerate a vanished root, rescan a replacement, and still refuse a missing nested entry under an unchanged root. Regular `.DS_Store` files are allowed in recognized generated directories, while links and wrong entry types remain refused.
+
+Regression evidence includes real TLC failures and successful model runs, companion collision preservation, nested-file/type/alias preservation, deterministic filesystem interleavings, ordinary reruns and quoted/malformed log records. Early CFG test fixtures included an invalid constant-only invariant and an incorrect assumption about CFG/TLA escape decoding; those fixtures were corrected and rerun against both the original and repaired implementation. Their original failures are not counted as proof of a product defect.
+
+### Final local verification
+
+The repaired working tree passed on Windows with Python 3.12.14, Node.js 25.2.0, Java 21.0.12.1 and TLC 1.7.4. `TLA2TOOLS` pointed to a task-local JAR with SHA-256 `936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88`; no global runtime configuration changed.
+
+| Command/check | Result |
+|---|---|
+| `python -B -m unittest discover -s scripts -p 'test_*.py'` | 57 tests, zero failures; two agent-validator tests skipped because unprivileged symbolic links are unavailable. Windows short-name and directory-junction cases executed. |
+| `python -B scripts/validate_skills.py` | All 62 skills valid, including local links and licenses. |
+| `python -B scripts/validate_agents.py` | Both reviewer profiles pass TOML parsing and package policy. |
+| `node --test scripts/test_statechart.mjs` with verified TLC | 35 tests including subtests, all passed, zero skips, 230.2 seconds. |
+| Independent repair review | No unresolved actionable findings after the logger, statechart and documentation follow-ups. |
+| `git diff --check` and pinned source comparison | Passed; no `pstack/` changes. |
+
+These are local repaired-tree results. The linked baseline CI above predates these repairs; the PR description records the hosted result for the pushed revision separately.
+
+Publication remains optimistic: concurrent nested mutation may conservatively stop a run. The deterministic race cases do not establish arbitrary concurrent-writer or non-rename-filesystem behavior. This repair pass does not repeat optional PNG rendering or broaden the native model study below. The original `pstack/` source tree remains `880564357e051d7c7802da1cb5d8df1d0b008299`.
+
+## Native roles, models, and selection — October 31, 2026
+
+These checks ran against `85809a64be7a670b895df3c73bba8b4b925d9874` on Windows with Codex CLI 0.165.0 and Node.js 25.2.0. They supersede the native-role and sampled-selection gaps in the October 27 records below. Earlier dated results retain their original scope and counts.
+
+Parallel, isolated native `critic` and `comment-sicko` probes completed in the chat host. The critic found a seeded retry-loss defect. Comment Sicko found redundant/dead comments and a false-success workaround, retained legal/API documentation and an unresolved external constraint, and applied no edits. The lead independently reproduced both seeded failures and verified unchanged fixture hashes. Two additional lead trials loaded Simplicit by file path and selected the appropriate native reviewer without receiving its expected name.
+
+Fresh native app-server sessions then executed **six parent turns and four reviewer turns** over four request types. Every session discovered all **62 adopted skills enabled**, with zero loading errors. The 200 copied skill files and both copied agent profiles matched the source bytes. Native prompts supplied no expected skill/role names or findings. The review prompts explicitly requested one independent reviewer, so they test skill/role choice rather than whether to delegate.
+
+| Request | Observed native behavior |
+|---|---|
+| Explain a module and its empty-input behavior | Loaded `how`, runtime guidance and source; returned the correct explanation. |
+| Audit unnecessary comments and comment-backed workarounds | Loaded `no-comments`; with a persisted parent, selected native `comment-sicko`, proposed two removals and retained license, public API and protocol comments. |
+| Review a queue against its serialized-caller contract | Loaded `interrogate`; with a persisted parent, selected native `critic`, reproduced the seeded failed-item loss, and kept concurrency outside the supplied contract. |
+| Calculate `17 + 25`, answering only with the number | Returned `42` without model-issued tools, skill reads or reviewers. The prompt did not prohibit tools. |
+
+Both persisted review parents used `gpt-6-astra` with `medium` reasoning, after the native model catalog confirmed availability. The actual spawn calls supplied the appropriate `agent_type` and **no model or effort override**:
+
+| Child role | Resolved model | Resolved effort | Result |
+|---|---|---|---|
+| `critic` | `gpt-6.1-sol` | `high` | Profile override observed; child and parent completed. |
+| `comment-sicko` | `gpt-6-astra` | `medium` | Parent settings inherited; child and parent completed. |
+
+Evidence combined actual spawn records, resolved-at-creation `subAgentActivity` fields, metadata-only `thread/read`, final responses and child completion events. The standalone walkthrough also completed under an explicit `gpt-6.1-sol`/`high` request. Each parent request disabled provider fallback, and no model-reroute event was observed. These establish actual execution under the reported configuration; backend serving-model identity is not independently exposed by these APIs.
+
+### Ephemeral parent limitation and reproduction
+
+Both initial review cases used ephemeral parents. Named-role startup failed with `failed to load model context ... no rollout found for thread id <parent-id>`. Each lead disclosed the failure and completed a generic independent review with the appropriate brief. Those helpers used `gpt-6-astra`/`medium`, leaving the critic's model pin unmet on that fallback path.
+
+Repeating the same prompts, files, profiles, model/effort and read-only policy with `thread/start.ephemeral: false` allowed both native roles to complete with the settings above. For a native app-server check on Codex 0.165.0:
+
+1. Install the full collection and both reviewer profiles in a disposable selected project. Initialize the app-server and verify `skills/list` with `forceReload: true`.
+2. Use a persisted parent with read-only permissions and the required model/effort available in the native catalog. The comparison parent used `gpt-6-astra`/`medium`; the critic profile retained its shipped pin.
+3. Ask for a bounded comment audit or contract review without naming the expected skill or role. Inspect actual skill reads, spawn arguments, resolved child role/model/effort, reviewer completion, lead triage and before/after hashes.
+4. Archive only the test-created persisted threads after collecting evidence and stop the app-server. In this run, all four persisted thread archives succeeded and all six app-server processes exited normally.
+
+The paired results isolate this limitation in the tested client path; they do not establish behavior for every version, transport or ephemeral delegation mode. Generic fallback itself worked. Restricted-shell initialization also failed before startup with `Could not find home directory`; approved host execution resolved that environment restriction without changing global configuration or copying credentials. The model tasks still used read-only permissions and approval policy `never`.
+
+The first observation harness missed `subAgentActivity` child IDs while looking for a different spawn event. Raw start/completion events established the generic reviews; later collection captured the correct IDs. Original failed-run evidence was retained. The harnesses and fixtures were disposable local artifacts, not automated repository CI.
+
+### Limits of the result
+
+This is a small smoke study, not a general accuracy or quality benchmark. Native reviewers in the automatic-dispatch cases inherited parent history (`fork_turns: all`); these checks do not establish blinded reviewer reasoning. The initial direct role probes used isolated contexts. All 62 skills loaded, but their individual behavior was not exhaustively tested. Linux/macOS native execution, other client versions, ambiguous or mixed-intent requests, repeated quality trials, unavailable-model errors, rate limits and cancellation remain untested. No token, cost, speed or quality savings are claimed. Behavioral role instructions alone do not enforce a separate sandbox.
+
+An independent critic audited the supplied protocol/metadata evidence, matched hashes and parent-persistence comparison and corroborated these bounded conclusions.
 
 ## Comment Sicko dispatch update — October 27, 2026
 

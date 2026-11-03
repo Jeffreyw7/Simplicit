@@ -4,7 +4,7 @@ Use Node.js 22 or later. The bundled JavaScript is local and works independently
 
 `from-chart` keeps existing TLA sources. When the TLA source is absent, generation still replaces sibling configuration/mapping files with generated defaults, but retains their originals in a unique `.NAME-statechart-backup-*` folder beside the chart and reports that path. Keep these backups until their contents have been reviewed. Output/tool preflight precedes source writes; execution or publication failure restores the previous siblings when they have not changed during the run. If restoration is unsafe or fails, the diagnostic identifies the retained originals. A reported property failure (exit 1) is a completed check, so its generated sources and backups remain available.
 
-Every replaced output folder is preserved at a unique sibling path ending in `-old`, and each retained path is printed. Matching generated names/extensions cannot prove that files were generated: the folder may contain a manually added configuration, model or log. Review these backups and remove them manually when no longer needed; repeated runs can retain large TLC graphs. Unrecognized output names and linked paths are still rejected before source generation. Overlapping publications retain each displaced folder separately.
+Every replaced output folder is preserved at a unique sibling path ending in `-old`, and each retained path is printed. Matching reserved names/extensions cannot prove that files were generated: the folder may contain a manually added configuration, model or log. Review these backups and remove them manually when no longer needed; repeated runs can retain large TLC graphs. Unrecognized output names and linked paths are still rejected before source generation. Overlapping publications retain each displaced folder separately.
 
 On Windows, publication briefly retries directory renames blocked by temporary file handles or sharing denials. Retries are bounded, preserve existing output checks, and recheck inputs before publication. Persistent denials still return exit 2 with recovery diagnostics; no permissions are changed.
 
@@ -21,6 +21,12 @@ In PowerShell, set `$env:TLA2TOOLS` to the absolute JAR path. Optionally set `$e
 Run `node <skill-directory>/scripts/statechart.mjs --help` for commands. Quote paths containing spaces. Chart parsing and `chart-to-tla.mjs CHART.mmd --module NAME` need only Node; checking a model needs TLC.
 
 Symbolic model values, including operators and names starting with digits, remain strings inside state records, tuples, sets and functions. Numbers and booleans retain their existing types. TLC can print different delimiter-shaped values identically; ambiguous or malformed marked broken-state output is rejected with its file and line instead of being interpreted as state data.
+
+Per-rule TLC runs preserve config text outside extracted `INVARIANT` and `PROPERTY` tokens, including whitespace, string escapes and comments. Quoted text and comments do not introduce rule sections. Parsed `NEXT` and `SPECIFICATION` directives also drive action diagnostics, including when directives are inline or indented.
+
+The output namespace includes regular `.tla`, `.cfg`, `.out` and `.dot` files in `tlc` and its optional `fixed` and `against` directories, regular `.DS_Store` files in recognized output directories, and `regions-all.mmd`/`regions-proof.mmd` directly in `tlc`. Files in that namespace can include inputs or manually edited files, so displaced output is always retained in the reported backup rather than deleted. Other nested names, unexpected entry types and links are refused.
+
+If another run replaces the output directory during inspection, the replacement is scanned again. A nested entry disappearing while the same output directory remains causes inspection to stop rather than treating the output as empty. Overlapping runs may refuse publication, and the last process to finish need not supply the final output. Copy-based publication can expose partial output to readers.
 
 ## Optional PNG rendering
 

@@ -1371,6 +1371,7 @@
       "source": "pstack/skills/show-me-your-work/scripts/log.sh",
       "targets": [
         "skills/show-me-your-work/scripts/log.py",
+        "skills/show-me-your-work/scripts/migrate_legacy.py",
         "skills/show-me-your-work/references/helper.md",
         "scripts/test_decision_log.py"
       ],

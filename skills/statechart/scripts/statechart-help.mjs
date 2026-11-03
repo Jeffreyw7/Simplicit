@@ -150,13 +150,13 @@ const COMMON = `Both commands
   --title TEXT       The chart title. Each bug chart adds ", bug N".
   --out DIR          The output folder. Default: NAME-statechart next to the input. A run writes its
                      files in a temporary folder, and then replaces the whole output folder with
-                     it. When runs overlap, the output folder has the files of the run that
-                     finished last. Unrecognized names and linked paths are rejected. Matching
+                     it. Overlapping runs may refuse publication, and the last process to finish
+                     need not supply the final output. Unrecognized names and linked paths are rejected. Matching
                      generated names/extensions cannot prove ownership, so every replaced folder
                      is preserved at a unique dot-prefixed sibling path ending in -old.
                      The command prints each retained path and never automatically deletes these
                      backups. On a filesystem that cannot rename, it copies the files into place,
-                     and overlapping runs can mix their files.
+                     and readers may see partial output. Overlapping publication may fail.
                      Windows retries brief directory sharing/permission denials with a fixed
                      limit, rechecking inputs and output safety. Persistent denials still exit 2.
   --png              Also draw each chart as a PNG. The PNG section tells how.

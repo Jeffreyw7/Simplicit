@@ -160,6 +160,7 @@ function splitRules(cfg) {
   const kept = cfg.split("");
   const rules = [];
   const properties = [];
+  const directives = {};
   let cursor = 0;
   const peek = () => tokens[cursor]?.text;
   const take = () => {
@@ -226,13 +227,15 @@ function splitRules(cfg) {
       }
     } else {
       // INIT, NEXT, TYPE, etc. each consume one operand before another section.
-      take();
+      const operand = take().text;
+      if (section.text === "NEXT" || section.text === "SPECIFICATION") directives[section.text] = operand;
     }
   }
   // TLC takes only a state predicate as an INVARIANT, and checks a state predicate given as a
   // PROPERTY only in the initial states, which the INVARIANT run checks too.
   return {
     cfgWithoutRules: `${kept.join("")}\n`,
+    directives,
     rules,
     properties: properties.filter((p) => !rules.includes(p)),
   };
@@ -320,12 +323,12 @@ async function tlc(tools, spec, cfg, base, { dump, module, workers = "1" } = {})
   }
 }
 
-function warnUnnamedSteps({ spec, copy }, cfg, dot) {
+function warnUnnamedSteps({ spec, copy, directives }, dot) {
   const text = withoutComments(copy);
-  const specName = /^SPECIFICATION\s+(\w+)/m.exec(cfg)?.[1];
+  const specName = directives.SPECIFICATION;
   const specBody = specName && new RegExp(`^${specName}\\s*==(.*(\\n[ \\t]+.*)*)`, "m").exec(text);
   const next =
-    /^NEXT\s+(\w+)/m.exec(cfg)?.[1] ?? /\[\]\s*\[\s*(\w+)\s*\]_/.exec(specBody?.[1] ?? text)?.[1];
+    directives.NEXT ?? /\[\]\s*\[\s*(\w+)\s*\]_/.exec(specBody?.[1] ?? text)?.[1];
   const graph = parseDot(fs.readFileSync(dot, "utf8"));
   const unnamed = [...graph.edges, ...graph.loops].filter((e) => e.action === next).length;
   if (unnamed > 0)
@@ -422,7 +425,7 @@ async function check(tools, model, { work, out, role }, expected) {
     workers: "1",
   });
   const dotBytes = fs.statSync(dot).size;
-  const next = dotBytes <= MAX_STRING_LENGTH && warnUnnamedSteps(model, cfgWithoutRules, dot);
+  const next = dotBytes <= MAX_STRING_LENGTH && warnUnnamedSteps(model, dot);
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
   console.log(`  TLC ran ${runs} ${runs === 1 ? "time" : "times"} in ${seconds} s.`);
   const broken = [...traces, ...temporal].some((t) => t.broken);
@@ -673,31 +676,46 @@ function renderFile(input, flags, { lib, theme }) {
 const published = (work, out) => (file) => rel(path.join(out, path.relative(work, file)));
 
 const OWN =
-  /^((chart|bug-\d+(-developer|-layered)?)\.(mmd|png)|stories\.md|summary\.json|tlc|\.DS_Store)$/;
+  /^((chart|bug-\d+(-developer|-layered)?)\.(mmd|png)|stories\.md|summary\.json|\.DS_Store)$/;
 
 function foreign(dir) {
   try {
-    const stat = fs.lstatSync(dir);
-    if (!stat.isDirectory() || stat.isSymbolicLink())
-      throw new CannotFinish("the output must be a real directory: " + rel(dir));
-    const found = [];
-    const tlcFiles = (folder, prefix) => {
-      for (const entry of fs.readdirSync(folder, {withFileTypes: true})) {
-        const name = path.join(prefix, entry.name);
-        if (entry.isDirectory() && prefix === "tlc" && ["fixed", "against"].includes(entry.name))
-          tlcFiles(path.join(folder, entry.name), name);
-        else if (!entry.isFile() || !(/\.(tla|cfg|out|dot)$/.test(entry.name) ||
-          (prefix === "tlc" && /^regions-(proof|all)\.mmd$/.test(entry.name)))) found.push(name);
+    for (;;) {
+      const root = fs.lstatSync(dir, { throwIfNoEntry: false, bigint: true });
+      if (!root) return [];
+      if (!root.isDirectory()) return ["."];
+      const found = [];
+      const visit = (relative = "") => {
+        const entries = fs.readdirSync(path.join(dir, relative)).map((name) => ({
+          name,
+          stat: fs.lstatSync(path.join(dir, relative, name)),
+        }));
+        for (const { name, stat } of entries) {
+          const entry = path.join(relative, name);
+          const directory = (!relative && name === "tlc") ||
+            (relative === "tlc" && ["fixed", "against"].includes(name));
+          if (directory && stat.isDirectory()) { visit(entry); continue; }
+          const owned = !relative ? OWN.test(name) :
+            name === ".DS_Store" ||
+            (relative === "tlc" && /^regions-(all|proof)\.mmd$/.test(name)) ||
+            /\.(tla|cfg|out|dot)$/.test(name);
+          if (!stat.isFile() || !owned) found.push(entry);
+        }
+      };
+      let missing;
+      try {
+        visit();
+      } catch (e) {
+        if (e.code !== "ENOENT") throw e;
+        missing = e;
       }
-    };
-    for (const entry of fs.readdirSync(dir, {withFileTypes: true})) {
-      if (entry.name === "tlc" && entry.isDirectory()) tlcFiles(path.join(dir, "tlc"), "tlc");
-      else if (!entry.isFile() || !OWN.test(entry.name) || entry.name === "tlc")
-        found.push(entry.name);
+      const current = fs.lstatSync(dir, { throwIfNoEntry: false, bigint: true });
+      if (!current) return [];
+      if (current.dev !== root.dev || current.ino !== root.ino) continue;
+      if (missing) throw missing;
+      return found.sort();
     }
-    return found.sort();
   } catch (e) {
-    if (e.code === "ENOENT") return [];
     throw new CannotFinish(`cannot use ${rel(dir)} as the output folder: ${e.message}`);
   }
 }

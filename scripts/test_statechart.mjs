@@ -5,6 +5,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { parseValue, tlaToken } from "../skills/statechart/scripts/lib.mjs";
+import { readBroken } from "../skills/statechart/scripts/bug-states.mjs";
 import "./test_statechart_values.mjs";
 import "./test_statechart_recovery.mjs";
 import "./test_statechart_config.mjs";
@@ -419,4 +421,473 @@ test("invalid input fails without replacing unrelated output", () => {
     assert.equal(result.status, 2);
     assert.equal(fs.readFileSync(path.join(dir, "Flow-statechart/keep.txt"), "utf8"), "user data");
   } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+});
+
+function writeWordsModel(dir, {declarations = "CONSTANT Value", value = "Value", aliases = ""} = {}) {
+  fs.writeFileSync(path.join(dir, "Words.tla"), `---- MODULE Words ----\n${declarations}\nVARIABLE x\nInit == x = ${value}\nNext == UNCHANGED x\nSpec == Init /\\ [][Next]_x\nExact == x = ${value}\nNoExactValue == ~Exact\n${aliases}\n====\n`);
+  fs.writeFileSync(path.join(dir, "Words.map.mjs"), 'export const state = () => "Waiting";\nexport const step = action => action;\n');
+}
+
+
+test("TLC rule extraction keeps keyword tokens inside complete constant assignments", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, async t => {
+  for (const fixture of [
+    {name: "scalar", constants: "CONSTANT Value = INVARIANT"},
+    {name: "compact scalar", constants: "CONSTANT Value=INVARIANT"},
+    {name: "nested set", constants: "CONSTANT Value = { INVARIANT , { PROPERTY } }"},
+    {name: "symbolic scalar brackets", constants: "CONSTANT Value = []"},
+    {name: "symbolic scalar equals", constants: "CONSTANT Value = =="},
+    {name: "dynamic equals token", value: "0", constants: "CONSTANT Value = ===="},
+    {name: "long dynamic equals token", value: "0", constants: "CONSTANT Value = ====="},
+    {name: "module header token", value: "0", constants: "CONSTANT Value = ---- MODULE"},
+    {name: "adjacent assignments", declarations: "CONSTANT Value, Other", value: "0", constants: "CONSTANTS Value=+Other=plain"},
+    {
+      name: "function table",
+      declarations: 'CONSTANT Key, Keys\nValue(a,b) == "original"',
+      value: "Value(Key, Keys)",
+      constants: "CONSTANTS Key = INVARIANT Keys = { PROPERTY } Value( INVARIANT, { PROPERTY } ) = { TYPE, { NEXT } }",
+    },
+    {name: "override", declarations: 'CONSTANT Value\nINVARIANT == "override"', constants: "CONSTANT Value <- INVARIANT"},
+    {name: "module value", declarations: "INSTANCE TYPE", constants: "CONSTANT Value = [TYPE] INVARIANT"},
+    {name: "module override", declarations: "INSTANCE TYPE", constants: "CONSTANT Value <- [TYPE] INVARIANT"},
+    {name: "qualified name", declarations: "Instance == INSTANCE TYPE", value: "Instance!INVARIANT", constants: "CONSTANT Instance ! INVARIANT = PROPERTY"},
+  ]) {
+    await t.test(fixture.name, () => {
+      const dir = scratch();
+      try {
+        writeWordsModel(dir, fixture);
+        fs.writeFileSync(path.join(dir, "TYPE.tla"), '---- MODULE TYPE ----\nValue == "original"\nINVARIANT == "override"\n====\n');
+        const kept = `SPECIFICATION Spec\r\n${fixture.constants}\r\n`;
+        const config = `${kept}INVARIANT NoExactValue\r\n`;
+        fs.writeFileSync(path.join(dir, "Words.cfg"), config);
+
+        const result = node("statechart.mjs", ["from-spec", "Words.tla"], dir);
+
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stdout, /NoExactValue is broken/);
+        for (const file of ["Words.cfg", "Words-NoExactValue.cfg"]) {
+          assert.ok(fs.readFileSync(path.join(dir, "Words-statechart/tlc", file), "utf8").startsWith(kept), file);
+        }
+        assert.equal(fs.readFileSync(path.join(dir, "Words.cfg"), "utf8"), config);
+        const summary = JSON.parse(fs.readFileSync(path.join(dir, "Words-statechart/summary.json"), "utf8"));
+        assert.equal(summary.chartStatus.wrong, 1);
+      } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+    });
+  }
+});
+
+
+test("symbolic model values retain broken-state metadata", () => {
+  const dir = scratch();
+  try {
+    for (const symbol of ["==", "====", "+", "=>", "\\notin"]) {
+      const text = `<<"statechart broken", [x |-> ${symbol}], {"NoExactValue"}>>`;
+      assert.deepEqual(parseValue(text), ["statechart broken", {x: symbol}, ["NoExactValue"]]);
+      const output = path.join(dir, "broken.out");
+      fs.writeFileSync(output, text + "\n");
+      assert.deepEqual(readBroken(output), [{key: JSON.stringify({x: symbol}), rules: ["NoExactValue"]}]);
+    }
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+});
+
+
+test("TLC token boundaries preserve native operator and identifier separation", () => {
+  for (const [text, expected] of [
+    ["Value=+Other=plain", ["Value", "=", "+", "Other", "=", "plain"]],
+    ["====", ["===="]],
+    ["---- MODULE", ["---- MODULE"]],
+    ["-----MODULE", ["-----MODULE"]],
+    ["*)Other", ["*", ")", "Other"]],
+    ["__", ["_", "_"]],
+    ["1_2", ["1", "_", "2"]],
+    ["_1", ["_", "1"]],
+    ["123abc", ["123abc"]],
+    ["__foo", ["__foo"]],
+    ["<1>Foo.Bar", ["<1>Foo.", "Bar"]],
+    ["\\notinOther", ["\\notin", "Other"]],
+  ]) {
+    const actual = [];
+    for (let i = 0; i < text.length;) {
+      const token = tlaToken(text, i);
+      assert.ok(token, text.slice(i));
+      actual.push(token);
+      i += token.length;
+    }
+    assert.deepEqual(actual, expected, text);
+  }
+});
+
+
+test("malformed broken-state metadata is rejected instead of becoming good states", () => {
+  const dir = scratch();
+  try {
+    const output = path.join(dir, "broken.out");
+    for (const text of [
+      '<<"statechart broken", [x |-> 0], "wrong shape">>',
+      '<<"statechart broken", [x |-> 0], {4}>>',
+      '<<"statechart broken", 0, {"NoExactValue"}>>',
+      '<<"statechart broken", [x |-> 0], {"NoExactValue"}',
+    ]) {
+      fs.writeFileSync(output, text + "\n");
+      assert.throws(() => readBroken(output), /cannot read broken-state entry.*broken\.out/i);
+    }
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+});
+
+
+test("TLC rule extraction consumes keyword-shaped directive arguments", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, async t => {
+  for (const {directives, aliases} of [
+    {directives: "INIT INVARIANT\r\nNEXT PROPERTY", aliases: "INVARIANT == Init\nPROPERTY == Next"},
+    {directives: "SPECIFICATION INVARIANT", aliases: "INVARIANT == Spec"},
+  ]) {
+    await t.test(directives, () => {
+      const dir = scratch();
+      try {
+        writeWordsModel(dir, {aliases});
+        const kept = `${directives}\r\nCONSTANT Value = plain\r\n`;
+        fs.writeFileSync(path.join(dir, "Words.cfg"), `${kept}INVARIANT NoExactValue\r\n`);
+
+        const result = node("statechart.mjs", ["from-spec", "Words.tla"], dir);
+
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stdout, /NoExactValue is broken/);
+        assert.ok(fs.readFileSync(path.join(dir, "Words-statechart/tlc/Words.cfg"), "utf8").startsWith(kept));
+        const summary = JSON.parse(fs.readFileSync(path.join(dir, "Words-statechart/summary.json"), "utf8"));
+        assert.equal(summary.chartStatus.wrong, 1);
+      } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+    });
+  }
+});
+
+
+test("TLC TYPE directives delimit extracted rule lists", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, async t => {
+  for (const directive of ["TYPE", "TYPE_CONSTRAINT"]) {
+    await t.test(directive, () => {
+      const dir = scratch();
+      try {
+        writeWordsModel(dir);
+        const before = "SPECIFICATION Spec\r\nCONSTANT Value = plain\r\n";
+        const after = `${directive} Exact\r\n`;
+        fs.writeFileSync(path.join(dir, "Words.cfg"), `${before}INVARIANT NoExactValue\r\n${after}`);
+
+        const result = node("statechart.mjs", ["from-spec", "Words.tla"], dir);
+
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stdout, /NoExactValue is broken/);
+        for (const file of ["Words.cfg", "Words-NoExactValue.cfg"]) {
+          assert.ok(fs.readFileSync(path.join(dir, "Words-statechart/tlc", file), "utf8").includes(before) && fs.readFileSync(path.join(dir, "Words-statechart/tlc", file), "utf8").includes(after), file);
+        }
+        const summary = JSON.parse(fs.readFileSync(path.join(dir, "Words-statechart/summary.json"), "utf8"));
+        assert.equal(summary.chartStatus.wrong, 1);
+      } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+    });
+  }
+});
+
+
+test("TLC rule extraction preserves config string values and ignores quoted or commented keywords", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, async t => {
+  for (const {literal, expected} of [
+    {literal: '"two  spaces"', expected: '"two  spaces"'},
+    {literal: String.raw`"PROPERTY fake (* INVARIANT fake *) \\* comment \"quoted\" \\\\ tail"`, expected: "Value"},
+  ]) {
+    await t.test(literal, () => {
+      const dir = scratch();
+      try {
+        fs.writeFileSync(path.join(dir, "Words.tla"), `---- MODULE Words ----\nCONSTANT Value\nVARIABLE x\nInit == x = Value\nNext == UNCHANGED x\nSpec == Init /\\ [][Next]_x\nExact == x = ${expected}\nNoExactValue == ~Exact\nAlwaysExact == []Exact\n====\n`);
+        const constants = `CONSTANT Value = ${literal}\n`;
+        const comment = literal === '"two  spaces"' ? "(* INVARIANT Missing *)" : "(* INVARIANT Missing (* PROPERTY AlsoMissing *) *)";
+        fs.writeFileSync(path.join(dir, "Words.cfg"), `SPECIFICATION Spec\n${constants}${comment}\nINVARIANTS\n  NoExactValue \\* PROPERTY Missing\nPROPERTIES AlwaysExact\n`);
+        fs.writeFileSync(path.join(dir, "Words.map.mjs"), 'export const state = () => "Waiting";\nexport const step = action => action;\n');
+
+        const result = node("statechart.mjs", ["from-spec", "Words.tla"], dir);
+
+        assert.equal(result.status, 1, result.stdout + result.stderr);
+        assert.match(result.stdout, /NoExactValue is broken/);
+        assert.match(result.stdout, /AlwaysExact holds/);
+        for (const file of ["Words.cfg", "Words-NoExactValue.cfg", "Words-AlwaysExact.cfg"]) {
+          assert.ok(fs.readFileSync(path.join(dir, "Words-statechart/tlc", file), "utf8").includes(constants), file);
+        }
+        const summary = JSON.parse(fs.readFileSync(path.join(dir, "Words-statechart/summary.json"), "utf8"));
+        assert.equal(summary.chartStatus.wrong, 1);
+      } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+    });
+  }
+});
+
+
+test("from-chart dependency preflight preserves existing companions before source generation", async t => {
+  for (const companions of [["Flow.cfg"], ["Flow.map.mjs"], ["Flow.cfg", "Flow.map.mjs"]]) {
+    await t.test(companions.join(" and "), () => {
+      const dir = scratch();
+      try {
+        fs.writeFileSync(path.join(dir, "Flow.mmd"), chart);
+        for (const name of companions) fs.writeFileSync(path.join(dir, name), `customized ${name}\n`);
+
+        const result = node("statechart.mjs", ["from-chart", "Flow.mmd"], dir, {TLA2TOOLS: ""});
+
+        assert.equal(result.status, 2, result.stdout + result.stderr);
+        assert.equal(fs.existsSync(path.join(dir, "Flow.tla")), false);
+        for (const name of companions) {
+          assert.equal(fs.readFileSync(path.join(dir, name), "utf8"), `customized ${name}\n`);
+        }
+        assert.match(result.stderr, /TLC|Java|TLA2TOOLS/);
+        assert.deepEqual(fs.readdirSync(dir).sort(), ["Flow.mmd", ...companions].sort());
+      } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+    });
+  }
+});
+
+
+test("CR-only config line comments do not hide later invariants", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, () => {
+  const dir = scratch();
+  try {
+    fs.writeFileSync(path.join(dir, "Flow.tla"), '---- MODULE Flow ----\nVARIABLE x\nInit == x = 0\nNext == UNCHANGED x\nSpec == Init /\\ [][Next]_x\nNoIdle == x # 0\n====\n');
+    fs.writeFileSync(path.join(dir, "Flow.cfg"), 'SPECIFICATION Spec\r\\* a line comment\rINVARIANT NoIdle\r');
+    fs.writeFileSync(path.join(dir, "Flow.map.mjs"), 'export const state = () => "Idle";\nexport const step = action => action;\n');
+
+    const result = node("statechart.mjs", ["from-spec", "Flow.tla"], dir);
+
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stdout, /NoIdle is broken/);
+    const summary = JSON.parse(fs.readFileSync(path.join(dir, "Flow-statechart/summary.json"), "utf8"));
+    assert.equal(summary.chartStatus.wrong, 1);
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+});
+
+
+test("output scans tolerate root publication races without skipping nested foreign data", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, async t => {
+  for (const mode of ["disappear", "replace", "nested"]) {
+    await t.test(mode, () => {
+      const dir = scratch();
+      try {
+        fs.writeFileSync(path.join(dir, "Flow.mmd"), chart);
+        const output = path.join(dir, "Flow-statechart");
+        fs.mkdirSync(path.join(output, "tlc"), {recursive: true});
+        fs.writeFileSync(path.join(output, "chart.mmd"), "previous chart");
+        if (mode === "nested") {
+          fs.writeFileSync(path.join(output, "tlc/notes.txt"), "user data");
+          fs.writeFileSync(path.join(output, "tlc/disappeared.out"), "transient file");
+        }
+        const preload = path.join(dir, "concurrent-rename.mjs");
+        fs.writeFileSync(preload, `import fs from "node:fs";\nimport path from "node:path";
+const output = ${JSON.stringify(output)};
+const mode = ${JSON.stringify(mode)};
+const lstat = fs.lstatSync;
+const readdir = fs.readdirSync;
+let changed = false;
+fs.lstatSync = function(file, ...args) {
+  if (!changed && mode === "nested" && path.resolve(file) === path.join(output, "tlc/disappeared.out")) {
+    changed = true;
+    fs.unlinkSync(file);
+  }
+  const stat = lstat.call(fs, file, ...args);
+  if (!changed && mode === "disappear" && path.resolve(file) === output && stat?.isDirectory()) {
+    changed = true;
+    fs.renameSync(output, output + "-held");
+  }
+  return stat;
+};
+fs.readdirSync = function(file, ...args) {
+  const entries = readdir.call(fs, file, ...args);
+  if (!changed && mode === "replace" && path.resolve(file) === output) {
+    changed = true;
+    fs.renameSync(output, output + "-held");
+    fs.mkdirSync(path.join(output, "tlc"), {recursive: true});
+    fs.writeFileSync(path.join(output, "tlc/notes.txt"), "user data");
+  }
+  return entries;
+};\n`);
+
+        const result = node("statechart.mjs", ["from-chart", "Flow.mmd"], dir, {
+          NODE_OPTIONS: `--import=${pathToFileURL(preload).href}`,
+        });
+
+        if (mode === "disappear") {
+          assert.equal(result.status, 0, result.stdout + result.stderr);
+          assert.equal(fs.readFileSync(path.join(`${output}-held`, "chart.mmd"), "utf8"), "previous chart");
+          assert.ok(fs.existsSync(path.join(output, "summary.json")));
+        } else {
+          assert.equal(result.status, 2, result.stdout + result.stderr);
+          assert.doesNotMatch(result.stdout, /TLC on/);
+          assert.equal(fs.readFileSync(path.join(output, "tlc/notes.txt"), "utf8"), "user data");
+          if (mode === "replace") assert.match(result.stderr, /did not write/);
+        }
+      } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+    });
+  }
+});
+
+
+test("nested foreign output files and wrong entry types are preserved", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, async t => {
+  for (const name of ["tlc/notes.txt", "tlc/notes.cfg", "tlc/fixed/notes.txt", "tlc/against/notes.cfg", "chart.mmd/keep.txt", "tlc/Flow.dot/keep.txt", "tlc/.DS_Store/keep.txt"]) {
+    await t.test(name, () => {
+      const dir = scratch();
+      try {
+        fs.writeFileSync(path.join(dir, "Flow.mmd"), chart);
+        const output = path.join(dir, "Flow-statechart");
+        const foreign = path.join(output, name);
+        fs.mkdirSync(path.dirname(foreign), {recursive: true});
+        fs.writeFileSync(foreign, "user data");
+
+        const result = node("statechart.mjs", ["from-chart", "Flow.mmd"], dir);
+
+        if (name.endsWith(".cfg")) {
+          assert.equal(result.status, 0, result.stdout + result.stderr);
+          const backups = fs.readdirSync(dir).filter(n => n.endsWith("-old"));
+          assert.equal(backups.length, 1);
+          assert.equal(fs.readFileSync(path.join(dir, backups[0], name), "utf8"), "user data");
+        } else {
+          assert.equal(result.status, 2, result.stdout + result.stderr);
+          assert.equal(fs.readFileSync(foreign, "utf8"), "user data");
+          assert.match(result.stderr, /did not write/);
+        }
+      } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+    });
+  }
+});
+
+
+test("output directory aliases are refused without following them", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, async t => {
+  for (const name of ["Flow-statechart", "Flow-statechart/tlc", "Flow-statechart/tlc/fixed", "Flow-statechart/tlc/.DS_Store"]) {
+    await t.test(name, t => {
+      const dir = scratch();
+      const alias = path.join(dir, name);
+      try {
+        fs.writeFileSync(path.join(dir, "Flow.mmd"), chart);
+        const target = path.join(dir, "user-data");
+        fs.mkdirSync(target);
+        fs.writeFileSync(path.join(target, "summary.json"), "user data");
+        fs.mkdirSync(path.dirname(alias), {recursive: true});
+        try {
+          fs.symlinkSync(target, alias, process.platform === "win32" ? "junction" : "dir");
+        } catch (error) {
+          if (!["EPERM", "EACCES", "ENOTSUP"].includes(error.code)) throw error;
+          t.skip("directory aliases are unavailable");
+          return;
+        }
+
+        const result = node("statechart.mjs", ["from-chart", "Flow.mmd"], dir);
+
+        assert.equal(result.status, 2, result.stdout + result.stderr);
+        assert.equal(fs.lstatSync(alias).isSymbolicLink(), true);
+        assert.equal(fs.readFileSync(path.join(target, "summary.json"), "utf8"), "user data");
+      } finally {
+        if (fs.lstatSync(alias, {throwIfNoEntry: false})?.isSymbolicLink()) fs.unlinkSync(alias);
+        fs.rmSync(dir, {recursive: true, force: true});
+      }
+    });
+  }
+});
+
+
+test("rerunning a chart replaces stale output and preserves model inputs", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, () => {
+  const dir = scratch();
+  try {
+    fs.writeFileSync(path.join(dir, "Flow.mmd"), chart);
+    const first = node("statechart.mjs", ["from-chart", "Flow.mmd"], dir);
+    assert.equal(first.status, 0, first.stdout + first.stderr);
+    const output = path.join(dir, "Flow-statechart");
+    fs.writeFileSync(path.join(output, "bug-99.mmd"), "stale generated chart");
+    for (const role of ["fixed", "against"]) {
+      fs.mkdirSync(path.join(output, "tlc", role));
+      for (const name of fs.readdirSync(path.join(output, "tlc"))) {
+        const source = path.join(output, "tlc", name);
+        if (fs.lstatSync(source).isFile()) fs.copyFileSync(source, path.join(output, "tlc", role, name));
+      }
+    }
+    for (const name of ["Flow-RetiredRule.cfg", "Flow-RetiredRule.out", "regions-all.mmd", "regions-proof.mmd"]) {
+      fs.writeFileSync(path.join(output, "tlc", name), "stale generated output");
+    }
+    for (const folder of ["", "tlc", "tlc/fixed", "tlc/against"]) {
+      fs.writeFileSync(path.join(output, folder, ".DS_Store"), "Finder metadata");
+    }
+    fs.writeFileSync(path.join(dir, "Flow.mmd"), chart.replaceAll("Done", "Complete"));
+    const spec = path.join(dir, "Flow.tla");
+    fs.writeFileSync(spec, fs.readFileSync(spec, "utf8").replaceAll('"Done"', '"Complete"'));
+    const inputs = ["Flow.mmd", "Flow.tla", "Flow.cfg", "Flow.map.mjs"]
+      .map(name => [name, fs.readFileSync(path.join(dir, name))]);
+
+    const second = node("statechart.mjs", ["from-chart", "Flow.mmd"], dir);
+
+    assert.equal(second.status, 0, second.stdout + second.stderr);
+    assert.match(second.stdout, /back unchanged/);
+    const updated = fs.readFileSync(path.join(output, "chart.mmd"), "utf8");
+    assert.match(updated, /Complete/);
+    assert.doesNotMatch(updated, /Done/);
+    assert.equal(fs.existsSync(path.join(output, "bug-99.mmd")), false);
+    for (const name of ["fixed", "against", "Flow-RetiredRule.cfg", "regions-all.mmd"]) {
+      assert.equal(fs.existsSync(path.join(output, "tlc", name)), false);
+    }
+    for (const [name, contents] of inputs) {
+      assert.deepEqual(fs.readFileSync(path.join(dir, name)), contents);
+    }
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+});
+
+
+test("unreserved model inputs in output are rejected without replacing them", () => {
+  const dir = scratch();
+  try {
+    fs.writeFileSync(path.join(dir, "Flow.mmd"), chart);
+    const compiled = node("chart-to-tla.mjs", ["Flow.mmd", "--module", "Flow", "--dir", "output/tlc"], dir);
+    assert.equal(compiled.status, 0, compiled.stdout + compiled.stderr);
+    const inputs = ["Flow.tla", "Flow.cfg", "Flow.map.mjs"]
+      .map(name => [name, fs.readFileSync(path.join(dir, "output/tlc", name))]);
+
+    const result = node("statechart.mjs", ["from-spec", "output/tlc/Flow.tla", "--out", "output"], dir);
+
+    assert.equal(result.status, 2, result.stdout + result.stderr);
+    assert.match(result.stderr, /did not write/);
+    for (const [name, contents] of inputs) {
+      assert.deepEqual(fs.readFileSync(path.join(dir, "output/tlc", name)), contents);
+    }
+    assert.deepEqual(fs.readdirSync(path.join(dir, "output")), ["tlc"]);
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+});
+
+
+test("unreserved model inputs reached through an alias are preserved", t => {
+  const dir = scratch();
+  const alias = path.join(dir, "model");
+  try {
+    fs.writeFileSync(path.join(dir, "Flow.mmd"), chart);
+    const compiled = node("chart-to-tla.mjs", ["Flow.mmd", "--module", "Flow", "--dir", "output/tlc"], dir);
+    assert.equal(compiled.status, 0, compiled.stdout + compiled.stderr);
+    try {
+      fs.symlinkSync(path.join(dir, "output/tlc"), alias, process.platform === "win32" ? "junction" : "dir");
+    } catch (error) {
+      if (!["EPERM", "EACCES", "ENOTSUP"].includes(error.code)) throw error;
+      t.skip("directory aliases are unavailable");
+      return;
+    }
+    const inputs = ["Flow.tla", "Flow.cfg", "Flow.map.mjs"]
+      .map(name => [name, fs.readFileSync(path.join(dir, "output/tlc", name))]);
+
+    const result = node("statechart.mjs", ["from-spec", "model/Flow.tla", "--out", "output"], dir);
+
+    assert.equal(result.status, 2, result.stdout + result.stderr);
+    assert.match(result.stderr, /did not write/);
+    for (const [name, contents] of inputs) {
+      assert.deepEqual(fs.readFileSync(path.join(dir, "output/tlc", name)), contents);
+    }
+  } finally {
+    if (fs.existsSync(alias)) fs.unlinkSync(alias);
+    fs.rmSync(dir, {recursive: true, force: true});
+  }
+});
+
+
+test("next-action diagnostics use parsed inline and indented config directives", {skip: !hasTlc && "set TLA2TOOLS to run model checking"}, async t => {
+  for (const config of ["INIT Init NEXT Advance", "  INIT Init\n  NEXT Advance", "  SPECIFICATION Chosen", "(* prefix *) SPECIFICATION Chosen"]) {
+    await t.test(config, () => {
+      const dir = scratch();
+      try {
+        fs.writeFileSync(path.join(dir, "Actions.tla"), "---- MODULE Actions ----\nVARIABLE x\nInit == x = 0\nDecoy == UNCHANGED x\nFirst == Init /\\ [][Decoy]_x\nAdvance == x = 0 /\\ x' = 1\nChosen == Init /\\ [][Advance]_x\n====\n");
+        fs.writeFileSync(path.join(dir, "Actions.cfg"), config + "\n");
+        fs.writeFileSync(path.join(dir, "Actions.map.mjs"), "export const state = v => String(v.x);\nexport const step = a => a;\n");
+        const result = node("statechart.mjs", ["from-spec", "Actions.tla"], dir);
+        assert.equal(result.status, 0, result.stdout + result.stderr);
+        assert.match(result.stderr, /step has the name Advance, the whole next-state action/);
+      } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+    });
+  }
 });
