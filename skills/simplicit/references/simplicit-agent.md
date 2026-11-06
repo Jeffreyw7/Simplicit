@@ -5,7 +5,8 @@ This is a worker briefing template, not a registered Codex role or tool name. Fi
 ```text
 Goal and acceptance criteria:
 Candidate revision plus relevant dirty/configuration/runtime state:
-Relevant paths and guidance (absolute paths when available):
+Selected installed skill location and verified absolute worker/reviewer-brief paths:
+Relevant product paths and guidance:
 Constraints and evidence gaps:
 Read-only scope OR exclusive write ownership / isolated checkout:
 Required checks and expected deliverable:

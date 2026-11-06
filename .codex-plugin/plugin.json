@@ -1,0 +1,19 @@
+{
+  "name": "simplicit",
+  "version": "0.1.0",
+  "description": "A lead-first coding workflow with selective delegation, independent review, and evidence-based verification.",
+  "author": {
+    "name": "Jeffrey Wang"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Simplicit",
+    "shortDescription": "Coding with independent review",
+    "longDescription": "Investigate, implement, verify, and review scoped changes using the existing Simplicit skill collection.",
+    "developerName": "Jeffrey Wang",
+    "category": "Productivity",
+    "defaultPrompt": [
+      "Use Simplicit to complete this task and report verification evidence."
+    ]
+  }
+}

@@ -9,7 +9,7 @@ Read the [runtime contract](../simplicit/references/runtime.md). This adapts the
 
 ## Configure a selected project
 
-Install the complete Simplicit collection under the selected repository's `.agents/skills/`, checking collisions and preserving customizations. See [setup-simplicit](../setup-simplicit/SKILL.md). Never write Cursor settings.
+Use the complete selected Simplicit plugin installation, or install the collection under the selected repository's `.agents/skills/`, checking collisions and preserving customizations. Avoid duplicate active copies. See [setup-simplicit](../setup-simplicit/SKILL.md). Never write Cursor settings.
 
 Copy [configuration.example.yaml](references/configuration.example.yaml), the [feature map](../reproduce-and-fix-issues/references/feature-map.example.md), and optional [routing map](../triage-issue-reports/references/routing.example.md) into user-owned, secret-free project configuration outside installed skills. Fill actual values; examples are not executable configuration. Keep credentials in the chosen service's secret store or environment.
 

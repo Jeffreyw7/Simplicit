@@ -1,5 +1,9 @@
 # Validation evidence
 
+## Repository-root plugin — November 6, 2026
+
+The [candidate-specific plugin record](validation/plugin-2026-11-06.md) covers the repository-root compatibility manifest and local marketplace, package checks and relocation, isolated Codex 0.165.0 installation/discovery/refresh, and the exact missing-authentication blocker for model-driven plugin workflow and named-role trials. It distinguishes static parsing and file resolution from actual model execution and preserves the historical entries below.
+
 ## Legacy decision-log compatibility repair — November 3, 2026
 
 The repair starts from `f8463d4861d1b63c134233d1980a0efeef99a8b4`. The compatibility review reproduced a gap introduced by the quoted-TSV repair in `465dcbf`: logs produced by the earlier raw-tab writer with literal cells such as `"open` or `"closed"junk` could no longer receive an append. Rejection preserved the original bytes, but no migration path existed. Balanced literal quotes also make automatic old/new format detection ambiguous.

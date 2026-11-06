@@ -26,6 +26,8 @@ jobs:
         run: python -B scripts/validate_skills.py
       - name: Validate agents
         run: python -B scripts/validate_agents.py
+      - name: Validate repository-root plugin
+        run: python -B scripts/check_package.py
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
