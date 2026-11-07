@@ -2,6 +2,10 @@
 
 The dated sections below describe their named candidates, including evidence imported from main. The [November 3 integration report](main-integration-2026-11-03.md) records the earlier integration checks; it does not validate later plugin changes.
 
+## Authenticated plugin workflows — November 7, 2026
+
+The [native plugin workflow report](validation/plugin-model-2026-11-07.md) records successful authenticated trials for installed-resource loading, a one-prompt bug fix with the configured critic, read-only defect review and the named Comment Sicko role. It preserves the failed setup preflight, corrected isolated configuration, credential cleanup, independent evidence review and the observed between-run normal-configuration change. These results supersede the November 6 missing-authentication gaps only within the stated Windows scope.
+
 ## Plugin/main merge — November 6, 2026
 
 The [merge verification record](validation/merge-2026-11-06.md) covers both parent revisions, documentation conflict resolution, preservation checks, the combined test suites, fresh isolated plugin installation/discovery/refresh and independent review. Model-driven plugin trials remain blocked by the isolated profile's missing authentication.
