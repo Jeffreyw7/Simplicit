@@ -75,10 +75,18 @@ const FROM_SPEC = `from-spec SPEC.tla
 
 const FROM_CHART = `from-chart CHART.mmd
   Writes NAME.tla, NAME.cfg, and NAME.map.mjs next to the chart. When NAME.tla already exists, it
-  writes none of them. Otherwise all three paths must be absent; an existing companion stops the
-  command before it writes any of them. Move the companions or choose another --module to generate
-  a new model. Then it checks the spec as from-spec does, and compares the chart that the spec
-  draws with CHART.mmd.
+  writes none of them. Otherwise it replaces a NAME.cfg or NAME.map.mjs that is there, keeping
+  the originals in a unique .NAME-statechart-backup-* folder beside the chart and printing its
+  path. It validates the output and tools before writing, stages generation, and restores the
+  source files if execution or publication fails. If a file changes or cannot be restored,
+  the error identifies the retained backup. Then it checks the spec as from-spec does, and
+  compares the chart that the spec draws with CHART.mmd.
+
+  If only PNG rendering fails after model results are published, exit 2 keeps those results,
+  generated sources, and source backups. Every replaced output folder is retained at a unique
+  sibling path ending in -old, and the command prints that path. Review and remove these backups
+  yourself when no longer needed; they may contain large TLC graphs or manually added files.
+  Temporary-folder cleanup failures likewise report retained files without changing the result.
 
   --module NAME      The TLA+ module name. Default: the chart's file name in CamelCase, such as
                      NotesApp for notes-app.mmd.
@@ -141,14 +149,16 @@ const COMMON = `Both commands
                      break, and the --fixed or --against model breaks no other rule.
   --title TEXT       The chart title. Each bug chart adds ", bug N".
   --out DIR          The output folder. Default: NAME-statechart next to the input. A run writes its
-                     files in a temporary folder, and then attempts to replace the whole output folder.
-                     Overlapping runs may refuse publication. The run whose process finishes last is
-                     not guaranteed to supply the final output. The command refuses links, unexpected
-                     entry types, and files outside its reserved output names, including inside tlc/.
-                     These names identify replaceable output, not proof of who wrote it; see
-                     references/runtime.md.
-                     On a filesystem that cannot rename, the command copies files into place.
-                     Readers may see partial output during a copy, and overlapping publication may fail.
+                     files in a temporary folder, and then replaces the whole output folder with
+                     it. Overlapping runs may refuse publication, and the last process to finish
+                     need not supply the final output. Unrecognized names and linked paths are rejected. Matching
+                     generated names/extensions cannot prove ownership, so every replaced folder
+                     is preserved at a unique dot-prefixed sibling path ending in -old.
+                     The command prints each retained path and never automatically deletes these
+                     backups. On a filesystem that cannot rename, it copies the files into place,
+                     and readers may see partial output. Overlapping publication may fail.
+                     Windows retries brief directory sharing/permission denials with a fixed
+                     limit, rechecking inputs and output safety. Persistent denials still exit 2.
   --png              Also draw each chart as a PNG. The PNG section tells how.
   --theme NAME       The colors of each PNG: light, dark, or classic. Default: light. It needs
                      --png.
@@ -307,14 +317,16 @@ Exit codes
   1  Another rule is broken, an expected rule holds, or the chart that the spec draws is not
      CHART.mmd. The output says which.
   2  The command cannot finish: a bad argument, a missing file, a chart or TLC output that it
-     cannot read, no TLC, a helper script that cannot start, an output folder with files that the
-     command did not write, an input file whose content changed during the run, a new mapping to
+     cannot read, no TLC, a helper script that cannot start, an output folder with unrecognized
+     names or linked paths, an input file whose content changed during the run, a new mapping to
      fill in, a mapping that it cannot use, a renderer that --png cannot install or load, or a
      chart that --png cannot render.
      When a chart does not render, the command keeps the files it wrote and exits 2, whatever the
      rules give. Otherwise, exit 2 does not change the output folder, unless the command moved it
-     aside and cannot put it back. Then the message names the folder's new path. When the command
-     stops after TLC has run, it keeps the files that it wrote, TLC's output among them, in a
+     aside and cannot put it back. Then the message names the folder's new path, even when temporary
+     cleanup also fails. Earlier outputs displaced by overlapping runs remain at their reported
+     backup paths. When the command stops after TLC has run, it keeps the files that it wrote,
+     TLC's output among them, in a
      temporary folder, and the message names it. When TLC's state graph is too large to draw, the
      command prints whether each rule holds and exits 2, whatever the rules give. It stops TLC as
      soon as the graph passes that size. The input files are the spec and config, the --fixed or

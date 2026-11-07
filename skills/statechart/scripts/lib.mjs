@@ -1,26 +1,82 @@
 import fs from "node:fs";
 import path from "node:path";
-import { tlaToken } from "./tla-token.mjs";
 
 const tuples = new WeakSet();
 export const isTuple = (v) => tuples.has(v);
 
+// ModelConfig uses SANY's SPEC lexer, even for otherwise opaque model values.
+// Match its longest token (TLC 2.19, 5a47802, javacc/tla+.jj): punctuation can
+// belong to a value such as =>, [] or (+), and need not be surrounded by spaces.
+const TLA_SYMBOLS = String.raw`
+  []ASSUME []PROVE SF_ WF_ , : :: . _ == ( ) -|- [ ]_ ] {| |} { } << >>_ >> ! -> <- |->
+  \E \exists \A \forall \EE \AA ' ^+ ^* ^# -. \lnot \neg ~ [] <> // /\ /= / \/
+  \approx \asymp \bigcirc \bullet \cap \cdot \circ \cong \cup \div \doteq \equiv
+  \geq \gg \in \intersect \union \land \leq \ll \lor \o \odot \ominus \oplus
+  \oslash \otimes \prec \preceq \propto \sim \simeq \sqcap \sqcup \sqsubset
+  \sqsupset \sqsubseteq \sqsupseteq \star \subset \subseteq \succ \succeq \supset
+  \supseteq \uplus \wr \ ~> => =< =| = ## # ^^ ^ -- -| -+-> - ** * ++ + <=> <: <= <
+  >= > ... .. || | |- |= && & $$ $ ?? %% % @@ !! :> := ::= (+) (-) (.) (/) (\X)
+  \notin \times \X @
+`.trim().split(/\s+/).sort((a, b) => b.length - a.length);
+const TLA_LEXEMES = [
+  /----+(?: *MODULE)?/y,
+  /====+/y,
+  /[0-9]+|\\[oO][0-7]+|\\[bB][01]+|\\[hH][0-9a-fA-F]+/y,
+  /"(?:[^"`\r\n\\]|`[^']*'|\\[ntrf\\"])*"/y,
+  // Identifiers may start with digits/underscores but must contain a letter.
+  // WF_ and SF_ are separate tokens, including when followed by an identifier.
+  /[0-9_][A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*|[WS]F(?:[A-Za-z0-9][A-Za-z0-9_]*)?|[WS](?:[a-zA-EG-Z_0-9][A-Za-z0-9_]*)?|[a-zA-RT-VX-Z][A-Za-z0-9_]*/y,
+  /(?:[0-9][A-Za-z0-9]*|[WS][a-zA-EG-Z0-9][A-Za-z0-9]*|[a-zA-RT-VX-Z][A-Za-z0-9]*)\.(?:\/\\|\\\/)/y,
+  /<[0-9]+>[A-Za-z0-9_]+/y,
+  /<[+*]>[A-Za-z0-9]+/y,
+  /<(?:[0-9]+|[+*])>(?:[A-Za-z0-9_]+\.+|[*-]\.*|\.+)?/y,
+];
+
+export function tlaToken(text, offset) {
+  let token = TLA_SYMBOLS.find(symbol => text.startsWith(symbol, offset)) ?? "";
+  for (const pattern of TLA_LEXEMES) {
+    pattern.lastIndex = offset;
+    const match = pattern.exec(text)?.[0];
+    if (match && match.length > token.length) token = match;
+  }
+  return token;
+}
+
 export function parseValue(text) {
   const src = text.trim();
   let i = 0;
+  const choices = [];
+  let choiceCursor = 0;
+  let work = 0;
+  let exhausted = false;
+  let opaque = false;
+  const charge = (size = 1) => {
+    work += size;
+    if (work > Math.max(128, src.length * 32)) {
+      exhausted = true;
+      throw new Error("value parsing work limit");
+    }
+  };
+  const alternative = () => {
+    const index = choiceCursor++;
+    return choices[index] ??= 0;
+  };
   const ws = () => {
-    while (i < src.length && /\s/.test(src[i])) i++;
+    while (i < src.length && /\s/.test(src[i])) { charge(); i++; }
   };
   const peek = (s) => src.startsWith(s, i);
   const eat = (s) => {
     ws();
     if (!peek(s)) throw new Error(`expected ${s} at ${i} in ${src}`);
+    charge(s.length);
     i += s.length;
   };
   const list = (close, item) => {
     const out = [];
     ws();
-    if (peek(close)) {
+    if (peek(close) && tlaToken(src, i) === close &&
+        (item !== value || alternative() === 0)) {
+      charge(close.length);
       i += close.length;
       return out;
     }
@@ -28,6 +84,7 @@ export function parseValue(text) {
       out.push(item());
       ws();
       if (peek(",")) {
+        charge();
         i++;
         continue;
       }
@@ -37,10 +94,20 @@ export function parseValue(text) {
   };
   const value = () => {
     ws();
-    const head = tlaToken(src, i);
-    if (head?.startsWith("(") && head.length > 1) {
-      i += head.length;
-      return head;
+    const token = tlaToken(src, i);
+    charge(Math.max(1, token.length));
+    // Compound model values such as (+) and {| are atoms, not collections.
+    // Keep [] as the existing empty-record representation.
+    if (token.length > 1 && /^[({\[]/.test(token) &&
+        !["<<", "[]"].includes(token)) {
+      i += token.length;
+      opaque = true;
+      return token;
+    }
+    if ((token === "(" || token === "<<") && alternative() === 1) {
+      i += token.length;
+      opaque = true;
+      return token;
     }
     if (peek("<<")) {
       i += 2;
@@ -58,6 +125,7 @@ export function parseValue(text) {
         ws();
         const m = /^[A-Za-z_][A-Za-z0-9_]*/.exec(src.slice(i));
         if (!m) throw new Error(`bad record field at ${i}`);
+        charge(m[0].length);
         i += m[0].length;
         eat("|->");
         return [m[0], value()];
@@ -73,6 +141,7 @@ export function parseValue(text) {
         fn[typeof k === "string" ? k : JSON.stringify(k)] = value();
         ws();
         if (peek("@@")) {
+          charge(2);
           i += 2;
           continue;
         }
@@ -83,28 +152,58 @@ export function parseValue(text) {
     if (peek('"')) {
       i++;
       let s = "";
-      while (i < src.length && src[i] !== '"') {
-        if (src[i] === "\\") i++;
-        s += src[i++];
+      const escapes = { '"': '"', "\\": "\\", t: "\t", n: "\n", f: "\f", r: "\r" };
+      while (i < src.length) {
+        charge();
+        const c = src[i++];
+        if (c === '"') return s;
+        if (c === "\\") {
+          charge();
+          const decoded = escapes[src[i++]];
+          if (decoded === undefined) throw new Error(`bad string escape at ${i - 1}`);
+          s += decoded;
+        } else s += c;
       }
-      i++;
-      return s;
+      throw new Error("unterminated string");
     }
-    const atom = /^-\d+(?![A-Za-z0-9_])/.exec(src.slice(i))?.[0] ?? head;
-    if (!atom || [",", ")", "]", "}", ">>", ":>", "@@"].includes(atom))
-      throw new Error(`bad value at ${i} in ${src}`);
+    const atom = /^-\d+/.exec(src.slice(i))?.[0] ?? token;
+    if (!atom) throw new Error(`bad value at ${i} in ${src}`);
+    if (atom.length > token.length) charge(atom.length - token.length);
     i += atom.length;
+    if (!/^(?:-?\d+|[A-Za-z_][A-Za-z0-9_]*)$/.test(atom)) opaque = true;
     if (atom === "TRUE") return true;
     if (atom === "FALSE") return false;
     return /^-?\d+$/.test(atom) ? Number(atom) : atom;
   };
-  try {
-    const v = value();
-    ws();
-    return i === src.length ? v : src;
-  } catch {
-    return src;
+  const shape = v => Array.isArray(v) ? [isTuple(v) ? "tuple" : "set", v.map(shape)]
+    : v !== null && typeof v === "object" ? ["record", Object.entries(v).map(([k, x]) => [k, shape(x)])]
+      : [typeof v, v];
+  let found = false, result, signature;
+  // Existing values keep their first interpretation. Symbolic delimiters need
+  // an unambiguous complete parse; never guess between different state values.
+  for (let attempt = 0; attempt <= src.length; attempt++) {
+    i = 0;
+    choiceCursor = 0;
+    opaque = false;
+    try {
+      const v = value();
+      ws();
+      if (i === src.length) {
+        if (!opaque && !found) return v;
+        const candidate = JSON.stringify(shape(v));
+        if (found && signature !== candidate) return src;
+        if (!found) { found = true; result = v; signature = candidate; }
+      }
+    } catch {}
+    if (exhausted) return src;
+    choices.length = choiceCursor;
+    let back = choices.length - 1;
+    while (back >= 0 && choices[back] === 1) back--;
+    if (back < 0) return found ? result : src;
+    choices[back] = 1;
+    choices.length = back + 1;
   }
+  return src;
 }
 
 // One state as TLC prints it: "/\ x = 1" lines, or "x = 1" for one variable.
@@ -767,8 +866,13 @@ export function parseMermaid(text) {
       if (holder && holder.parts.length > 1)
         throw new Error(`${display(holder.name)} splits into regions below the top level`);
       const name = holder ? display(holder.name) : `Region${Object.keys(regions).length + 1}`;
+      if (Object.hasOwn(regions, name))
+        throw new Error(`two regions have the caption "${name}"; give each its own caption`);
       const [r, ids] = region(holder ? holder.parts[0] : p);
-      regions[name] = r;
+      // Captions such as "__proto__" are data, not inherited object setters.
+      Object.defineProperty(regions, name, {
+        value: r, enumerable: true, configurable: true, writable: true,
+      });
       for (const [id, { all }] of ids) owners.set(id, { name, all });
     }
   } else {
@@ -790,7 +894,11 @@ export function parseMermaid(text) {
           throw new Error(
             `a %% when line names ${display(id)}, which is in the step's own region; a guard reads other regions`,
           );
-        states[at.name] = [...new Set([...(states[at.name] ?? []), ...at.all])].sort();
+        const previous = Object.hasOwn(states, at.name) ? states[at.name] : [];
+        Object.defineProperty(states, at.name, {
+          value: [...new Set([...previous, ...at.all])].sort(),
+          enumerable: true, configurable: true, writable: true,
+        });
       }
       t.guard = { not: t.when.not, states };
       delete t.when;

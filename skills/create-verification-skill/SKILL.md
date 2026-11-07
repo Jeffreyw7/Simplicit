@@ -26,7 +26,7 @@ Write `.agents/skills/verify-<app>/SKILL.md` with a matching `name` and a descri
 
 ## Map and prove
 
-Seed `features/README.md` and a few important user journeys using the [feature-map shape](references/feature-map-example.md). Name prerequisites and observable acceptance. Missing data or access is a gap, not a reason to weaken the journey.
+Seed `features/README.md` and a few important user journeys using the [feature-map shape](references/feature-map-example.md). Enumerate every supported user entry point for each mapped feature, with prerequisites and observable acceptance. Full verification is incomplete when a mapped entry point remains unverified; success through another route does not cover it. Missing data or access is a gap, not a reason to weaken the journey.
 
 Run the generated instructions end to end: launch, doctor, drive one mapped feature, capture evidence, cleanup, then confirm evidence remains. Clean up owned residue after failed attempts too. A skill never exercised on its target remains a draft. Stand-in results must name what the real target has not verified. Obtain independent review for meaningful generated harness code or workflow changes.
 

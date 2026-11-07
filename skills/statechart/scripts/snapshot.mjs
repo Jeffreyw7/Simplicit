@@ -51,26 +51,8 @@ export class Inputs {
     return copyPath(this.#root, file);
   }
 
-  changed() {
-    return [...this.#files].find((file) => contentOf(file) !== contentOf(this.copyOf(file)));
-  }
-
-  inside(directory) {
-    const realPath = (file) => {
-      try {
-        return fs.realpathSync(file);
-      } catch (e) {
-        if (e.code === "ENOENT") return path.resolve(file);
-        throw e;
-      }
-    };
-    const roots = [path.resolve(directory), realPath(directory)];
-    return [...this.#files].find((file) =>
-      [file, realPath(file)].some((at) => roots.some((root) => {
-        const relative = path.relative(root, at);
-        return relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
-      })),
-    );
+  changed(resolve = (file) => file) {
+    return [...this.#files].find((file) => contentOf(resolve(file)) !== contentOf(this.copyOf(file)));
   }
 
   #take(file, listed) {

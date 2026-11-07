@@ -2,6 +2,16 @@
 
 Use Node.js 22 or later. The bundled JavaScript is local and works independently of Codex-specific tools. Commands write beside their input; use a disposable, user-approved working directory and preserve source files.
 
+`from-chart` keeps existing TLA sources. When the TLA source is absent, generation still replaces sibling configuration/mapping files with generated defaults, but retains their originals in a unique `.NAME-statechart-backup-*` folder beside the chart and reports that path. Keep these backups until their contents have been reviewed. Output/tool preflight precedes source writes; execution or publication failure restores the previous siblings when they have not changed during the run. If restoration is unsafe or fails, the diagnostic identifies the retained originals. A reported property failure (exit 1) is a completed check, so its generated sources and backups remain available.
+
+Every replaced output folder is preserved at a unique sibling path ending in `-old`, and each retained path is printed. Matching reserved names/extensions cannot prove that files were generated: the folder may contain a manually added configuration, model or log. Review these backups and remove them manually when no longer needed; repeated runs can retain large TLC graphs. Unrecognized output names and linked paths are still rejected before source generation. Overlapping publications retain each displaced folder separately.
+
+On Windows, publication briefly retries directory renames blocked by temporary file handles or sharing denials. Retries are bounded, preserve existing output checks, and recheck inputs before publication. Persistent denials still return exit 2 with recovery diagnostics; no permissions are changed.
+
+If only PNG rendering fails after model results are published, exit 2 retains those results, generated sources, source backups and previous-output backups. If publication and restoration fail, the diagnostic identifies the old output's recovery location even if staging cleanup also fails; the operation exits 2.
+
+Temporary-folder cleanup failures report the retained path without cancelling a source transaction or changing a completed result. Remove retained temporary files only after reviewing the reported location.
+
 ## Model checking
 
 Install or reuse Java 11+ and the official immutable [TLC 1.7.4 release](https://github.com/tlaplus/tlaplus/releases/tag/v1.7.4). The expected SHA-256 of `tla2tools.jar` is `936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88`. Verify the downloaded file before executing it. The helper never installs Java or TLC itself.
@@ -10,13 +20,13 @@ In PowerShell, set `$env:TLA2TOOLS` to the absolute JAR path. Optionally set `$e
 
 Run `node <skill-directory>/scripts/statechart.mjs --help` for commands. Quote paths containing spaces. Chart parsing and `chart-to-tla.mjs CHART.mmd --module NAME` need only Node; checking a model needs TLC.
 
-`from-chart` keeps an existing `NAME.tla` and its companions. When that spec is missing, all three generated paths (`NAME.tla`, `NAME.cfg`, `NAME.map.mjs`) must be absent before automatic compilation starts. A collision leaves the companions unchanged and the spec missing; move the companions or choose another module name. Calling the standalone `chart-to-tla.mjs` compiler explicitly still replaces its three output files.
+Symbolic model values, including operators and names starting with digits, remain strings inside state records, tuples, sets and functions. Numbers and booleans retain their existing types. TLC can print different delimiter-shaped values identically; ambiguous or malformed marked broken-state output is rejected with its file and line instead of being interpreted as state data.
 
-Per-rule TLC runs preserve the config text outside the extracted `INVARIANT` and `PROPERTY` sections, including string whitespace and escapes. Quoted text and comments do not introduce rule sections.
+Per-rule TLC runs preserve config text outside extracted `INVARIANT` and `PROPERTY` tokens, including whitespace, string escapes and comments. Quoted text and comments do not introduce rule sections. Parsed `NEXT` and `SPECIFICATION` directives also drive action diagnostics, including when directives are inline or indented.
 
-Output folders reserve `chart.mmd`/`.png`, `bug-N.mmd`/`.png` (including `-developer` and `-layered`), `stories.md`, `summary.json`, `.DS_Store`, and the `tlc` directory. In `tlc` and its optional `fixed` and `against` directories, a model's regular `.cfg`, `.out`, and `.dot` triplet reserves that model's files, its `MODEL-RULE.cfg`/`.out` files, and `MODEL_rules.tla`. Only the top `tlc` directory also reserves `regions-all.mmd` and `regions-proof.mmd`. Regular `.DS_Store` files are reserved in every recognized output directory. Other nested files, unexpected entry types, and symbolic links or directory aliases cause refusal before replacement. These names define replaceable output; they do not prove provenance, so keep user files outside that namespace.
+The output namespace includes regular `.tla`, `.cfg`, `.out` and `.dot` files in `tlc` and its optional `fixed` and `against` directories, regular `.DS_Store` files in recognized output directories, and `regions-all.mmd`/`regions-proof.mmd` directly in `tlc`. Files in that namespace can include inputs or manually edited files, so displaced output is always retained in the reported backup rather than deleted. Other nested names, unexpected entry types and links are refused.
 
-When another run replaces the output folder during inspection, the command scans the replacement. If a nested entry disappears while the output folder itself remains the same, inspection stops and the command does not publish.
+If another run replaces the output directory during inspection, the replacement is scanned again. A nested entry disappearing while the same output directory remains causes inspection to stop rather than treating the output as empty. Overlapping runs may refuse publication, and the last process to finish need not supply the final output. Copy-based publication can expose partial output to readers.
 
 ## Optional PNG rendering
 

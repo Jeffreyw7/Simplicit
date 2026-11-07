@@ -21,7 +21,7 @@ Choose bug, performance, or other (feature request, question, feedback). Keep hy
 
 Search the tracker and source history for the exact source permalink, error signature, area/trigger/symptom, version window and suspected regression. A confident duplicate shares a signature or established cause; a possible match is uncertain and creates no new issue. A long-closed issue is a regression lead, not automatically a live duplicate. If a verdict or issue already exists for this source, resume or report it instead of duplicating the side effect.
 
-Create a ticket only for a clear live bug/performance issue, after dedupe excludes plausible live matches, actual target fields resolve, the source still exists, and creation is authorized. Do not create labels, assign owners, change priority or reopen issues without scope. The ticket includes observed behavior, expected behavior, environment or unknown, trigger, frequency, source URL, evidence links and qualified cause findings.
+Create a ticket only for a clear live bug/performance issue that is not a reroute, after dedupe excludes plausible live matches, actual target fields resolve, the source still exists, and creation is authorized. For a reroute, create no ticket; tell the reporter the configured destination in the authorized source-thread verdict and use `[benny:other]` so unattended reproduction does not start. Do not create labels, assign owners, change priority or reopen issues without scope. The ticket includes observed behavior, expected behavior, environment or unknown, trigger, frequency, source URL, evidence links and qualified cause findings.
 
 ## Authorized writes
 

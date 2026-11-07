@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: "Use when the user asks to reflect on a substantive session and propose durable improvements to the skills or tools it actually used."
+description: "Use when the user asks to reflect on a substantive session for durable skill or tool improvements, including recurring workflows with no existing skill home."
 ---
 
 Read and follow the [runtime contract](../simplicit/references/runtime.md) before using this skill. It governs scope, tools, authorization, verification, and review.
@@ -21,7 +21,7 @@ Read the relevant lens reference for each pass:
 
 If authorized independent helpers are available, give them read-only tasks with those lens briefs and bounded evidence. Use available tools and inherit the lead's model; do not require provider-specific slugs. If unavailable, run separate lens passes yourself and label the result self-review. Source lookup remains read-only even when a connector can write.
 
-Use the [synthesizer](references/synthesizer.md) to classify Accepted, Rejected, and Backlog. Spot-check citations, read target skills, reject duplication, and prefer structural enforcement where cheap. Route only to skills actually used or demonstrable missed-trigger candidates. A one-off incident is not automatically a universal rule.
+Use the [synthesizer](references/synthesizer.md) to classify Accepted, Rejected, and Backlog. Spot-check citations, read target skills, reject duplication, and prefer structural enforcement where cheap. Route existing-skill edits only to skills actually used or demonstrable missed-trigger candidates. A new-skill proposal requires transcript evidence of a recurring workflow and no existing skill that is a real home. A one-off incident does not qualify for that route.
 
 ## Concrete proposals and changes
 

@@ -1,5 +1,11 @@
 # Validation evidence
 
+The dated sections below describe their named candidates, including evidence imported from main. The [November 3 integration report](main-integration-2026-11-03.md) records the earlier integration checks; it does not validate later plugin changes.
+
+## Plugin/main merge — November 6, 2026
+
+The [merge verification record](validation/merge-2026-11-06.md) covers both parent revisions, documentation conflict resolution, preservation checks, the combined test suites, fresh isolated plugin installation/discovery/refresh and independent review. Model-driven plugin trials remain blocked by the isolated profile's missing authentication.
+
 ## Repository-root plugin — November 6, 2026
 
 The [candidate-specific plugin record](validation/plugin-2026-11-06.md) covers the repository-root compatibility manifest and local marketplace, package checks and relocation, isolated Codex 0.165.0 installation/discovery/refresh, and the exact missing-authentication blocker for model-driven plugin workflow and named-role trials. It distinguishes static parsing and file resolution from actual model execution and preserves the historical entries below.
@@ -16,6 +22,10 @@ Four actual native trials on merged candidate `a8e0d75a3504c1785dc8a4718810dd6e5
 | Preservation and cleanup | Only the permitted ledger/new-test files and cancellation start marker changed. Installed skills/profiles, policy, seed tests, sentinels and Git metadata were preserved. All six owned threads were archived; all four app-server processes exited with code 0. |
 
 These are bounded Windows Codex 0.165.0 trials using explicit native skill invocation, persisted parents, `gpt-6-astra/medium` and the configured `gpt-6.1-sol/high` critic. Negative model trials intentionally ended in failed review/model turns; successful reporting does not turn those into completed reviews. The unavailable identifier is synthetic, so real model entitlement/provider outages and permitted fallback remain untested. Cancellation during delegation/partial edits and other timings remain untested. Linux/macOS native execution and general automatic-selection/quality claims remain open. Earlier dated entries below retain their historical results; the three named gaps are superseded only within this new scope. Detailed local artifacts are under `.scratch/native-gaps-20261103/`.
+
+## Review fixes — October 27, 2026
+
+The [review-fix completion report](review-fixes-2026-10-27.md) records the eight repairs, source-preservation changes, independent review findings and compatibility limits. Final local verification passes 54 Python tests on Windows (3 skips) and Ubuntu (2 skips), 30 real Node/TLC regressions on Windows (no skips), all 62 skills and both agent profiles. Preserved CLI workflows and PNG success/partial-failure behavior were also exercised. Linux Node/TLC and native custom-role execution remain unverified. The earlier counts and hosted CI results below belong to their dated candidates.
 
 ## Legacy decision-log compatibility repair — November 3, 2026
 
