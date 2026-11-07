@@ -92,6 +92,7 @@ The original mismatch flags remain in the evidence. A separate later snapshot
 matched through the remaining runs. The normal personal marketplace catalog
 remained absent, and no test code wrote normal configuration or registrations.
 No attempt was made to restore or overwrite the concurrent configuration change.
+The follow-up investigation below retains this limitation.
 
 The host also emitted an unrelated `codex-security` MCP startup warning; no MCP
 tool calls occurred in these trials. All 224 tested functional source/configuration
@@ -101,6 +102,53 @@ exited with code 0, and a final process check found no remaining owned app-serve
 or fixture process. The temporary credential file was absent. A scan of retained
 sanitized run evidence found none of the cached access, refresh or ID tokens, or
 API key values.
+
+## CI and configuration follow-up
+
+Hosted [run 42392519751](https://github.com/Jeffreyw7/Simplicit/actions/runs/42392519751)
+completed successfully for documentation commit
+`1eb7c8949049567a608cca5b70c2ac7e9e64c0ab`. Its functional files are unchanged
+from the native trial candidate above. Both jobs also passed the skill, agent
+and repository-root package validators and verified the pinned TLC download.
+
+| CI job | Python unittest result | Node/TLC result |
+|---|---|---|
+| Ubuntu | 109 tests, 4 skips, no failures | 180 tests: 160 passed, 20 platform skips, no failures |
+| Windows | 109 tests, 1 skip, no failures | 180 passed, no skips or failures |
+
+A read-only investigation on November 7 checked the retained case timeline,
+runner write destinations, current configuration and available host logs:
+
+- Help app-server exit was confirmed at `16:27:15.648Z`; the next preflight
+  started at `16:28:26.018Z` and spawned its app-server at `16:28:28.069Z`.
+  The normal file's modification time, `16:27:52.625559Z`, falls between them.
+- At `16:58:42Z`, the normal file still matched the separate `16:32:41Z`
+  observation. It parsed as valid TOML, contained neither this trial's unique
+  fixture identifier nor a Simplicit plugin/marketplace registration, and the
+  normal personal marketplace catalog remained absent.
+- Runtime diagnostic queries found configuration reads but no recorded writer.
+  Other Codex desktop/editor activity was present, including generic editor
+  cache-invalidation messages shortly after the modification. Those messages
+  do not identify who changed the file or what changed. These logs are not an
+  exhaustive filesystem-write audit.
+- An independent reviewer checked whether existing Windows audit telemetry
+  could identify a writer. The Sysmon event log was absent; the Security log
+  required administrator access and remained uninspected. Neither result
+  establishes the absence of a matching file-access event.
+
+The original capture retained only a whole-file hash, not earlier bytes or a
+settings snapshot. No matching prior copy was found. The changed settings and
+writer therefore remain unresolved; this is an evidence gap, not a confirmed
+plugin defect or proof that external activity caused the change. No supported
+implementation repair was identified, and normal settings were left intact.
+The original mismatch flags and failed preflight remain unchanged.
+
+For future repetitions, capture per-run configuration timestamps, sizes and a
+redacted snapshot of relevant non-secret settings alongside the whole-file
+hash, before and after execution. Keep the initial observation when a change
+appears; a later baseline must not erase the mismatch. File-writer attribution
+requires suitable telemetry captured when the write occurs. Raw user
+configuration and credentials do not belong in the repository evidence.
 
 ## Reproduction and evidence
 
@@ -132,7 +180,9 @@ needed no repair.
 Sanitized local artifacts are retained under `.scratch/plugin-model-20261107/`:
 the preparation and native runner scripts, original and corrected freezes,
 manifest/protocol, per-case events and evidence, audit, configuration-change
-observation and process check. They are ignored by Git. This report does not
+observation and process check. The CI/configuration follow-up adds sanitized
+`ci-followup.json`, `config-investigation.json` and its read-only collector
+`investigate-config.py`. They are ignored by Git. This report does not
 claim general automatic skill selection, all 62 skills' behavior, model diversity,
 Linux/macOS native execution, or a review-driven repair loop: the critic found
 no additional defect in the repaired fixture. Earlier project-local repair-loop
