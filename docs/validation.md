@@ -4,6 +4,19 @@
 
 The [candidate-specific plugin record](validation/plugin-2026-11-06.md) covers the repository-root compatibility manifest and local marketplace, package checks and relocation, isolated Codex 0.165.0 installation/discovery/refresh, and the exact missing-authentication blocker for model-driven plugin workflow and named-role trials. It distinguishes static parsing and file resolution from actual model execution and preserves the historical entries below.
 
+## Native workflow gaps — November 3, 2026
+
+Four actual native trials on merged candidate `a8e0d75a3504c1785dc8a4718810dd6e56b9436c` exercised the previously open review-driven repair branch, missing-model handling and cancellation. The [follow-up protocol and results](validation/native-gaps-2026-11-03.md) record exact scope, thread IDs, preservation checks and remaining limits.
+
+| Gap | Observed native evidence |
+|---|---|
+| Review-driven repair/re-review | Actual configured critic found the seeded retry defect before edits. The lead added five regressions, observed three failures, repaired the implementation, and reused that same critic for focused follow-up. All seven tests passed for the lead, critic and independent controller; a separate behavior oracle also passed. One uninterrupted parent prompt, no steering. |
+| Missing configured model | The actual critic child attempted the fixture-only unavailable model and failed with `modelNotFound`. The parent disclosed the failure once and left the required review pending without substitution or edits. A separate direct parent-model request also failed with `modelNotFound` and no file changes. |
+| Cancellation and recovery | The controller interrupted a running 60-second diagnostic after its start marker. The turn became `interrupted`; the same parent completed a read-only reassessment without restarting it. The completion marker remained absent beyond 100 seconds, and a separate process check found no matching diagnostic. |
+| Preservation and cleanup | Only the permitted ledger/new-test files and cancellation start marker changed. Installed skills/profiles, policy, seed tests, sentinels and Git metadata were preserved. All six owned threads were archived; all four app-server processes exited with code 0. |
+
+These are bounded Windows Codex 0.165.0 trials using explicit native skill invocation, persisted parents, `gpt-6-astra/medium` and the configured `gpt-6.1-sol/high` critic. Negative model trials intentionally ended in failed review/model turns; successful reporting does not turn those into completed reviews. The unavailable identifier is synthetic, so real model entitlement/provider outages and permitted fallback remain untested. Cancellation during delegation/partial edits and other timings remain untested. Linux/macOS native execution and general automatic-selection/quality claims remain open. Earlier dated entries below retain their historical results; the three named gaps are superseded only within this new scope. Detailed local artifacts are under `.scratch/native-gaps-20261103/`.
+
 ## Legacy decision-log compatibility repair — November 3, 2026
 
 The repair starts from `f8463d4861d1b63c134233d1980a0efeef99a8b4`. The compatibility review reproduced a gap introduced by the quoted-TSV repair in `465dcbf`: logs produced by the earlier raw-tab writer with literal cells such as `"open` or `"closed"junk` could no longer receive an append. Rejection preserved the original bytes, but no migration path existed. Balanced literal quotes also make automatic old/new format detection ambiguous.
