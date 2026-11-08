@@ -23,10 +23,14 @@ RUNTIME_RESOURCES = (
     "skills/simplicit-help/SKILL.md",
     "skills/simplicit/references/runtime.md",
     "skills/simplicit/references/simplicit-agent.md",
+    "skills/simplicit/references/worker-routing.md",
     "skills/interrogate/references/reviewer-prompt.md",
     "skills/no-comments/references/comment-review.md",
     ".codex/agents/critic.toml",
     ".codex/agents/comment-sicko.toml",
+    ".codex/agents/coder-light.toml",
+    ".codex/agents/coder-medium.toml",
+    ".codex/agents/coder-hard.toml",
 )
 SEMVER = re.compile(
     r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"

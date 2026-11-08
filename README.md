@@ -41,8 +41,8 @@ $simplicit:simplicit Fix this bug, verify the result, and obtain independent rev
 The shorter `$simplicit` examples below describe project-local installation;
 use the corresponding qualified selector for plugin skills. Use the host's
 discovery result rather than constructing cache paths. All resources resolve
-relative to the selected skill. Reviewer profiles require the separate
-[project-scoped adoption](#optional-reviewer-roles) below.
+relative to the selected skill. Coder and reviewer profiles require the separate
+[project-scoped adoption](#coder-and-reviewer-roles) below.
 
 Edit the source checkout directly. To refresh a local installation, the tested
 CLI method is:
@@ -94,30 +94,36 @@ See the [skill catalog](skills/simplicit/references/catalog.md) for all skills a
 
 ### Worker model selection
 
-Ordinary workers select model and reasoning effort by assignment complexity:
-routine work uses `gpt-6-luna` / `low`, standard work uses `gpt-6.1-sol` /
-`medium`, and complex work uses `gpt-6-astra` / `high`. The lead checks host
-support, applies both settings through the delegation tool, and records the
-selection and any fallback in the worker brief. Explicit user requirements,
-project constraints, and configured reviewer settings take precedence.
-See the [worker routing policy](skills/simplicit/references/worker-routing.md)
-for classification, fallbacks, and reassessment. These are workflow instructions;
-they do not install models or change global Codex settings.
+Ordinary workers route by assignment complexity to `coder-light` (routine),
+`coder-medium` (standard), or `coder-hard` (complex). Model and reasoning settings
+live in the corresponding `.codex/agents/*.toml` profile. The lead selects the
+registered role and records the profile, requested settings, and any disclosed
+generic fallback in the worker brief. Explicit user requirements, project
+constraints, and configured reviewer settings take precedence. See the
+[worker routing policy](skills/simplicit/references/worker-routing.md) for
+classification, profile resolution, and reassessment.
 
-### Optional reviewer roles
+### Coder and reviewer roles
 
 Adopt the shipped `.codex/agents/*.toml` files individually into the selected project's `.codex/agents/` to expose these named roles. Neither plugin installation nor the skill installer registers them in another project. Codex documents personal and project agent directories; a profile stored inside a plugin cache is not project-scoped adoption.
 
 1. Inspect the target project's `.codex/agents/` and its ancestors for linked paths. Create missing ordinary directories only in the selected project.
-2. Copy `.codex/agents/critic.toml` and `.codex/agents/comment-sicko.toml` from this source checkout into that directory. For each existing same-name file, compare first: retain identical content, or reconcile differences explicitly before replacement. Preserve all unrelated files. Do not copy the whole `.codex/` directory or install globally.
+2. Copy `coder-light.toml`, `coder-medium.toml`, `coder-hard.toml`, `critic.toml`, and `comment-sicko.toml` from this checkout's `.codex/agents/` into that directory. For each existing same-name file, compare first: retain identical content, or reconcile differences explicitly before replacement. Preserve all unrelated files. Do not copy the whole `.codex/` directory or install globally.
 3. Run `python -B scripts/validate_agents.py "/absolute/path/to/project/.codex/agents"` from Simplicit, then start a fresh session in the selected project and confirm actual named-role execution when required.
 
-- **critic** — independent review, configured for `gpt-6.1-sol` with high reasoning.
+- **coder-light** — routine work; settings in [coder-light.toml](.codex/agents/coder-light.toml).
+- **coder-medium** — standard work; settings in [coder-medium.toml](.codex/agents/coder-medium.toml).
+- **coder-hard** — complex work; settings in [coder-hard.toml](.codex/agents/coder-hard.toml).
+- **critic** — independent review; settings in [critic.toml](.codex/agents/critic.toml).
 - **comment-sicko** — comment review for `$no-comments`, using the host model.
 
 Comment Sicko inherits the host model and reads its portable brief from the selected installed `no-comments` skill. The parent supplies its verified absolute brief path, including for plugin installs. Keep the complete skills collection available; it need not be physically beside the project roles.
 
-When permitted, skills can use a disclosed generic independent-reviewer fallback; unavailable independent review remains pending. The critic's configured model and effort must be honored when using that role. Effective permissions come from the host/parent; read-only instructions do not enforce a separate sandbox. A profile-validator pass does not establish native discovery or model execution.
+When permitted, skills can use disclosed generic worker or independent-reviewer fallbacks; unavailable independent review remains pending. A generic worker uses the selected profile's settings when they can be read and applied. All named roles retain their configured model and effort. Effective permissions come from the host/parent; read-only instructions do not enforce a separate sandbox. A profile-validator pass does not establish native discovery or model execution.
+
+A [November 8 native trial](docs/validation/coder-roles-2026-11-08.md) verified
+all three coder roles in a fresh Codex session: each completed a read-only task
+with its configured model and high effort, without spawn-setting overrides.
 
 Authenticated Windows trials with Codex 0.165.0 verified installed-plugin resource reads, a one-prompt bug fix with the configured critic, read-only defect review and the named Comment Sicko role. Both profiles were explicitly adopted into disposable projects. The [November 7 workflow report](docs/validation/plugin-model-2026-11-07.md) records the setup, actual model/effort, preservation evidence and limits. These bounded results do not establish every skill's behavior, general automatic selection or native execution on other operating systems. Earlier project-local and installation-only results remain in the [dated validation record](docs/validation.md).
 

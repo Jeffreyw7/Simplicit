@@ -41,9 +41,10 @@ class PackageTests(unittest.TestCase):
                        f"---\nname: {name}\ndescription: A workflow\n---\n")
             self.write(f"skills/{name}/LICENSE", "Fixture license\n")
         for path in ("simplicit/references/runtime.md", "simplicit/references/simplicit-agent.md",
+                     "simplicit/references/worker-routing.md",
                      "interrogate/references/reviewer-prompt.md", "no-comments/references/comment-review.md"):
             self.write("skills/" + path, "Fixture resource\n")
-        for name in ("critic", "comment-sicko"):
+        for name in ("critic", "comment-sicko", "coder-light", "coder-medium", "coder-hard"):
             self.write(f".codex/agents/{name}.toml",
                        f'name = "{name}"\ndescription = "Review"\ndeveloper_instructions = "Read only"\n')
 
@@ -159,11 +160,14 @@ class PackageTests(unittest.TestCase):
         shutil.rmtree(self.root / "skills")
         self.assert_error("skills")
 
-    def test_missing_selected_reviewer_and_runtime_resources(self):
+    def test_missing_selected_agent_and_runtime_resources(self):
         for name in (".codex/agents/critic.toml", ".codex/agents/comment-sicko.toml",
+                     ".codex/agents/coder-light.toml", ".codex/agents/coder-medium.toml",
+                     ".codex/agents/coder-hard.toml",
                      "skills/interrogate/references/reviewer-prompt.md",
                      "skills/no-comments/references/comment-review.md",
                      "skills/simplicit/references/runtime.md",
+                     "skills/simplicit/references/worker-routing.md",
                      "skills/simplicit/references/simplicit-agent.md"):
             with self.subTest(name=name):
                 path = self.root / name

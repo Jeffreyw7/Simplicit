@@ -14,6 +14,7 @@ from validate_skills import validate as validate_skills
 VALID = ('name = "critic"\n'
          'description = "Independent review"\n'
          'developer_instructions = "Review without edits."\n')
+PROFILE_NAMES = ("critic", "comment-sicko", "coder-light", "coder-medium", "coder-hard")
 
 
 class AgentTests(unittest.TestCase):
@@ -28,7 +29,8 @@ class AgentTests(unittest.TestCase):
         self.write(self.source)
         self.write(self.destination)
         for root in (self.source, self.destination):
-            self.write(root, VALID.replace('"critic"', '"comment-sicko"'), "comment-sicko.toml")
+            for name in PROFILE_NAMES[1:]:
+                self.write(root, VALID.replace('"critic"', f'"{name}"'), name + ".toml")
 
     def write(self, root, text=VALID, filename="critic.toml"):
         path = root / filename
@@ -100,7 +102,7 @@ class AgentTests(unittest.TestCase):
                 self.assert_error("unsupported")
 
     def test_each_required_source_profile_is_independent_of_inventory(self):
-        for filename in ("critic.toml", "comment-sicko.toml"):
+        for filename in (name + ".toml" for name in PROFILE_NAMES):
             with self.subTest(profile=filename):
                 profile = self.source / filename
                 before = profile.read_bytes()
@@ -124,7 +126,7 @@ class AgentTests(unittest.TestCase):
         self.assert_error("missing")
 
     def test_each_required_destination_profile_is_checked(self):
-        for filename in ("critic.toml", "comment-sicko.toml"):
+        for filename in (name + ".toml" for name in PROFILE_NAMES):
             with self.subTest(profile=filename):
                 profile = self.destination / filename
                 before = profile.read_bytes()
@@ -209,7 +211,7 @@ class AgentTests(unittest.TestCase):
             with contextlib.redirect_stdout(output):
                 status = main(args, source_root=self.source)
             self.assertEqual(0, status)
-            self.assertIn("2 agent", output.getvalue())
+            self.assertIn("5 agent", output.getvalue())
 
     def test_cli_never_reports_success_for_empty_source_or_missing_destination(self):
         for root in (self.destination, self.source):

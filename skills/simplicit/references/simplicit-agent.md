@@ -5,6 +5,7 @@ This is a worker briefing template, not a registered Codex role or tool name. Fi
 ```text
 Goal and acceptance criteria:
 Complexity tier and concise task-based reason:
+Selected role and verified profile path or host role metadata:
 Requested model and reasoning effort; role/user overrides and fallback reason:
 Observed effective settings, or settings still inherited/unverified:
 Candidate revision plus relevant dirty/configuration/runtime state:

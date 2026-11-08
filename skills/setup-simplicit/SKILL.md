@@ -7,7 +7,7 @@ Read and follow the [runtime contract](../simplicit/references/runtime.md) befor
 
 # Setup Simplicit
 
-Adapt Simplicit to this host without inventing model configuration APIs. Use the [worker routing policy](../simplicit/references/worker-routing.md) for complexity-based model and reasoning defaults.
+Adapt Simplicit to this host without inventing model configuration APIs. Use the [worker routing policy](../simplicit/references/worker-routing.md) to select coder roles by complexity. Their `.codex/agents/` profiles own the model and reasoning settings.
 
 1. Inspect the current project's instructions and existing Simplicit configuration. Discover actual shell, connector, browser, planning, and collaboration capabilities. A tool's documented available options are evidence; familiar provider names are not. Do not read credentials or enumerate unrelated personal projects.
 2. Identify what the user asked to change: verification access, review availability, permitted delegation, or role preferences. Preserve unrelated settings. For a missing preference that materially changes cost, offer a concise choice such as minimal, balanced, or thorough, explaining the difference in checks or authorized helper work. A preference cannot raise tool or permission limits.

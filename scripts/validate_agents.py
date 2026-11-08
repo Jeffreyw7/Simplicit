@@ -10,7 +10,10 @@ import tomllib
 from pathlib import Path
 
 SOURCE_ROOT = Path(__file__).resolve().parents[1] / ".codex" / "agents"
-REQUIRED_PROFILES = {"critic.toml", "comment-sicko.toml"}
+REQUIRED_PROFILES = {
+    "critic.toml", "comment-sicko.toml",
+    "coder-light.toml", "coder-medium.toml", "coder-hard.toml",
+}
 REQUIRED_FIELDS = {"name", "description", "developer_instructions"}
 OPTIONAL_FIELDS = {"model", "model_reasoning_effort", "model_reasoning_summary", "model_verbosity"}
 
