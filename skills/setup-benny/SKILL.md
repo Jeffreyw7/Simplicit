@@ -13,7 +13,7 @@ Use the complete selected Simplicit plugin installation, or install the collecti
 
 Copy [configuration.example.yaml](references/configuration.example.yaml), the [feature map](../reproduce-and-fix-issues/references/feature-map.example.md), and optional [routing map](../triage-issue-reports/references/routing.example.md) into user-owned, secret-free project configuration outside installed skills. Fill actual values; examples are not executable configuration. Keep credentials in the chosen service's secret store or environment.
 
-Resolve the repository and base branch, source type and immutable source identity, tracker/team/project/status, triage identity for unattended runs, allowed actions, feature map/control adapter, budgets, and artifact retention. Use observed available model choices or inherit the current model. Do not guess model slugs.
+Resolve the repository and base branch, source type and immutable source identity, tracker/team/project/status, triage identity for unattended runs, allowed actions, feature map/control adapter, budgets, and artifact retention. For delegated work, apply the [worker routing policy](../simplicit/references/worker-routing.md) using observed available model and effort choices. Do not guess model slugs.
 
 ## Verify capabilities
 

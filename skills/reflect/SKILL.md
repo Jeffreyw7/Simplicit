@@ -19,7 +19,7 @@ Read the relevant lens reference for each pass:
 - [Tooling](references/tooling-reviewer.md): tool conventions future agents would otherwise re-derive.
 - [Divergent](references/divergent-reviewer.md): blind spots, second-order effects, and assumptions.
 
-If authorized independent helpers are available, give them read-only tasks with those lens briefs and bounded evidence. Use available tools and inherit the lead's model; do not require provider-specific slugs. If unavailable, run separate lens passes yourself and label the result self-review. Source lookup remains read-only even when a connector can write.
+If authorized independent helpers are available, give them read-only tasks with those lens briefs and bounded evidence. Use available tools and the [worker routing policy](../simplicit/references/worker-routing.md) for each assignment's model and reasoning effort. If unavailable, run separate lens passes yourself and label the result self-review. Source lookup remains read-only even when a connector can write.
 
 Use the [synthesizer](references/synthesizer.md) to classify Accepted, Rejected, and Backlog. Spot-check citations, read target skills, reject duplication, and prefer structural enforcement where cheap. Route existing-skill edits only to skills actually used or demonstrable missed-trigger candidates. A new-skill proposal requires transcript evidence of a recurring workflow and no existing skill that is a real home. A one-off incident does not qualify for that route.
 

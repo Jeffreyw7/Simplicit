@@ -66,7 +66,7 @@ Obtain one primary independent review for meaningful changes, local or hosted, u
 
 ## Delegate and finish
 
-Delegate a bounded uncertainty, independent slice, or required review using the [simplicit-agent brief](references/simplicit-agent.md). Default to one optional specialist at a time; expand for a concrete independent need within available capacity. Budgets never excuse unresolved defects. Helpers do not recursively delegate by default. Use actual host tools and available models; inherit the lead's model unless a supported alternative is justified.
+Delegate a bounded uncertainty, independent slice, or required review using the [simplicit-agent brief](references/simplicit-agent.md). Default to one optional specialist at a time; expand for a concrete independent need within available capacity. Budgets never excuse unresolved defects. Helpers do not recursively delegate by default. Select and explicitly apply supported model and reasoning settings using the [worker routing policy](references/worker-routing.md); preserve user requirements and configured reviewer settings.
 
 Reuse a suitable helper for follow-up while preserving review independence. Integrate and check its result. End its work after consuming the final result; interrupt active helpers no longer needed and verify their status. Close or delete only through supported lifecycle tools; disclose when deletion is unavailable.
 

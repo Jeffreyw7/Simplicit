@@ -77,8 +77,5 @@ budgets:
   fix_minutes: 90
   operations_follow_up_minutes: 45
 
-models:
-  triage: "inherit"
-  reproduce: "inherit"
-  code: "inherit"
-  media_review: "inherit"
+# Empty uses Simplicit's complexity-based worker routing; add only explicit project overrides.
+models: {}

@@ -92,6 +92,18 @@ Use `$simplicit-help` to find a skill, or select one directly, such as `$no-comm
 
 See the [skill catalog](skills/simplicit/references/catalog.md) for all skills and the [main workflow](skills/simplicit/SKILL.md) for supported modes. Most skills use Codex's normal tools; integrations require the relevant host capabilities.
 
+### Worker model selection
+
+Ordinary workers select model and reasoning effort by assignment complexity:
+routine work uses `gpt-6-luna` / `low`, standard work uses `gpt-6.1-sol` /
+`medium`, and complex work uses `gpt-6-astra` / `high`. The lead checks host
+support, applies both settings through the delegation tool, and records the
+selection and any fallback in the worker brief. Explicit user requirements,
+project constraints, and configured reviewer settings take precedence.
+See the [worker routing policy](skills/simplicit/references/worker-routing.md)
+for classification, fallbacks, and reassessment. These are workflow instructions;
+they do not install models or change global Codex settings.
+
 ### Optional reviewer roles
 
 Adopt the shipped `.codex/agents/*.toml` files individually into the selected project's `.codex/agents/` to expose these named roles. Neither plugin installation nor the skill installer registers them in another project. Codex documents personal and project agent directories; a profile stored inside a plugin cache is not project-scoped adoption.
