@@ -26,6 +26,10 @@ Before dispatch, record in the [worker brief](simplicit-agent.md): complexity an
 
 For example, a normal feature under an existing API contract routes to `coder-medium`. If investigation reveals a cross-service data-loss race, reclassify the unresolved assignment for `coder-hard` before further dispatch. The subsequent independent `critic` still uses its own profile.
 
+## Context for a new assignment
+
+Prefer fresh context for a new bounded worker only when the compact brief is sufficient and the host supports it with the required role, model, and effort. Include relevant decisions and evidence through the [worker brief](simplicit-agent.md); source pointers still require reading. If the brief is insufficient, improve it, keep the work in the lead when permitted, or use an authorized compatible context route. Record requested and observed context in the existing dispatch record; mark unobservable isolation unverified and disclose inherited history. Do not relax an explicit context requirement or change a fixed profile to obtain isolation.
+
 ## Reassess on follow-up
 
 Reuse a suitable helper when its settings still fit. If new evidence raises complexity, the worker reports the unresolved issue and the lead reclassifies it. Change settings only through a supported host mechanism; a follow-up prompt cannot be assumed to change model or effort. When replacement is needed, stop the prior writer and verify ownership transfer before dispatching the replacement with current artifacts and evidence.
