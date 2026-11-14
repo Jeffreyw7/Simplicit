@@ -1,5 +1,7 @@
 # Simplicit token efficiency scope and design
 
+Current continuation: see the [November 13–14 validation addendum](../../validation/branch-merge-2026-11-13.md) for the authorized branch review, behavioral cases, and focused repairs. The status and authorization notes below describe the original November 9 side conversation. No measured efficiency claim is made.
+
 Status: the three reference changes are committed in `bc0ce67`. Live author-guided smoke checks and local Windows/Ubuntu suites have run, including successful Linux coverage of the previously skipped symlink/POSIX methods. Controlled agent trials and independent review are blocked by the side-conversation restriction; exact-version CI coverage and measured savings remain pending. See [validation status](../../validation/token-efficiency-2026-11-09.md).
 
 ## Request and baseline

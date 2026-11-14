@@ -1,5 +1,7 @@
 # Simplicit Token Efficiency Implementation Plan
 
+Current continuation: the [November 13–14 validation addendum](../../validation/branch-merge-2026-11-13.md) records subsequent authorized execution and review. The dated update and checkboxes below preserve the November 9 handoff; use the addendum for current case outcomes and limitations. The matched efficiency pilot remains unrun.
+
 **2026-11-09 execution update:** The three reference edits are committed in `bc0ce67ab2e109488097130bcc4fbc3d262c7c4c`. Live author-guided output smoke checks, a small syntax-change check, structural validators, and existing local test suites have now run. These are not fresh baseline/candidate agent evaluations. Editing steps are marked complete below; controlled behavioral trials, full CI coverage, independent review, and matched measurements remain open. See [validation status](../../validation/token-efficiency-2026-11-09.md).
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. This header is a future implementation handoff, not authorization to use subagents in this side conversation.

@@ -1,5 +1,7 @@
 # Token-efficiency safeguard validation — 2026-11-09
 
+Historical status as of November 9. The later authorized branch review and behavioral observations are recorded in the [November 13–14 validation addendum](branch-merge-2026-11-13.md). The observations and remaining-gates table below retain their original scope; consult the addendum for subsequent evidence.
+
 Status: instruction candidate committed; local live smoke checks and repository suites executed. Independent review, controlled baseline/candidate agent trials, full CI coverage, and measured token/cost/latency savings remain pending.
 
 ## Candidate and identity
