@@ -1,0 +1,357 @@
+{
+  "schema_version": 1,
+  "candidate_commit": "bc0ce67ab2e109488097130bcc4fbc3d262c7c4c",
+  "source_identity": {
+    "skills/simplicit/references/runtime.md": {
+      "commit_blob_sha256": "543c6469a54672bbbf6e8f370b3d660840195cc699a1491ccdd5eab2e8ae95e3",
+      "local_file_sha256": "4287842c2044aa1a752fb48e76e835edf8446b3ef46e3f3579c46f3319504249"
+    },
+    "skills/simplicit/references/worker-routing.md": {
+      "commit_blob_sha256": "069bda0b31d733a772435f49682d81322a5737f989f167f4c95053742069b65b",
+      "local_file_sha256": "069bda0b31d733a772435f49682d81322a5737f989f167f4c95053742069b65b"
+    },
+    "skills/simplicit/references/simplicit-agent.md": {
+      "commit_blob_sha256": "4eb612eea03365e5086cf61ee29622d3b192dcd88119df30c13a1720d91e0fe7",
+      "local_file_sha256": "a05bed24af1b1ee76328a44d97cd552a656e23d2bdf3b5dbd0eed4cbafe9e6d1"
+    }
+  },
+  "scope": "Live author-guided tool-mechanics smoke checks and existing repository tests; not blinded model evaluations.",
+  "environment": {
+    "os": "Windows",
+    "python": "3.12.14",
+    "node": "25.2.0",
+    "java": "21.0.12.1",
+    "tlc_sha256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88"
+  },
+  "records": {
+    "capture-unicode-check": {
+      "label": "capture-unicode-check",
+      "cwd": "C:/Users/jeffr/Documents/Codex/2026-11-08/referenced-chatgpt-conversation-this-is-an/work/live-trials-20261109",
+      "command": [
+        "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe",
+        "-X",
+        "utf8",
+        "-c",
+        "print(chr(0x2714)+' capture display')"
+      ],
+      "started_utc": "2026-11-09T17:09:48.209549+00:00",
+      "elapsed_seconds": 0.046,
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109\\capture-unicode-check.log",
+      "log_sha256": "141fcb5751139a9cb205cb5dca2b9dab13af23f9efc163be38f9989d934391a8"
+    },
+    "check_package": {
+      "label": "check_package",
+      "cwd": "C:/Users/jeffr/OneDrive/Desktop/Simplicit",
+      "command": [
+        "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe",
+        "-B",
+        "scripts/check_package.py"
+      ],
+      "started_utc": "2026-11-09T17:05:21.726343+00:00",
+      "elapsed_seconds": 1.516,
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109\\check_package.log",
+      "log_sha256": "5def31e90905b5be2ce11fc53ac7dd5ca4bfeb681674228afade1aa6ed3c4ea4"
+    },
+    "O1": {
+      "case": "O1",
+      "kind": "live author-guided tool-mechanics smoke test; not a blinded agent evaluation",
+      "started_utc": "2026-11-09T17:03:22.1354856+00:00",
+      "command": "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe -B diagnostic.py O1",
+      "cwd": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109",
+      "actual_exit": 0,
+      "raw_line_count": 2001,
+      "selected_lines": [
+        "passed=2000 failed=0 skipped=0"
+      ],
+      "evidence": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109/O1.log",
+      "log_sha256": "0F2EBB9386708C6D5742003489893A84B5501021EE52705032F6043CC6018936",
+      "synthetic_sensitive_value_absent_from_retained_log": true
+    },
+    "O2": {
+      "case": "O2",
+      "kind": "live author-guided tool-mechanics smoke test; not a blinded agent evaluation",
+      "started_utc": "2026-11-09T17:03:22.1354864+00:00",
+      "command": "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe -B diagnostic.py O2",
+      "cwd": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109",
+      "actual_exit": 1,
+      "raw_line_count": 2001,
+      "selected_lines": [
+        "FAIL item=1001 expected=42 actual=41",
+        "passed=1999 failed=1 skipped=0"
+      ],
+      "evidence": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109/O2.log",
+      "log_sha256": "4670FCC0C0B79339850446C0CB0FE594A75535D479D529A2CE37A44DB35145E8",
+      "synthetic_sensitive_value_absent_from_retained_log": true
+    },
+    "O3": {
+      "case": "O3",
+      "kind": "live author-guided tool-mechanics smoke test; not a blinded agent evaluation",
+      "started_utc": "2026-11-09T17:03:22.1357471+00:00",
+      "command": "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe -B diagnostic.py O3",
+      "cwd": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109",
+      "actual_exit": 0,
+      "raw_line_count": 2001,
+      "selected_lines": [
+        "SKIP item=1001 required=true reason=fixture-service-unavailable",
+        "passed=1999 failed=0 skipped=1"
+      ],
+      "evidence": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109/O3.log",
+      "log_sha256": "F15A3389800F327FF88E3844FCAC91C8D1211236B5CC2A567227192AC1D1289E",
+      "synthetic_sensitive_value_absent_from_retained_log": true
+    },
+    "O4": {
+      "case": "O4",
+      "kind": "live author-guided tool-mechanics smoke test; not a blinded agent evaluation",
+      "started_utc": "2026-11-09T17:03:39.9036511+00:00",
+      "command": "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe -B diagnostic.py O4",
+      "cwd": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109",
+      "actual_exit": 1,
+      "raw_line_count": 3,
+      "selected_lines": [
+        "FAIL service-health reason=fixture-endpoint-unreachable",
+        "passed=0 failed=1 skipped=0"
+      ],
+      "evidence": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109/O4.log",
+      "log_sha256": "027CB71A18C60C7014EBC051C2D579D82860316AF916EFE16019B2046EEF0602",
+      "synthetic_sensitive_value_absent_from_retained_log": true
+    },
+    "python-skip-diagnostics": {
+      "label": "python-skip-diagnostics",
+      "cwd": "C:/Users/jeffr/OneDrive/Desktop/Simplicit/scripts",
+      "command": [
+        "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "-v",
+        "test_check_package.PackageTests.test_linked_resources_are_rejected_even_within_package",
+        "test_install_skills.InstallationTests.test_partial_install_cleans_staged_readonly_directories",
+        "test_upstream_report.UpstreamReportTests.test_linked_target_is_rejected_without_reading_external_content",
+        "test_validate_agents.AgentTests.test_escaping_symlinks_in_source_and_destination"
+      ],
+      "started_utc": "2026-11-09T17:04:47.882516+00:00",
+      "elapsed_seconds": 1.782,
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109\\python-skip-diagnostics.log",
+      "log_sha256": "49f6bdb0b89388514834cb08a6e314366df8d71540e2871da8979e2c0f8a5cfe"
+    },
+    "python-suite": {
+      "label": "python-suite",
+      "cwd": "C:/Users/jeffr/OneDrive/Desktop/Simplicit",
+      "command": [
+        "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_*.py"
+      ],
+      "started_utc": "2026-11-09T17:02:36.836774+00:00",
+      "elapsed_seconds": 66.906,
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109\\python-suite.log",
+      "log_sha256": "ce4e7c1b1040c86b05e8c4b1159c900508c9ac97797920d8e93253511fdb7cc7"
+    },
+    "statechart-suite": {
+      "label": "statechart-suite",
+      "cwd": "C:/Users/jeffr/OneDrive/Desktop/Simplicit",
+      "command": [
+        "C:/Program Files/nodejs/node.exe",
+        "--test",
+        "scripts/test_statechart.mjs"
+      ],
+      "started_utc": "2026-11-09T17:02:38.489328+00:00",
+      "elapsed_seconds": 389.39,
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109\\statechart-suite.log",
+      "log_sha256": "97f9a660d95fe52f89a2135aa3fb6d4472d186e38064862dae18011fa2ece72e",
+      "capture_process_exit_code": 1,
+      "capture_display_error": "The test process exited 0 and its log/metadata were saved; the capture helper then failed displaying Unicode through cp1252. The saved UTF-8 log was read separately without rerunning tests."
+    },
+    "syntax-changed": {
+      "label": "syntax-changed",
+      "cwd": "C:/Users/jeffr/Documents/Codex/2026-11-08/referenced-chatgpt-conversation-this-is-an/work/live-trials-20261109",
+      "command": [
+        "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe",
+        "-B",
+        "-c",
+        "from pathlib import Path; import hashlib; p=Path('syntax-fixture.py'); print('input_sha256='+hashlib.sha256(p.read_bytes()).hexdigest(),flush=True); compile(p.read_text(),str(p),'exec')"
+      ],
+      "started_utc": "2026-11-09T17:04:18.922145+00:00",
+      "elapsed_seconds": 0.203,
+      "exit_code": 1,
+      "timed_out": false,
+      "log": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109\\syntax-changed.log",
+      "log_sha256": "af8268ac52f613eb39d84567e28a7b95152b65f9092b384268de5609d6807e93"
+    },
+    "syntax-restored": {
+      "label": "syntax-restored",
+      "cwd": "C:/Users/jeffr/Documents/Codex/2026-11-08/referenced-chatgpt-conversation-this-is-an/work/live-trials-20261109",
+      "command": [
+        "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe",
+        "-B",
+        "-c",
+        "from pathlib import Path; import hashlib; p=Path('syntax-fixture.py'); print('input_sha256='+hashlib.sha256(p.read_bytes()).hexdigest(),flush=True); compile(p.read_text(),str(p),'exec'); print('syntax valid')"
+      ],
+      "started_utc": "2026-11-09T17:04:33.902934+00:00",
+      "elapsed_seconds": 0.172,
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109\\syntax-restored.log",
+      "log_sha256": "744520950505a38d090e3aec987ee141e9df60f4c677dfffd61cb3ad062caf08"
+    },
+    "validate_agents": {
+      "label": "validate_agents",
+      "cwd": "C:/Users/jeffr/OneDrive/Desktop/Simplicit",
+      "command": [
+        "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe",
+        "-B",
+        "scripts/validate_agents.py"
+      ],
+      "started_utc": "2026-11-09T17:05:21.728342+00:00",
+      "elapsed_seconds": 0.344,
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109\\validate_agents.log",
+      "log_sha256": "1e033fe331d6384262a8c5525e018716d28be930907e89eaea74c60ffc640efc"
+    },
+    "validate_skills": {
+      "label": "validate_skills",
+      "cwd": "C:/Users/jeffr/OneDrive/Desktop/Simplicit",
+      "command": [
+        "C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe",
+        "-B",
+        "scripts/validate_skills.py"
+      ],
+      "started_utc": "2026-11-09T17:05:21.730342+00:00",
+      "elapsed_seconds": 0.891,
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109\\validate_skills.log",
+      "log_sha256": "abd6c78f24e157f72e9422ee64052a4b24abf73c1014c40795de4abaee1f0309"
+    },
+    "linux-python-suite": {
+      "label": "linux-python-suite",
+      "cwd": "C:/Users/jeffr/OneDrive/Desktop/Simplicit",
+      "command": [
+        "C:/Windows/System32/wsl.exe",
+        "-d",
+        "Ubuntu",
+        "--cd",
+        "/mnt/c/Users/jeffr/OneDrive/Desktop/Simplicit",
+        "--",
+        "env",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "started_utc": "2026-11-09T17:52:38.078451+00:00",
+      "elapsed_seconds": 36.484,
+      "exit_code": 0,
+      "timed_out": false,
+      "log": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109\\linux-python-suite.log",
+      "log_sha256": "73c18c46051b6b9e345808f13f89ef737fcb632395ecfbdc1644ea8a2699a1de"
+    }
+  },
+  "statechart_counts": {
+    "tests": 180,
+    "pass": 180,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "observations": {
+    "O1": "2001 generated lines selected before entering the model-visible tool result; summary preserved; item 1001 retrieved separately from the retained log.",
+    "O2": "Failure at item 1001 retained together with counts and actual command/tool exit 1.",
+    "O3": "Actual exit 0 retained with required skip and counts; this fixture is not fully verified.",
+    "O4": "Original log existence check returned false; safe diagnostic expansion returned a failure with exit 1; fictional sensitive value absent from retained log.",
+    "E_partial": "One-file syntax check passed, failed after a deliberate input change, and passed after restoration. This is partial mechanical coverage only; full E1-E5 behavior remains unvalidated."
+  },
+  "limitations": [
+    "No fresh baseline/candidate model arms were run.",
+    "The author knew the cases and selected the commands; success cannot be attributed to the instruction changes.",
+    "No worker or reviewer was dispatched.",
+    "No complete token/cost usage was collected; elapsed test time is not a workflow latency benchmark.",
+    "Python suite reported five skips, including two subtest skips.",
+    "Local runtime versions differ from the required CI matrix."
+  ],
+  "setup_attempts": [
+    "Oracle javapath java -version stalled and was interrupted; installed JDK executable worked directly.",
+    "First syntax-capture invocation used the wrong working directory and never ran the check; corrected invocation is recorded.",
+    "An attempt to map unittest progress characters to tests failed because subtest skips add characters; targeted verbose runs established actual skip reasons.",
+    "Statechart capture helper failed only while displaying the already-saved Unicode summary. Its own exit was 1; the actual test process exit was 0. UTF-8 log inspection recovered all results. The helper now explicitly uses UTF-8 stdout; the original executed version is preserved."
+  ],
+  "fixture_sources": {
+    "diagnostic.py": "\"\"\"Disposable output fixtures; no workflow or model-routing implementation.\"\"\"\nimport sys\n\ncase = sys.argv[1]\nif case in ('O1', 'O2', 'O3'):\n    for number in range(1, 2001):\n        if case == 'O2' and number == 1001:\n            print('FAIL item=1001 expected=42 actual=41')\n        elif case == 'O3' and number == 1001:\n            print('SKIP item=1001 required=true reason=fixture-service-unavailable')\n        else:\n            print(f'OK item={number}')\n    print({'O1': 'passed=2000 failed=0 skipped=0',\n           'O2': 'passed=1999 failed=1 skipped=0',\n           'O3': 'passed=1999 failed=0 skipped=1'}[case])\n    raise SystemExit(1 if case == 'O2' else 0)\nif case == 'O4':\n    print('DEBUG sensitive=FICTIONAL_SENTINEL_NOT_A_REAL_SECRET')\n    print('FAIL service-health reason=fixture-endpoint-unreachable')\n    print('passed=0 failed=1 skipped=0')\n    raise SystemExit(1)\nraise SystemExit('Unknown fixture')\n",
+    "output-trial.ps1": "param([ValidateSet('O1','O2','O3','O4')][string]$Case)\n$ErrorActionPreference = 'Stop'\n$trialPython = 'C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1104-2876-0_26.1104.2876.0_x64__3k8sg7r9htsxt/dependencies/python/python.exe'\n$trialStarted = [DateTimeOffset]::UtcNow.ToString('o')\n$trialRaw = @(& $trialPython -B \"$PSScriptRoot/diagnostic.py\" $Case)\n$trialExit = $LASTEXITCODE\n$trialRetained = @($trialRaw | ForEach-Object { if ($_ -like 'DEBUG sensitive=*') { 'DEBUG sensitive=[REDACTED]' } else { $_ } })\n$trialLog = \"$PSScriptRoot/$Case.log\"\n$trialRetained | Set-Content -LiteralPath $trialLog -Encoding utf8\n$trialSelected = @($trialRetained | Where-Object { $_ -match '^(FAIL|SKIP|WARNING|passed=)' })\n$trialResult = [ordered]@{\n    case = $Case\n    kind = 'live author-guided tool-mechanics smoke test; not a blinded agent evaluation'\n    started_utc = $trialStarted\n    command = \"$trialPython -B diagnostic.py $Case\"\n    cwd = (Get-Location).Path\n    actual_exit = $trialExit\n    raw_line_count = $trialRaw.Count\n    selected_lines = $trialSelected\n    evidence = $trialLog\n    log_sha256 = (Get-FileHash -LiteralPath $trialLog -Algorithm SHA256).Hash\n    synthetic_sensitive_value_absent_from_retained_log = -not [bool]($trialRetained -match 'FICTIONAL_SENTINEL_NOT_A_REAL_SECRET')\n}\n$trialJson = $trialResult | ConvertTo-Json -Depth 4\n$trialJson | Set-Content -LiteralPath \"$PSScriptRoot/$Case.json\" -Encoding utf8\nWrite-Output $trialJson\nexit $trialExit\n",
+    "run_check-executed.py": "\"\"\"Local evidence capture for existing commands, not an agent evaluation harness.\"\"\"\nimport datetime\nimport hashlib\nimport json\nimport os\nfrom pathlib import Path\nimport subprocess\nimport sys\nimport time\n\nfolder = Path(__file__).resolve().parent\nlabel, cwd, *command = sys.argv[1:]\nenv = dict(os.environ, PYTHONDONTWRITEBYTECODE='1')\nstarted = datetime.datetime.now(datetime.timezone.utc).isoformat()\nbegin = time.monotonic()\ntry:\n    result = subprocess.run(command, cwd=cwd, env=env, capture_output=True, timeout=720)\n    code, out, err, timed_out = result.returncode, result.stdout, result.stderr, False\nexcept subprocess.TimeoutExpired as exc:\n    code, out, err, timed_out = None, exc.stdout or b'', exc.stderr or b'', True\nelapsed = time.monotonic() - begin\nlog = out + b'\\n--- stderr ---\\n' + err\npath = folder / (label + '.log')\npath.write_bytes(log)\nrecord = dict(label=label, cwd=cwd, command=command, started_utc=started,\n              elapsed_seconds=round(elapsed, 3), exit_code=code, timed_out=timed_out,\n              log=str(path), log_sha256=hashlib.sha256(log).hexdigest())\n(folder / (label + '.json')).write_text(json.dumps(record, indent=2), encoding='utf-8')\nprint(json.dumps(record))\nlines = log.decode('utf-8', errors='replace').splitlines()\nif code != 0:\n    print('\\n'.join(lines[-100:]))\nelse:\n    print('\\n'.join(lines[-16:]))\nraise SystemExit(code if code is not None and code >= 0 else 1)\n",
+    "run_check.py": "\"\"\"Local evidence capture for existing commands, not an agent evaluation harness.\"\"\"\nimport datetime\nimport hashlib\nimport json\nimport os\nfrom pathlib import Path\nimport subprocess\nimport sys\nimport time\n\nsys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')\nfolder = Path(__file__).resolve().parent\nlabel, cwd, *command = sys.argv[1:]\nenv = dict(os.environ, PYTHONDONTWRITEBYTECODE='1')\nstarted = datetime.datetime.now(datetime.timezone.utc).isoformat()\nbegin = time.monotonic()\ntry:\n    result = subprocess.run(command, cwd=cwd, env=env, capture_output=True, timeout=720)\n    code, out, err, timed_out = result.returncode, result.stdout, result.stderr, False\nexcept subprocess.TimeoutExpired as exc:\n    code, out, err, timed_out = None, exc.stdout or b'', exc.stderr or b'', True\nelapsed = time.monotonic() - begin\nlog = out + b'\\n--- stderr ---\\n' + err\npath = folder / (label + '.log')\npath.write_bytes(log)\nrecord = dict(label=label, cwd=cwd, command=command, started_utc=started,\n              elapsed_seconds=round(elapsed, 3), exit_code=code, timed_out=timed_out,\n              log=str(path), log_sha256=hashlib.sha256(log).hexdigest())\n(folder / (label + '.json')).write_text(json.dumps(record, indent=2), encoding='utf-8')\nprint(json.dumps(record))\nlines = log.decode('utf-8', errors='replace').splitlines()\nif code != 0:\n    print('\\n'.join(lines[-100:]))\nelse:\n    print('\\n'.join(lines[-16:]))\nraise SystemExit(code if code is not None and code >= 0 else 1)\n",
+    "syntax-fixture.py": "def total(values):\n    return sum(values)\n"
+  },
+  "local_evidence_directory": "C:\\Users\\jeffr\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\work\\live-trials-20261109",
+  "followup_completion_attempt": {
+    "date": "2026-11-09",
+    "linux_environment": {
+      "distribution": "Ubuntu under WSL",
+      "user_id": 1000,
+      "python": "3.12.3",
+      "node_available": false,
+      "java_available": false
+    },
+    "linux_python_suite": {
+      "tests_run": 109,
+      "failures": 0,
+      "errors": 0,
+      "reported_skips": 5,
+      "previously_skipped_methods_now_passed": [
+        "test_linked_resources_are_rejected_even_within_package",
+        "test_linked_target_is_rejected_without_reading_external_content",
+        "test_escaping_symlinks_in_source_and_destination",
+        "test_partial_install_cleans_staged_readonly_directories"
+      ],
+      "skip_details": [
+        "test_linked_directory_is_rejected (test_check_package.PackageTests.test_linked_directory_is_rejected) ... skipped 'Windows junction case'",
+        "test_quotes_and_successive_records_round_trip_with_powershell_import_csv (test_decision_log.DecisionLogTests.test_quotes_and_successive_records_round_trip_with_powershell_import_csv) ... skipped 'PowerShell unavailable'",
+        "test_partial_install_cleans_staged_readonly_files (test_install_skills.InstallationTests.test_partial_install_cleans_staged_readonly_files) ... skipped 'Windows read-only file deletion behavior'",
+        "test_published_skills_retain_inherited_read_access (test_install_skills.InstallationTests.test_published_skills_retain_inherited_read_access) ... skipped 'Windows inherited access permissions only'",
+        "test_windows_short_name_path_is_not_mistaken_for_a_link (test_install_skills.InstallationTests.test_windows_short_name_path_is_not_mistaken_for_a_link) ... skipped 'Windows short-name paths only'"
+      ]
+    },
+    "linux_structural_checks": {
+      "validate_skills.py": "PASS: 62 skills",
+      "validate_agents.py": "PASS: 5 profiles",
+      "check_package.py": "PASS: 62 skills and package resources",
+      "evidence": "Live shell output in this conversation; combined command exited 0."
+    },
+    "hosted_ci_lookup": {
+      "url": "https://api.github.com/repos/Jeffreyw7/Simplicit/actions/runs?head_sha=bc0ce67ab2e109488097130bcc4fbc3d262c7c4c&per_page=10",
+      "total_count": 0
+    },
+    "git_state": "Implementation branch ahead of its local origin tracking ref by one commit; prior documentation updates preserved; no production edits.",
+    "remaining_blockers": [
+      "Side-conversation developer rules prohibit subagents, preventing delegated baseline/candidate trials and non-author agent review. No CLI/API workaround was used.",
+      "No candidate hosted CI runs exist; prescribed Python 3.11 / Node 22 / Java 17 matrix is not established by the available local environments.",
+      "The matched 30-attempt pilot depends on permitted worker/reviewer execution and complete per-run model usage."
+    ],
+    "scope": "No runtime installation, privilege change, push, workflow dispatch, or agent creation was performed."
+  }
+}

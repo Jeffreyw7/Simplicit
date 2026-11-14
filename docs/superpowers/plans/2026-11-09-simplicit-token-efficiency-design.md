@@ -1,12 +1,12 @@
 # Simplicit token efficiency scope and design
 
-Status: the user subsequently authorized selective safeguard implementation. Three existing references now have a local candidate draft; native trials, independent review, and measured savings remain pending. See [validation status](../../validation/token-efficiency-2026-11-09.md).
+Status: the three reference changes are committed in `bc0ce67`. Live author-guided smoke checks and local Windows/Ubuntu suites have run, including successful Linux coverage of the previously skipped symlink/POSIX methods. Controlled agent trials and independent review are blocked by the side-conversation restriction; exact-version CI coverage and measured savings remain pending. See [validation status](../../validation/token-efficiency-2026-11-09.md).
 
 ## Request and baseline
 
 Plan the first three proposed optimizations: selective tool output, isolated new-worker context, and evidence reuse tied to relevant inputs. Preserve verification and independent review; avoid redundant instructions. The referenced conversation also reports an undisclosed generic fallback when project trust prevented named-role discovery. That is reported evidence, not an independently reproduced result here.
 
-Inspected branch: `feat/worker-model-routing`, HEAD `d08c74f19f20a6f19d4af20d71be87ff650453f8`. Relevant working files were read on November 9, 2026. Git status failed with a work-tree error in this environment, so checkout cleanliness is unknown. Before implementation, inspect actual status and reconcile concurrent changes without resetting them.
+Original inspected baseline: branch `feat/worker-model-routing` at `d08c74f19f20a6f19d4af20d71be87ff650453f8`; current instruction candidate is `bc0ce67`. Relevant working files were read on November 9, 2026. The initial restricted Git status failed; a later authorized read confirmed no tracked edits before implementation. Candidate `bc0ce67` had a clean working tree before the live trials. Preserve subsequent unrelated changes.
 
 ## Existing coverage and missing decisions
 
@@ -27,7 +27,7 @@ Recommended: small replacements in three existing reference files, plus one vali
 
 An output-wrapper subsystem plus persistent evidence cache could enforce more mechanics, but adds host-specific behavior, cache invalidation risk, maintenance, and new calls. Defer it until traces demonstrate a repeated failure the minimal approach cannot address. Adding the same rules to every skill would increase instruction tokens and drift; reject that approach.
 
-The latest request authorizes the selective instruction changes below. This does not authorize weaker verification, installation, commit, or release.
+The user authorized the selective instruction edits, their commit, and subsequent live trials/document updates. This does not authorize weaker verification, installation, push, or release.
 
 ## Requirements
 
@@ -40,7 +40,7 @@ The latest request authorizes the selective instruction changes below. This does
 - Do not add dependencies, hooks, a persistent cache, a new skill, or blanket full-repository hashing.
 - Keep the original `pstack/` archive, global configuration, project trust, and plugin caches unchanged.
 - No quantified token, cost, latency, or quality gain may be claimed without matched observations.
-- The user subsequently authorized selective safeguard implementation in this side conversation. The three reference-file edits are a local draft; native worker trials and independent review remain pending because subagents are prohibited here. No installation, commit, or release is implied.
+- The user authorized selective safeguard implementation and then commit `bc0ce67`; the current request authorizes live trials and document updates. Subagents remain prohibited in this side conversation, so worker-dispatch trials and independent review remain pending. No installation, push, or release is authorized by this plan.
 
 ## Acceptance and limits
 
@@ -54,6 +54,6 @@ Quality acceptance requires all predefined behavior cases, ordinary package chec
 
 ## Remaining tradeoffs and rollout
 
-Implement output selection first, conditional worker isolation second, and only minimal evidence-record clarification third. Pre-context filtering can hide material diagnostics; fresh workers can repeat grounding; evidence tracking can exceed the cost of a cheap check. The behavioral cases must test these failure modes, while the matched pilot assesses the combined net effect. More instructions may increase every session's input, so replace existing prose and avoid repeating records at each turn. Do not create a new wrapper or cache merely to make the pilot easier.
+The committed edits cover output selection, conditional worker isolation, and minimal evidence-record clarification. Continue with the remaining validation rather than repeating implementation. Pre-context filtering can hide material diagnostics; fresh workers can repeat grounding; evidence tracking can exceed the cost of a cheap check. The behavioral cases must test these failure modes, while the matched pilot assesses the combined net effect. More instructions may increase every session's input, so replace existing prose and avoid repeating records at each turn. Do not create a new wrapper or cache merely to make the pilot easier.
 
-The pilot and independent review have a one-time evaluation cost; report that separately from per-task operating usage. These are proposed changes with no guaranteed saving or guaranteed quality preservation. Host limitations and stochastic behavior remain implementation constraints rather than reasons to bypass verification. Before these edits, an authorized Git status check confirmed only the two untracked planning documents and no tracked changes.
+The pilot and independent review have a one-time evaluation cost; report that separately from per-task operating usage. The committed changes have no guaranteed saving or guaranteed quality preservation; author-guided smoke checks do not establish a causal improvement. Host limitations and stochastic behavior remain implementation constraints rather than reasons to bypass verification. Before these edits, an authorized Git status check confirmed only the two untracked planning documents and no tracked changes.
